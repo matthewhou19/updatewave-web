@@ -1,0 +1,70 @@
+import { createSupabaseServiceClient } from '@/lib/supabase'
+import { Project, User } from '@/lib/types'
+import TopBar from '@/components/TopBar'
+import ProjectList from '@/components/ProjectList'
+
+interface BrowsePageProps {
+  params: Promise<{ hash: string }>
+}
+
+export default async function BrowsePage({ params }: BrowsePageProps) {
+  const { hash } = await params
+  const supabase = createSupabaseServiceClient()
+
+  // Validate hash
+  const { data: user, error: userError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('hash', hash)
+    .single()
+
+  if (userError || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
+        <p className="text-base text-[#6b7280]">
+          This link isn&apos;t valid. Check your email for the correct URL.
+        </p>
+      </div>
+    )
+  }
+
+  const typedUser = user as User
+
+  // Update last_seen_at (fire and forget, don't block render)
+  supabase
+    .from('users')
+    .update({ last_seen_at: new Date().toISOString() })
+    .eq('id', typedUser.id)
+    .then(() => {})
+
+  // Fetch published projects
+  const { data: projects } = await supabase
+    .from('projects')
+    .select('*')
+    .eq('status', 'published')
+    .order('filing_date', { ascending: false })
+
+  // Fetch this user's reveals
+  const { data: reveals } = await supabase
+    .from('reveals')
+    .select('project_id')
+    .eq('user_id', typedUser.id)
+
+  const revealedProjectIds = (reveals ?? []).map((r: { project_id: number }) => r.project_id)
+
+  return (
+    <div className="min-h-screen bg-[#f5f5f5]">
+      <TopBar hash={hash} view="browse" />
+      <ProjectList
+        projects={(projects ?? []) as Project[]}
+        revealedProjectIds={revealedProjectIds}
+        hash={hash}
+      />
+      <footer className="max-w-6xl mx-auto px-4 py-6 text-center">
+        <p className="text-xs text-[#9ca3af]">
+          All listings sourced from public planning commission filings.
+        </p>
+      </footer>
+    </div>
+  )
+}
