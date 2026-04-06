@@ -22,3 +22,13 @@ VALUES
   ('Palo Alto', '890 UNIVERSITY AVE', 'New Construction Commercial', 1200000000, '$12M', 'Sarah Kim', 'Kim & Associates', 'sarah@kimassoc.com', 'https://kimassoc.com', 1005, '2025-03-25', NULL, 'published', now()),
   ('Mountain View', '450 CASTRO ST', 'Site Development', 85000000, '$850K', 'Roberto Martinez', NULL, NULL, NULL, 1006, '2025-03-30', NULL, 'published', now()),
   ('Los Altos', '100 MAIN ST', 'Design Review Multi-Family', NULL, NULL, 'Tom Wright', 'Wright Residential', NULL, 'https://wrightresidential.com', 1007, '2025-04-03', NULL, 'published', now());
+
+-- Insert a test reveal so /reveals/{hash} has data to render.
+-- Uses the first project (336 SPRINGER RD) for the test user.
+INSERT INTO reveals (user_id, project_id, stripe_payment_id, amount_cents)
+SELECT u.id, p.id, 'pi_test_seed_001', 2500
+FROM users u, projects p
+WHERE u.hash = 'test_abcdefghijklmnopqrstuvwxyz1234567890A'
+  AND p.address = '336 SPRINGER RD'
+  AND p.city = 'Los Altos'
+ON CONFLICT (user_id, project_id) DO NOTHING;

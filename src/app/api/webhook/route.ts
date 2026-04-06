@@ -88,19 +88,8 @@ export async function POST(request: NextRequest) {
       return Response.json({ received: true })
     }
 
-    // Increment reveal_count (direct update, no RPC needed)
-    const { data: project } = await supabase
-      .from('projects')
-      .select('reveal_count')
-      .eq('id', projectId)
-      .single()
-
-    if (project) {
-      await supabase
-        .from('projects')
-        .update({ reveal_count: (project.reveal_count ?? 0) + 1 })
-        .eq('id', projectId)
-    }
+    // reveal_count is auto-incremented by Postgres trigger on reveals table.
+    // No manual update needed.
   }
 
   return Response.json({ received: true })
