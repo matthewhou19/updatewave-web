@@ -1,5 +1,5 @@
 import { createSupabaseClient } from '@/lib/supabase'
-import { Project } from '@/lib/types'
+import { fetchPublishedProjects } from '@/lib/queries'
 import ProjectList from '@/components/ProjectList'
 
 export const dynamic = 'force-dynamic'
@@ -7,12 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const supabase = createSupabaseClient()
 
-  // Explicit column list: never fetch architect fields on public page
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('id, city, address, project_type, estimated_value_cents, estimated_value, filing_date, source_url, status, reveal_count, published_at, updated_at, created_at')
-    .eq('status', 'published')
-    .order('filing_date', { ascending: false })
+  const { projects } = await fetchPublishedProjects(supabase)
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -33,7 +28,7 @@ export default async function Home() {
       </div>
 
       <ProjectList
-        projects={(projects ?? []) as Project[]}
+        projects={projects}
         revealedProjectIds={[]}
       />
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { matchesValueRange } from '../../src/components/ProjectList'
+import { matchesValueRange } from '../../src/lib/utils'
 
 describe('matchesValueRange', () => {
   // "any" range matches everything
