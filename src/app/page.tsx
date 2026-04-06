@@ -32,7 +32,17 @@ export default async function Home() {
       </div>
 
       <ProjectList
-        projects={(projects ?? []) as Project[]}
+        projects={(projects ?? []).map((p) => {
+          const project = p as Project
+          // Security: strip architect info on public page (no reveals possible)
+          return {
+            ...project,
+            architect_name: null,
+            architect_firm: null,
+            architect_contact: null,
+            architect_website: null,
+          }
+        })}
         revealedProjectIds={[]}
       />
 

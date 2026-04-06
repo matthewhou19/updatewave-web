@@ -52,11 +52,25 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
 
   const revealedProjectIds = (reveals ?? []).map((r: { project_id: number }) => r.project_id)
 
+  // Security: strip architect info from unrevealed projects before sending to client.
+  // Without this, architect data is visible in page source even for unrevealed projects.
+  const sanitizedProjects = (projects ?? []).map((p) => {
+    const project = p as Project
+    if (revealedProjectIds.includes(project.id)) return project
+    return {
+      ...project,
+      architect_name: null,
+      architect_firm: null,
+      architect_contact: null,
+      architect_website: null,
+    }
+  })
+
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <TopBar hash={hash} view="browse" />
       <ProjectList
-        projects={(projects ?? []) as Project[]}
+        projects={sanitizedProjects}
         revealedProjectIds={revealedProjectIds}
         hash={hash}
       />
