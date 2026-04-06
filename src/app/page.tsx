@@ -7,9 +7,10 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const supabase = createSupabaseClient()
 
+  // Explicit column list: never fetch architect fields on public page
   const { data: projects } = await supabase
     .from('projects')
-    .select('*')
+    .select('id, city, address, project_type, estimated_value_cents, estimated_value, filing_date, source_url, status, reveal_count, published_at, updated_at, created_at')
     .eq('status', 'published')
     .order('filing_date', { ascending: false })
 
@@ -32,17 +33,7 @@ export default async function Home() {
       </div>
 
       <ProjectList
-        projects={(projects ?? []).map((p) => {
-          const project = p as Project
-          // Security: strip architect info on public page (no reveals possible)
-          return {
-            ...project,
-            architect_name: null,
-            architect_firm: null,
-            architect_contact: null,
-            architect_website: null,
-          }
-        })}
+        projects={(projects ?? []) as Project[]}
         revealedProjectIds={[]}
       />
 
