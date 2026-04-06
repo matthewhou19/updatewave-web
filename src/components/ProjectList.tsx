@@ -8,7 +8,7 @@ import ProjectCard from './ProjectCard'
 interface ProjectListProps {
   projects: Project[]
   revealedProjectIds: number[]
-  hash: string
+  hash?: string
 }
 
 interface Filters {

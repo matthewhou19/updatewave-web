@@ -6,7 +6,7 @@ import { Project } from '@/lib/types'
 interface ProjectCardProps {
   project: Project
   isRevealed: boolean
-  hash: string
+  hash?: string           // undefined = public visitor (no reveal capability)
   justRevealed?: boolean  // true if this card was just purchased (post-payment redirect)
 }
 
@@ -32,6 +32,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
   const [loading, setLoading] = useState(false)
 
   async function handleReveal() {
+    if (!hash) return
     setLoading(true)
     try {
       const res = await fetch('/api/create-checkout', {
@@ -131,18 +132,24 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
           <div className="flex items-center gap-3">
             <div
               className="h-10 flex-1 bg-gray-200 rounded blur-sm"
-              aria-label="Architect details hidden, $25 to reveal"
+              aria-label="Architect details hidden"
               role="img"
             />
-            <button
-              onClick={handleReveal}
-              disabled={loading}
-              className="flex-shrink-0 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#93c5fd] text-white text-sm font-medium rounded-md transition-colors cursor-pointer disabled:cursor-wait min-w-[120px] text-center"
-            >
-              {loading ? 'Processing...' : 'Reveal · $25'}
-            </button>
+            {hash ? (
+              <button
+                onClick={handleReveal}
+                disabled={loading}
+                className="flex-shrink-0 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#93c5fd] text-white text-sm font-medium rounded-md transition-colors cursor-pointer disabled:cursor-wait min-w-[120px] text-center"
+              >
+                {loading ? 'Processing...' : 'Reveal · $25'}
+              </button>
+            ) : (
+              <span className="flex-shrink-0 px-4 py-2 bg-gray-300 text-[#6b7280] text-sm font-medium rounded-md min-w-[120px] text-center">
+                $25 to reveal
+              </span>
+            )}
           </div>
-          {loading && (
+          {loading && hash && (
             <p className="text-xs text-[#71717a] mt-2">
               You&apos;ll be redirected to Stripe to complete payment. You&apos;ll return here automatically.
             </p>
