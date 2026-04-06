@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UpdateWave Web
 
-## Getting Started
+Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $25/reveal to see architect contact info.
 
-First, run the development server:
+**Live:** https://updatewave-web.vercel.app
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## How It Works
+
+1. GC receives cold email with unique browse link (`/browse/{hash}`)
+2. Browses pre-permit project listings with city/type/value filters
+3. Pays $25 via Stripe to reveal architect contact info
+4. Views all past reveals at `/reveals/{hash}`
+
+No registration. Hash in URL = identity.
+
+## Tech Stack
+
+- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Database:** Supabase (Postgres + RLS)
+- **Payments:** Stripe Checkout + Webhooks
+- **Hosting:** Vercel
+- **Styling:** Tailwind CSS v4
+
+## Project Structure
+
+```
+src/
+  app/
+    browse/[hash]/page.tsx    # Server component: project list
+    reveals/[hash]/page.tsx   # Server component: past reveals
+    api/create-checkout/      # Stripe Checkout session
+    api/webhook/              # Stripe webhook (idempotent)
+  components/
+    ProjectList.tsx           # Client: filters + card grid
+    ProjectCard.tsx           # Client: reveal button + states
+    TopBar.tsx                # Shared nav header
+  lib/
+    supabase.ts               # Supabase client factories
+    stripe.ts                 # Stripe client factory
+    types.ts                  # TypeScript interfaces
+supabase/
+  schema.sql                  # Database schema (tables, indexes, RLS)
+  seed-test-data.sql          # Test data for development
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Install
+npm install
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Configure
+cp .env.example .env.local
+# Fill in Supabase + Stripe keys
 
-## Learn More
+# Run schema
+# Paste supabase/schema.sql into Supabase SQL Editor
 
-To learn more about Next.js, take a look at the following resources:
+# Dev
+npm run dev
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Build
+npm run build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Lint
+npm run lint
+```
 
-## Deploy on Vercel
+## Data Pipeline
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Data flows one way: `apollo.db → publish_leads.py → Supabase`
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Scripts live in the [updatewave](https://github.com/matthewhou19/updatewave) repo:
+- `scripts/publish_leads.py` — Push curated leads to Supabase
+- `scripts/create_user_hashes.py` — Generate hash URLs for cold email
+
+## Security
+
+- Hash-based auth (no passwords, no sessions)
+- `Referrer-Policy: no-referrer` on all pages
+- CSP headers restricting to Stripe + Supabase origins
+- RLS: anon can only read published projects, service role required for users/reveals
+- Webhook signature verification + idempotent reveal insertion
