@@ -10,7 +10,7 @@ interface ProjectCardProps {
   justRevealed?: boolean  // true if this card was just purchased (post-payment redirect)
 }
 
-function formatRelativeTime(dateStr: string | null): string {
+export function formatRelativeTime(dateStr: string | null): string {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   const now = new Date()

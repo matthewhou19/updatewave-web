@@ -17,7 +17,7 @@ import { resolve } from 'path'
 // ---------------------------------------------------------------------------
 // CSV parser (handles quoted fields with commas)
 // ---------------------------------------------------------------------------
-function parseCSVLine(line: string): string[] {
+export function parseCSVLine(line: string): string[] {
   const fields: string[] = []
   let current = ''
   let inQuotes = false
@@ -48,7 +48,7 @@ function parseCSVLine(line: string): string[] {
   return fields
 }
 
-function parseCSV(content: string): Record<string, string>[] {
+export function parseCSV(content: string): Record<string, string>[] {
   const lines = content.split('\n').filter((l) => l.trim().length > 0)
   if (lines.length === 0) return []
 
@@ -82,7 +82,7 @@ interface ProjectInsert {
   published_at: string
 }
 
-function mapRow(row: Record<string, string>): ProjectInsert {
+export function mapRow(row: Record<string, string>): ProjectInsert {
   return {
     city: row.city || 'Unknown',
     address: row.address || '',
@@ -209,7 +209,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error('FATAL:', err)
-  process.exit(1)
-})
+// Only run when executed as a script, not when imported for testing
+if (!process.env.VITEST) {
+  main().catch((err) => {
+    console.error('FATAL:', err)
+    process.exit(1)
+  })
+}

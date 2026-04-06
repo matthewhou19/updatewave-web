@@ -38,7 +38,7 @@ function loadFilters(): Filters {
   return { cities: [], projectTypes: [], valueRange: 'any' }
 }
 
-function matchesValueRange(cents: number | null, range: string): boolean {
+export function matchesValueRange(cents: number | null, range: string): boolean {
   if (range === 'any' || cents === null) return true
   if (range === 'under500k') return cents < 50_000_000
   if (range === '500k-1m') return cents >= 50_000_000 && cents < 100_000_000
