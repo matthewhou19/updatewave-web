@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, maskStreetNumber } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project
@@ -61,7 +61,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
 
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="font-bold text-[16px] text-[#111827] leading-snug">
-          {project.address}
+          {isRevealed ? project.address : maskStreetNumber(project.address)}
         </span>
         <span className="text-xs text-[#71717a] whitespace-nowrap mt-0.5 flex-shrink-0">
           {formatRelativeTime(project.filing_date)}
@@ -83,6 +83,10 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
           <span className="text-sm text-[#6b7280]">{project.estimated_value}</span>
         )}
       </div>
+
+      {project.description && (
+        <p className="text-sm text-[#374151] mb-3 leading-relaxed">{project.description}</p>
+      )}
 
       {isRevealed ? (
         <div className="space-y-1">

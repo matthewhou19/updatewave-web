@@ -13,7 +13,7 @@ import { Project, User } from './types'
  * excluded to prevent data leaks to the client.
  */
 const PROJECT_LIST_COLUMNS =
-  'id, city, address, project_type, estimated_value_cents, estimated_value, filing_date, source_url, status, reveal_count, published_at, updated_at, created_at'
+  'id, city, address, description, project_type, estimated_value_cents, estimated_value, filing_date, source_url, status, reveal_count, published_at, updated_at, created_at'
 
 /**
  * Fetch published projects without architect fields.

@@ -9,6 +9,7 @@ export interface Project {
   architect_firm: string | null
   architect_contact: string | null
   architect_website: string | null
+  description: string | null
   source_permit_id: number | null
   filing_date: string | null
   source_url: string | null
