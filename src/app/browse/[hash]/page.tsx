@@ -28,11 +28,11 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
   const typedUser = user as User
 
   // Update last_seen_at (fire and forget, don't block render)
-  supabase
+  void supabase
     .from('users')
     .update({ last_seen_at: new Date().toISOString() })
     .eq('id', typedUser.id)
-    .then(() => {})
+    .then(() => {}, () => {})
 
   // Fetch projects + reveals + architect data using query helpers
   const { projects } = await fetchPublishedProjects(supabase)
