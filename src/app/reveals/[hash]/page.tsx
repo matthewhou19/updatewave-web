@@ -151,11 +151,8 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
                 </div>
 
                 <div className="space-y-0.5">
-                  {reveal.architect_name && (
-                    <p className="font-bold text-sm text-[#111827]">{reveal.architect_name}</p>
-                  )}
                   {reveal.architect_firm && (
-                    <p className="text-sm text-[#6b7280]">{reveal.architect_firm}</p>
+                    <p className="font-bold text-sm text-[#111827]">{reveal.architect_firm}</p>
                   )}
                   {reveal.architect_contact && (
                     <p className="text-sm text-[#6b7280]">{reveal.architect_contact}</p>

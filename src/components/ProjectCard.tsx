@@ -91,16 +91,13 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
       {isRevealed ? (
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            {project.architect_name && (
-              <span className="font-bold text-sm text-[#111827]">{project.architect_name}</span>
+            {project.architect_firm && (
+              <span className="font-bold text-sm text-[#111827]">{project.architect_firm}</span>
             )}
             <span className="inline-block px-2 py-0.5 text-xs font-medium bg-[#16a34a]/10 text-[#16a34a] rounded-full">
               ✓ Revealed
             </span>
           </div>
-          {project.architect_firm && (
-            <p className="text-sm text-[#6b7280]">{project.architect_firm}</p>
-          )}
           {project.architect_contact && (
             <p className="text-sm text-[#6b7280]">{project.architect_contact}</p>
           )}
