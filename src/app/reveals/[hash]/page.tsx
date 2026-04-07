@@ -120,7 +120,7 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
         ) : (
           <div className="space-y-3">
             {revealList.map((reveal) => (
-              <div key={reveal.id} className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
+              <div key={reveal.id} data-testid="project-card" className="bg-white rounded-lg shadow-sm p-4 border border-gray-100">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <span className="font-bold text-[16px] text-[#111827] leading-snug">
                     {reveal.address}
