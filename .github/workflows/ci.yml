@@ -10,6 +10,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      HAS_SECRETS: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -39,9 +41,11 @@ jobs:
           STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
 
       - name: Install Playwright browsers
+        if: env.HAS_SECRETS == 'true'
         run: npx playwright install --with-deps chromium
 
       - name: E2E tests
+        if: env.HAS_SECRETS == 'true'
         run: npx playwright test --project=chromium
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
