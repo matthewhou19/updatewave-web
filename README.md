@@ -45,6 +45,16 @@ supabase/
 
 ## Setup
 
+### Quick Start (recommended)
+
+```bash
+npm run setup
+```
+
+This runs `scripts/setup-local.sh`, which checks prerequisites, copies `.env.example` to `.env.local`, installs dependencies, and prints next steps.
+
+### Manual Setup
+
 ```bash
 # Install
 npm install
@@ -66,6 +76,22 @@ npm run build
 npm run lint
 ```
 
+## Testing
+
+```bash
+npm test              # Unit tests (Vitest)
+npm run test:watch    # Unit tests in watch mode
+npm run test:e2e      # E2E tests (Playwright)
+npm run test:e2e:smoke # Post-deploy smoke tests
+```
+
+### Stripe & Database helpers
+
+```bash
+npm run stripe:listen  # Forward Stripe webhooks to localhost
+npm run db:seed        # Instructions for seeding test data
+```
+
 ## Data Pipeline
 
 Data flows one way: `apollo.db → publish_leads.py → Supabase`
@@ -73,6 +99,10 @@ Data flows one way: `apollo.db → publish_leads.py → Supabase`
 Scripts live in the [updatewave](https://github.com/matthewhou19/updatewave) repo:
 - `scripts/publish_leads.py` — Push curated leads to Supabase
 - `scripts/create_user_hashes.py` — Generate hash URLs for cold email
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## Security
 
