@@ -45,6 +45,17 @@ export function formatRelativeTime(dateStr: string | null): string {
  * Handles leading digits (with optional dash or letter suffix like "123A" or "12-34").
  * If the address has no leading number, returns it unchanged.
  */
+/**
+ * Format a project_type value for display.
+ * "new_construction" → "New Construction", "addition" → "Addition"
+ */
+export function formatProjectType(type: string): string {
+  return type
+    .split('_')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function maskStreetNumber(address: string): string {
   if (!address) return ''
   // Match leading street number: digits, optionally followed by dash+digits or a letter

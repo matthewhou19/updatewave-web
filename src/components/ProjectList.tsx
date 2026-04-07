@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Project } from '@/lib/types'
-import { matchesValueRange } from '@/lib/utils'
+import { matchesValueRange, formatProjectType } from '@/lib/utils'
 import ProjectCard from './ProjectCard'
 
 interface ProjectListProps {
@@ -152,7 +152,7 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
                   onChange={() => toggleProjectType(type)}
                   className="accent-[#2563eb]"
                 />
-                <span className="text-sm text-[#111827]">{type}</span>
+                <span className="text-sm text-[#111827]">{formatProjectType(type)}</span>
               </label>
             ))}
           </div>

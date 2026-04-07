@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User, RevealWithProject } from '@/lib/types'
 import { fetchUserByHash } from '@/lib/queries'
+import { formatProjectType } from '@/lib/utils'
 import TopBar from '@/components/TopBar'
 
 interface RevealsPageProps {
@@ -134,7 +135,7 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   {reveal.project_type && (
                     <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
-                      {reveal.project_type}
+                      {formatProjectType(reveal.project_type)}
                     </span>
                   )}
                   {reveal.city && (

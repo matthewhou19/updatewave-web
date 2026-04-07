@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { formatRelativeTime, maskStreetNumber } from '@/lib/utils'
+import { formatRelativeTime, formatProjectType, maskStreetNumber } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project
@@ -71,7 +71,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         {project.project_type && (
           <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
-            {project.project_type}
+            {formatProjectType(project.project_type)}
           </span>
         )}
         {project.city && (
