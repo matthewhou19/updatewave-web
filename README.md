@@ -26,6 +26,8 @@ No registration. Hash in URL = identity.
 ```
 src/
   app/
+    page.tsx                  # Public homepage: all project listings
+    not-found.tsx             # Custom 404 page
     browse/[hash]/page.tsx    # Server component: project list
     reveals/[hash]/page.tsx   # Server component: past reveals
     api/create-checkout/      # Stripe Checkout session
@@ -37,7 +39,11 @@ src/
   lib/
     supabase.ts               # Supabase client factories
     stripe.ts                 # Stripe client factory
+    queries.ts                # Database query helpers
+    utils.ts                  # Shared utilities
     types.ts                  # TypeScript interfaces
+scripts/
+  setup-local.sh              # One-command local dev setup
 supabase/
   schema.sql                  # Database schema (tables, indexes, RLS)
   seed-test-data.sql          # Test data for development
@@ -103,6 +109,10 @@ Scripts live in the [updatewave](https://github.com/matthewhou19/updatewave) rep
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for release history.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
 
 ## Security
 

@@ -40,6 +40,13 @@ Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERV
 - `npm run dev` — local development
 - `npm run build` — production build
 - `npm run lint` — ESLint check
+- `npm test` — unit + integration tests (Vitest)
+- `npm run test:watch` — tests in watch mode
+- `npm run test:e2e` — E2E tests (Playwright, needs running dev server)
+- `npm run test:e2e:smoke` — post-deploy smoke tests against production
+- `npm run setup` — one-command local dev setup
+- `npm run stripe:listen` — forward Stripe webhooks to localhost
+- `npm run db:seed` — seed test data instructions
 
 ## Skill routing
 

@@ -24,8 +24,8 @@
 - **Pros:** Guarantees CI passes before production deploy. Safety net for the money path.
 - **Cons:** Slightly slower workflow (must wait for CI). Solo founder overhead is minimal.
 - **Context:** GitHub repo settings change, not code. One checkbox. Do after CI workflow is verified working for at least 1 week.
-- **Trigger:** After CI pipeline is stable and verified.
-- **Depends on:** CI/CD pipeline (this plan) must be working first.
+- **Trigger:** CI pipeline is now stable and verified (full green run 2026-04-06: 64 unit + 12 E2E + 3 smoke tests passing). Ready to enable.
+- **Depends on:** CI/CD pipeline (this plan) must be working first. ✅ Done.
 
 ## Pagination
 - **What:** Add LIMIT/OFFSET or cursor-based pagination to project queries on browse pages.
