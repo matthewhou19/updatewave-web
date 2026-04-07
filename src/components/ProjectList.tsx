@@ -124,12 +124,12 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
           </legend>
           <div className="space-y-1">
             {allCities.map((city) => (
-              <label key={city} className="flex items-center gap-2 cursor-pointer">
+              <label key={city} className="flex items-center gap-2 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={filters.cities.includes(city)}
                   onChange={() => toggleCity(city)}
-                  className="accent-[#2563eb]"
+                  className="accent-[#2563eb] w-4 h-4"
                 />
                 <span className="text-sm text-[#111827]">{city}</span>
               </label>
@@ -145,12 +145,12 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
           </legend>
           <div className="space-y-1">
             {allProjectTypes.map((type) => (
-              <label key={type} className="flex items-center gap-2 cursor-pointer">
+              <label key={type} className="flex items-center gap-2 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={filters.projectTypes.includes(type)}
                   onChange={() => toggleProjectType(type)}
-                  className="accent-[#2563eb]"
+                  className="accent-[#2563eb] w-4 h-4"
                 />
                 <span className="text-sm text-[#111827]">{formatProjectType(type)}</span>
               </label>
