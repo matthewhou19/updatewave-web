@@ -163,7 +163,7 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
                       href={reveal.architect_website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#2563eb] hover:text-[#1d4ed8]"
+                      className="text-sm text-[#2563eb] hover:text-[#1d4ed8] break-all"
                     >
                       {reveal.architect_website}
                     </a>
