@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User, RevealWithProject } from '@/lib/types'
+import { fetchUserByHash } from '@/lib/queries'
 import TopBar from '@/components/TopBar'
 
 interface RevealsPageProps {
@@ -18,11 +19,7 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
   const supabase = createSupabaseServiceClient()
 
   // Validate hash
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('hash', hash)
-    .single()
+  const { user, error: userError } = await fetchUserByHash(supabase, hash)
 
   if (userError || !user) {
     return (

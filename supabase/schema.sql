@@ -35,7 +35,8 @@ CREATE TABLE users (
   city_filter TEXT,              -- preferred city for pre-filtering
   source_campaign TEXT,          -- which email campaign created this user
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  last_seen_at TIMESTAMPTZ
+  last_seen_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ         -- soft-delete: null = active, set = deleted
 );
 
 -- Reveals table (payment records, one per user+project)
@@ -105,3 +106,26 @@ ALTER TABLE reveals ENABLE ROW LEVEL SECURITY;
 
 -- Status log: service role only
 ALTER TABLE project_status_log ENABLE ROW LEVEL SECURITY;
+
+-- Auto-update reveal_count on projects when reveals are inserted or deleted.
+-- This replaces the manual read-then-write in the webhook handler, which was
+-- vulnerable to race conditions with concurrent webhooks.
+CREATE OR REPLACE FUNCTION update_reveal_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    UPDATE projects SET reveal_count = reveal_count + 1 WHERE id = NEW.project_id;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    UPDATE projects SET reveal_count = reveal_count - 1 WHERE id = OLD.project_id;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS reveals_update_count ON reveals;
+CREATE TRIGGER reveals_update_count
+  AFTER INSERT OR DELETE ON reveals
+  FOR EACH ROW
+  EXECUTE FUNCTION update_reveal_count();

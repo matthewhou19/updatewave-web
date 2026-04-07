@@ -2,27 +2,8 @@ import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { createStripeClient } from '@/lib/stripe'
 
-// In-memory rate limit store: hash -> { count, windowStart }
-const rateLimitStore = new Map<string, { count: number; windowStart: number }>()
-const RATE_LIMIT_MAX = 5
-const RATE_LIMIT_WINDOW_MS = 60 * 1000
-
-function isRateLimited(hash: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitStore.get(hash)
-
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitStore.set(hash, { count: 1, windowStart: now })
-    return false
-  }
-
-  if (entry.count >= RATE_LIMIT_MAX) {
-    return true
-  }
-
-  entry.count += 1
-  return false
-}
+// Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
+// not shared across instances). See TODOS.md for Upstash Redis migration plan.
 
 export async function POST(request: NextRequest) {
   let body: unknown
@@ -42,11 +23,6 @@ export async function POST(request: NextRequest) {
   }
 
   const { hash, projectId } = body as { hash: string; projectId: number }
-
-  // Rate limiting
-  if (isRateLimited(hash)) {
-    return Response.json({ error: 'Too many requests. Please wait a moment.' }, { status: 429 })
-  }
 
   const supabase = createSupabaseServiceClient()
 
@@ -90,7 +66,8 @@ export async function POST(request: NextRequest) {
 
   // Create Stripe Checkout session
   const stripe = createStripeClient()
-  const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  // Use env-based URL, never trust Origin header (open redirect risk)
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   const session = await stripe.checkout.sessions.create({
     line_items: [

@@ -1,5 +1,5 @@
 import { createSupabaseClient } from '@/lib/supabase'
-import { Project } from '@/lib/types'
+import { fetchPublishedProjects } from '@/lib/queries'
 import ProjectList from '@/components/ProjectList'
 
 export const dynamic = 'force-dynamic'
@@ -7,11 +7,7 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const supabase = createSupabaseClient()
 
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('status', 'published')
-    .order('filing_date', { ascending: false })
+  const { projects } = await fetchPublishedProjects(supabase)
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
@@ -32,7 +28,7 @@ export default async function Home() {
       </div>
 
       <ProjectList
-        projects={(projects ?? []) as Project[]}
+        projects={projects}
         revealedProjectIds={[]}
       />
 

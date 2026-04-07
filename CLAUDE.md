@@ -11,7 +11,7 @@ Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $
 ## Architecture
 - `/browse/[hash]` — main browsing page (server component + client filter component)
 - `/reveals/[hash]` — past reveals page (server component)
-- `/api/create-checkout` — Stripe Checkout session creation (rate limited 5/min per hash)
+- `/api/create-checkout` — Stripe Checkout session creation (no rate limiting; see TODOS.md)
 - `/api/webhook` — Stripe webhook handler (idempotent via UNIQUE constraint)
 
 ## Database
@@ -40,3 +40,23 @@ Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERV
 - `npm run dev` — local development
 - `npm run build` — production build
 - `npm run lint` — ESLint check
+
+## Skill routing
+
+When the user's request matches an available skill, ALWAYS invoke it using the Skill
+tool as your FIRST action. Do NOT answer directly, do NOT use other tools first.
+The skill has specialized workflows that produce better results than ad-hoc answers.
+
+Key routing rules:
+- Product ideas, "is this worth building", brainstorming → invoke office-hours
+- Bugs, errors, "why is this broken", 500 errors → invoke investigate
+- Ship, deploy, push, create PR → invoke ship
+- QA, test the site, find bugs → invoke qa
+- Code review, check my diff → invoke review
+- Update docs after shipping → invoke document-release
+- Weekly retro → invoke retro
+- Design system, brand → invoke design-consultation
+- Visual audit, design polish → invoke design-review
+- Architecture review → invoke plan-eng-review
+- Save progress, checkpoint, resume → invoke checkpoint
+- Code quality, health check → invoke health

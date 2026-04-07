@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
+import { formatRelativeTime } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project
@@ -10,23 +11,9 @@ interface ProjectCardProps {
   justRevealed?: boolean  // true if this card was just purchased (post-payment redirect)
 }
 
-function formatRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'today'
-  if (diffDays === 1) return '1 day ago'
-  if (diffDays < 30) return `${diffDays} days ago`
-  const diffMonths = Math.floor(diffDays / 30)
-  if (diffMonths === 1) return '1 month ago'
-  if (diffMonths < 12) return `${diffMonths} months ago`
-  const diffYears = Math.floor(diffMonths / 12)
-  if (diffYears === 1) return '1 year ago'
-  return `${diffYears} years ago`
-}
+// formatRelativeTime extracted to @/lib/utils for testability and reuse.
+// Re-export for backwards compatibility.
+export { formatRelativeTime } from '@/lib/utils'
 
 export default function ProjectCard({ project, isRevealed, hash, justRevealed }: ProjectCardProps) {
   const [loading, setLoading] = useState(false)

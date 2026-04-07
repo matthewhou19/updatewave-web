@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Project } from '@/lib/types'
+import { matchesValueRange } from '@/lib/utils'
 import ProjectCard from './ProjectCard'
 
 interface ProjectListProps {
@@ -38,14 +39,9 @@ function loadFilters(): Filters {
   return { cities: [], projectTypes: [], valueRange: 'any' }
 }
 
-function matchesValueRange(cents: number | null, range: string): boolean {
-  if (range === 'any' || cents === null) return true
-  if (range === 'under500k') return cents < 50_000_000
-  if (range === '500k-1m') return cents >= 50_000_000 && cents < 100_000_000
-  if (range === '1m-5m') return cents >= 100_000_000 && cents < 500_000_000
-  if (range === 'over5m') return cents >= 500_000_000
-  return true
-}
+// matchesValueRange extracted to @/lib/utils for testability and reuse.
+// Re-export for backwards compatibility.
+export { matchesValueRange } from '@/lib/utils'
 
 function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListProps) {
   const searchParams = useSearchParams()

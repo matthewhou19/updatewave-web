@@ -9,39 +9,15 @@
  * Deduplicates by (address, city) — skips rows that already exist.
  */
 
+import 'dotenv/config'
 import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'fs'
 import { resolve } from 'path'
 
 // ---------------------------------------------------------------------------
-// Load .env.local (minimal parser, no external deps)
-// ---------------------------------------------------------------------------
-function loadEnvLocal(): void {
-  const envPath = resolve(__dirname, '..', '.env.local')
-  let content: string
-  try {
-    content = readFileSync(envPath, 'utf-8')
-  } catch {
-    console.error('ERROR: .env.local not found at', envPath)
-    process.exit(1)
-  }
-  for (const line of content.split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eqIdx = trimmed.indexOf('=')
-    if (eqIdx === -1) continue
-    const key = trimmed.slice(0, eqIdx).trim()
-    const value = trimmed.slice(eqIdx + 1).trim()
-    if (!process.env[key]) {
-      process.env[key] = value
-    }
-  }
-}
-
-// ---------------------------------------------------------------------------
 // CSV parser (handles quoted fields with commas)
 // ---------------------------------------------------------------------------
-function parseCSVLine(line: string): string[] {
+export function parseCSVLine(line: string): string[] {
   const fields: string[] = []
   let current = ''
   let inQuotes = false
@@ -72,7 +48,7 @@ function parseCSVLine(line: string): string[] {
   return fields
 }
 
-function parseCSV(content: string): Record<string, string>[] {
+export function parseCSV(content: string): Record<string, string>[] {
   const lines = content.split('\n').filter((l) => l.trim().length > 0)
   if (lines.length === 0) return []
 
@@ -106,7 +82,7 @@ interface ProjectInsert {
   published_at: string
 }
 
-function mapRow(row: Record<string, string>): ProjectInsert {
+export function mapRow(row: Record<string, string>): ProjectInsert {
   return {
     city: row.city || 'Unknown',
     address: row.address || '',
@@ -125,8 +101,6 @@ function mapRow(row: Record<string, string>): ProjectInsert {
 // Main
 // ---------------------------------------------------------------------------
 async function main(): Promise<void> {
-  loadEnvLocal()
-
   const args = process.argv.slice(2)
   const dryRun = args.includes('--dry-run')
   const csvPath = args.find((a) => !a.startsWith('--'))
@@ -235,7 +209,10 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((err) => {
-  console.error('FATAL:', err)
-  process.exit(1)
-})
+// Only run when executed as a script, not when imported for testing
+if (!process.env.VITEST) {
+  main().catch((err) => {
+    console.error('FATAL:', err)
+    process.exit(1)
+  })
+}

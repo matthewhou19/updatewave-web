@@ -1,5 +1,6 @@
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { Project, User } from '@/lib/types'
+import { User } from '@/lib/types'
+import { fetchPublishedProjects, fetchUserByHash, fetchUserReveals, fetchArchitectData, mergeArchitectData } from '@/lib/queries'
 import TopBar from '@/components/TopBar'
 import ProjectList from '@/components/ProjectList'
 
@@ -12,11 +13,7 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
   const supabase = createSupabaseServiceClient()
 
   // Validate hash
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('hash', hash)
-    .single()
+  const { user, error: userError } = await fetchUserByHash(supabase, hash)
 
   if (userError || !user) {
     return (
@@ -37,26 +34,17 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
     .eq('id', typedUser.id)
     .then(() => {})
 
-  // Fetch published projects
-  const { data: projects } = await supabase
-    .from('projects')
-    .select('*')
-    .eq('status', 'published')
-    .order('filing_date', { ascending: false })
-
-  // Fetch this user's reveals
-  const { data: reveals } = await supabase
-    .from('reveals')
-    .select('project_id')
-    .eq('user_id', typedUser.id)
-
-  const revealedProjectIds = (reveals ?? []).map((r: { project_id: number }) => r.project_id)
+  // Fetch projects + reveals + architect data using query helpers
+  const { projects } = await fetchPublishedProjects(supabase)
+  const { revealedProjectIds } = await fetchUserReveals(supabase, typedUser.id)
+  const architectData = await fetchArchitectData(supabase, revealedProjectIds)
+  const sanitizedProjects = mergeArchitectData(projects, architectData)
 
   return (
     <div className="min-h-screen bg-[#f5f5f5]">
       <TopBar hash={hash} view="browse" />
       <ProjectList
-        projects={(projects ?? []) as Project[]}
+        projects={sanitizedProjects}
         revealedProjectIds={revealedProjectIds}
         hash={hash}
       />
