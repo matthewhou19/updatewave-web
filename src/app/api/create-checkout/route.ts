@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
 
   // Create Stripe Checkout session
   const stripe = createStripeClient()
-  const origin = request.headers.get('origin') || process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'
+  // Use env-based URL, never trust Origin header (open redirect risk)
+  const origin = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
 
   const session = await stripe.checkout.sessions.create({
     line_items: [

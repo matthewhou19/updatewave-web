@@ -124,6 +124,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS reveals_update_count ON reveals;
 CREATE TRIGGER reveals_update_count
   AFTER INSERT OR DELETE ON reveals
   FOR EACH ROW

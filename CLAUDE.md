@@ -11,7 +11,7 @@ Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $
 ## Architecture
 - `/browse/[hash]` — main browsing page (server component + client filter component)
 - `/reveals/[hash]` — past reveals page (server component)
-- `/api/create-checkout` — Stripe Checkout session creation (rate limited 5/min per hash)
+- `/api/create-checkout` — Stripe Checkout session creation (no rate limiting; see TODOS.md)
 - `/api/webhook` — Stripe webhook handler (idempotent via UNIQUE constraint)
 
 ## Database
