@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Project } from '@/lib/types'
-import { matchesValueRange, formatProjectType } from '@/lib/utils'
+import { formatProjectType } from '@/lib/utils'
 import ProjectCard from './ProjectCard'
 
 interface ProjectListProps {
@@ -15,39 +15,26 @@ interface ProjectListProps {
 interface Filters {
   cities: string[]
   projectTypes: string[]
-  valueRange: string
 }
-
-const VALUE_RANGES = [
-  { label: 'Any value', value: 'any' },
-  { label: 'Under $500K', value: 'under500k' },
-  { label: '$500K – $1M', value: '500k-1m' },
-  { label: '$1M – $5M', value: '1m-5m' },
-  { label: 'Over $5M', value: 'over5m' },
-]
 
 const STORAGE_KEY = 'uw_filters'
 
 function loadFilters(): Filters {
-  if (typeof window === 'undefined') return { cities: [], projectTypes: [], valueRange: 'any' }
+  if (typeof window === 'undefined') return { cities: [], projectTypes: [] }
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) return JSON.parse(stored) as Filters
   } catch {
     // ignore parse errors
   }
-  return { cities: [], projectTypes: [], valueRange: 'any' }
+  return { cities: [], projectTypes: [] }
 }
-
-// matchesValueRange extracted to @/lib/utils for testability and reuse.
-// Re-export for backwards compatibility.
-export { matchesValueRange } from '@/lib/utils'
 
 function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListProps) {
   const searchParams = useSearchParams()
   const justRevealedId = searchParams.get('revealed') ? parseInt(searchParams.get('revealed')!, 10) : null
   const [showMobileFilters, setShowMobileFilters] = useState(false)
-  const [filters, setFilters] = useState<Filters>({ cities: [], projectTypes: [], valueRange: 'any' })
+  const [filters, setFilters] = useState<Filters>({ cities: [], projectTypes: [] })
   const filtersLoaded = useRef(false)
 
   // Load filters from localStorage after hydration (can't read localStorage during SSR)
@@ -55,7 +42,7 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
     if (!filtersLoaded.current) {
       filtersLoaded.current = true
       const stored = loadFilters()
-      if (stored.cities.length > 0 || stored.projectTypes.length > 0 || stored.valueRange !== 'any') {
+      if (stored.cities.length > 0 || stored.projectTypes.length > 0) {
         // eslint-disable-next-line react-hooks/set-state-in-effect -- localStorage sync requires post-hydration setState
         setFilters(stored)
       }
@@ -85,7 +72,6 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
     return projects.filter((p) => {
       if (filters.cities.length > 0 && !filters.cities.includes(p.city)) return false
       if (filters.projectTypes.length > 0 && (!p.project_type || !filters.projectTypes.includes(p.project_type))) return false
-      if (!matchesValueRange(p.estimated_value_cents, filters.valueRange)) return false
       return true
     })
   }, [projects, filters])
@@ -109,10 +95,10 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
   }
 
   function clearFilters() {
-    setFilters({ cities: [], projectTypes: [], valueRange: 'any' })
+    setFilters({ cities: [], projectTypes: [] })
   }
 
-  const hasActiveFilters = filters.cities.length > 0 || filters.projectTypes.length > 0 || filters.valueRange !== 'any'
+  const hasActiveFilters = filters.cities.length > 0 || filters.projectTypes.length > 0
   const revealedSet = new Set(revealedProjectIds)
 
   const filterPanel = (
@@ -159,23 +145,6 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
         </fieldset>
       )}
 
-      <div>
-        <label className="text-xs font-semibold text-[#6b7280] uppercase tracking-wide mb-2 block">
-          Estimated Value
-        </label>
-        <select
-          value={filters.valueRange}
-          onChange={(e) => setFilters((prev) => ({ ...prev, valueRange: e.target.value }))}
-          className="w-full text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#2563eb]"
-        >
-          {VALUE_RANGES.map((r) => (
-            <option key={r.value} value={r.value}>
-              {r.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
@@ -195,7 +164,7 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
           onClick={() => setShowMobileFilters(!showMobileFilters)}
           className="w-full text-sm font-medium text-[#111827] bg-white border border-gray-200 rounded-md px-4 py-2.5 flex items-center justify-between"
         >
-          <span>Filters {hasActiveFilters ? `(${filters.cities.length + filters.projectTypes.length + (filters.valueRange !== 'any' ? 1 : 0)})` : ''}</span>
+          <span>Filters {hasActiveFilters ? `(${filters.cities.length + filters.projectTypes.length})` : ''}</span>
           <span>{showMobileFilters ? '▲' : '▼'}</span>
         </button>
         {showMobileFilters && (
