@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test'
 // E2E tests use a real Supabase instance. The test hash must exist in the users table.
 // In CI, these run against the dev server connected to the same Supabase as production.
 // We use a known production user hash from seed data, or skip gracefully.
-const TEST_HASH = 'test_abcdefghijklmnopqrstuvwxyz1234567890A'
+const TEST_HASH = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
 
 test.describe('Reveal flow', () => {
   test('clicking Reveal triggers checkout API call', async ({ page }) => {

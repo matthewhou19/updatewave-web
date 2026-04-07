@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test'
 
-const TEST_HASH = 'test_abcdefghijklmnopqrstuvwxyz1234567890A'
+const TEST_HASH = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
 
 test.describe('Public browse (homepage)', () => {
   test('renders published projects', async ({ page }) => {
@@ -59,12 +59,12 @@ test.describe('Authenticated browse', () => {
     }
 
     // Get the full page HTML — architect data should NOT appear for unrevealed projects.
-    // The test hash has 1 revealed project (336 SPRINGER RD / Jia Liu).
-    // Other architects like "David Chen", "Sarah Kim" should NOT be in the HTML.
+    // User 6 has revealed project 12 (1222 OAK KNOLL DR / JENNY WONG).
+    // Other architects should NOT be in the HTML.
     const html = await page.content()
     // These architects are in the test data but NOT revealed by the test user
-    expect(html).not.toContain('David Chen')
-    expect(html).not.toContain('Sarah Kim')
-    expect(html).not.toContain('Roberto Martinez')
+    expect(html).not.toContain('MICHELLE MINER')
+    expect(html).not.toContain('TONY ROWE')
+    expect(html).not.toContain('Ninh Le')
   })
 })
