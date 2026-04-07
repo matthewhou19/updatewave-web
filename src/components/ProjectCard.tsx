@@ -106,7 +106,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
               href={project.architect_website}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-[#2563eb] hover:text-[#1d4ed8]"
+              className="text-sm text-[#2563eb] hover:text-[#1d4ed8] break-all"
             >
               {project.architect_website}
             </a>
