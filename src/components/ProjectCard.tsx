@@ -127,7 +127,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
               <button
                 onClick={handleReveal}
                 disabled={loading}
-                className="flex-shrink-0 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#93c5fd] text-white text-sm font-medium rounded-md transition-colors cursor-pointer disabled:cursor-wait min-w-[120px] text-center"
+                className="flex-shrink-0 px-4 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#93c5fd] text-white text-sm font-medium rounded-md transition-colors cursor-pointer disabled:cursor-wait min-w-[120px] text-center"
               >
                 {loading ? 'Processing...' : 'Reveal · $25'}
               </button>
