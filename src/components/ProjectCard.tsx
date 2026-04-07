@@ -63,7 +63,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
         <span className="font-bold text-[16px] text-[#111827] leading-snug">
           {isRevealed ? project.address : maskStreetNumber(project.address)}
         </span>
-        <span className="text-xs text-[#71717a] whitespace-nowrap mt-0.5 flex-shrink-0">
+        <span className="text-xs text-[#9ca3af] whitespace-nowrap mt-0.5 flex-shrink-0">
           {formatRelativeTime(project.filing_date)}
         </span>
       </div>
@@ -112,7 +112,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
             </a>
           )}
           {project.architect_website && (
-            <p className="text-xs text-[#71717a] mt-1">Visit their website to see their portfolio →</p>
+            <p className="text-xs text-[#9ca3af] mt-1">Visit their website to see their portfolio →</p>
           )}
         </div>
       ) : (
@@ -138,14 +138,14 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
             )}
           </div>
           {loading && hash && (
-            <p className="text-xs text-[#71717a] mt-2">
+            <p className="text-xs text-[#9ca3af] mt-2">
               You&apos;ll be redirected to Stripe to complete payment. You&apos;ll return here automatically.
             </p>
           )}
         </div>
       )}
 
-      <p className="text-xs text-[#71717a] mt-3">
+      <p className="text-xs text-[#9ca3af] mt-3">
         {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
       </p>
     </div>

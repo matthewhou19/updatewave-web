@@ -189,7 +189,7 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
           {filteredProjects.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-[#6b7280] mb-1">No projects match your filters.</p>
-              <p className="text-sm text-[#71717a]">Try adjusting your city or project type.</p>
+              <p className="text-sm text-[#9ca3af]">Try adjusting your city or project type.</p>
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
