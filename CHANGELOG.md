@@ -2,6 +2,12 @@
 
 All notable changes to UpdateWave Web will be documented in this file.
 
+## [0.1.2] — 2026-04-07
+
+### Changed
+- Unrevealed project cards now mask the street number (e.g. "802 COLLEEN DR" → "••• COLLEEN DR") so GCs can see the street and neighborhood but must reveal to get the exact address
+- Project cards now display the permit description when available, giving GCs more context before they reveal
+
 ## [0.1.1] — 2026-04-07
 
 ### Added

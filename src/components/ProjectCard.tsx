@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Project } from '@/lib/types'
-import { formatRelativeTime } from '@/lib/utils'
+import { formatRelativeTime, formatProjectType, maskStreetNumber } from '@/lib/utils'
 
 interface ProjectCardProps {
   project: Project
@@ -61,7 +61,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
 
       <div className="flex items-start justify-between gap-2 mb-2">
         <span className="font-bold text-[16px] text-[#111827] leading-snug">
-          {project.address}
+          {isRevealed ? project.address : maskStreetNumber(project.address)}
         </span>
         <span className="text-xs text-[#71717a] whitespace-nowrap mt-0.5 flex-shrink-0">
           {formatRelativeTime(project.filing_date)}
@@ -71,7 +71,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
       <div className="flex items-center gap-2 mb-3 flex-wrap">
         {project.project_type && (
           <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
-            {project.project_type}
+            {formatProjectType(project.project_type)}
           </span>
         )}
         {project.city && (
@@ -84,19 +84,20 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
         )}
       </div>
 
+      {project.description && (
+        <p className="text-sm text-[#374151] mb-3 leading-relaxed">{project.description}</p>
+      )}
+
       {isRevealed ? (
         <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            {project.architect_name && (
-              <span className="font-bold text-sm text-[#111827]">{project.architect_name}</span>
+            {project.architect_firm && (
+              <span className="font-bold text-sm text-[#111827]">{project.architect_firm}</span>
             )}
             <span className="inline-block px-2 py-0.5 text-xs font-medium bg-[#16a34a]/10 text-[#16a34a] rounded-full">
               ✓ Revealed
             </span>
           </div>
-          {project.architect_firm && (
-            <p className="text-sm text-[#6b7280]">{project.architect_firm}</p>
-          )}
           {project.architect_contact && (
             <p className="text-sm text-[#6b7280]">{project.architect_contact}</p>
           )}
