@@ -7,6 +7,16 @@ All notable changes to UpdateWave Web will be documented in this file.
 ### Changed
 - Unrevealed project cards now mask the street number (e.g. "802 COLLEEN DR" → "••• COLLEEN DR") so GCs can see the street and neighborhood but must reveal to get the exact address
 - Project cards now display the permit description when available, giving GCs more context before they reveal
+- Revealed projects now show architect firm and website only (architect name removed from display)
+- Project type labels formatted from snake_case to Title Case ("new_construction" → "New Construction")
+- Increased checkbox and label touch targets in filter sidebar for better mobile usability
+
+### Added
+- Keyboard-accessible focus ring (`:focus-visible`) on all interactive elements
+- Unit tests for `formatProjectType` (4 cases) and `maskStreetNumber` (8 cases)
+
+### Fixed
+- E2E tests now skip gracefully when seed data is missing instead of failing
 
 ## [0.1.1] — 2026-04-07
 
