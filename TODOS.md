@@ -35,3 +35,42 @@
 - **Context:** Both pages use `select('*').eq('status', 'published').order('filing_date', ...)` with no limit. Supabase handles hundreds of rows in single-digit ms, so this is not urgent.
 - **Trigger:** When project count exceeds 100.
 - **Depends on:** Nothing. Independent workstream.
+
+## Design Polish — Deferred from 2026-04-07 Audit
+
+Design audit scored the site B- → B+ after fixing all 4 high-impact findings. These 5 remain:
+
+### Skip-Navigation Link (FINDING-005, medium, a11y)
+- **What:** Add a hidden "Skip to main content" link as the first focusable element on every page.
+- **Why:** Screen reader and keyboard-only users currently have to tab through TopBar and filters to reach project cards. WCAG 2.4.1 requires a skip mechanism.
+- **Effort:** Small. One component added to layout.tsx.
+
+### Filter Checkbox Touch Targets (FINDING-006, medium, interaction)
+- **What:** Increase filter checkbox label height to 44px minimum on mobile.
+- **Why:** Current `py-1` labels are ~32px. On mobile, users will mis-tap adjacent filters. WCAG 2.5.8 target size.
+- **Effort:** Small. Change `py-1` to `py-2` on checkbox labels in ProjectList.tsx.
+
+### Unused CSS Custom Properties (FINDING-008, polish, color)
+- **What:** Remove unused `--background`, `--foreground` etc. CSS variables from globals.css, or adopt them in Tailwind config.
+- **Why:** Dead code. Defined but never referenced. Confusing for anyone reading the stylesheet.
+- **Effort:** Trivial. Delete or wire up.
+
+### Duplicate Font Family Declaration (FINDING-009, polish, typography)
+- **What:** Font family is set in both globals.css `body {}` and Tailwind's `theme.fontFamily`. Pick one.
+- **Why:** Redundant. If Tailwind config changes, the CSS override will mask it silently.
+- **Effort:** Trivial. Remove one declaration.
+
+### Arbitrary Font Sizes (FINDING-010, polish, typography)
+- **What:** Replace `text-[16px]` with Tailwind's `text-base` (which is 16px/1rem).
+- **Why:** Arbitrary values bypass the type scale and make future changes harder. `text-base` is semantically equivalent.
+- **Effort:** Trivial. Find-and-replace in ProjectCard.tsx and reveals page.
+
+### Reveal Button Missing Accessible Context (subagent finding, high, a11y)
+- **What:** Add `aria-describedby` on the Reveal button linking it to the blurred placeholder, so screen readers announce WHAT is being revealed, not just "Reveal · $25".
+- **Where:** `ProjectCard.tsx:127-133`. The adjacent blur div already has `aria-label="Architect details hidden"` but is not linked.
+- **Effort:** Small. Add an `id` to the blur div and `aria-describedby` to the button.
+
+### Links Lack Non-Color Distinction (subagent finding, high, a11y)
+- **What:** Architect website links rely solely on blue color to distinguish from surrounding text. WCAG 1.4.1 requires a non-color indicator (underline, bold, icon).
+- **Where:** `ProjectCard.tsx:105-112`, `reveals/[hash]/page.tsx:162-169`.
+- **Effort:** Small. Add `underline` or `hover:underline` class to link elements.
