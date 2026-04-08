@@ -52,9 +52,9 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
   }
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 border ${justRevealed ? 'border-[#16a34a] ring-2 ring-[#16a34a]/20' : 'border-gray-100'}`}>
+    <div className={`bg-white rounded-lg shadow-sm p-4 border ${justRevealed ? 'border-[#16a34a] ring-2 ring-[#16a34a]/20' : 'border-gray-100'}`} data-testid={justRevealed ? 'just-revealed-card' : undefined}>
       {justRevealed && (
-        <div className="mb-3 px-3 py-1.5 bg-[#16a34a]/10 rounded text-sm text-[#16a34a] font-medium">
+        <div className="mb-3 px-3 py-1.5 bg-[#16a34a]/10 rounded text-sm text-[#16a34a] font-medium" data-testid="just-revealed-banner">
           ✓ Architect info revealed!
         </div>
       )}

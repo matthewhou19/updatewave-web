@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-const TEST_HASH = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
+import { TEST_HASH } from './fixtures'
 
 test.describe('Public browse (homepage)', () => {
   test('renders published projects', async ({ page }) => {
