@@ -23,6 +23,18 @@ VALUES
   ('Mountain View', '450 CASTRO ST', 'Site Development', 85000000, '$850K', 'Roberto Martinez', NULL, NULL, NULL, 1006, '2025-03-30', NULL, 'published', now()),
   ('Los Altos', '100 MAIN ST', 'Design Review Multi-Family', NULL, NULL, 'Tom Wright', 'Wright Residential', NULL, 'https://wrightresidential.com', 1007, '2025-04-03', NULL, 'published', now());
 
+-- Second test user with zero reveals (for empty state E2E test)
+INSERT INTO users (hash, name, company, email, city_filter, source_campaign)
+VALUES (
+  'empty_reveals_test_user_hash_000000000000',
+  'Test Empty User',
+  'No Reveals Corp',
+  'empty@test.local',
+  'Los Altos',
+  'test'
+)
+ON CONFLICT (hash) DO NOTHING;
+
 -- Insert a test reveal so /reveals/{hash} has data to render.
 -- Uses the first project (336 SPRINGER RD) for the test user.
 INSERT INTO reveals (user_id, project_id, stripe_payment_id, amount_cents)

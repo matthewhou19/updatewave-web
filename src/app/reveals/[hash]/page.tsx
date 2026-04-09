@@ -108,7 +108,7 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
         </h1>
 
         {revealList.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="text-center py-16" data-testid="empty-reveals">
             <p className="text-[#6b7280] mb-4">You haven&apos;t revealed any projects yet.</p>
             <Link
               href={`/browse/${hash}`}

@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test'
-
-// E2E tests use a real Supabase instance. The test hash must exist in the users table.
-// In CI, these run against the dev server connected to the same Supabase as production.
-// We use a known production user hash from seed data, or skip gracefully.
-const TEST_HASH = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
+import { TEST_HASH, TEST_REVEALED_PROJECT_ID } from './fixtures'
 
 test.describe('Reveal flow', () => {
   test('clicking Reveal triggers checkout API call', async ({ page }) => {
@@ -98,5 +94,21 @@ test.describe('Post-reveal experience', () => {
 
     // If we see "Revealed", there should also be architect info visible somewhere
     await expect(revealedBadge).toBeVisible()
+  })
+})
+
+test.describe('Post-payment highlight', () => {
+  test('?revealed= query param highlights card with banner', async ({ page }) => {
+    // Navigate with revealed query param (ENG-2: Suspense hydration — use auto-retry)
+    await page.goto(`/browse/${TEST_HASH}?revealed=${TEST_REVEALED_PROJECT_ID}`)
+
+    // Wait for client hydration past Suspense boundary
+    const card = page.locator('[data-testid="just-revealed-card"]')
+    await expect(card).toBeVisible({ timeout: 10_000 })
+
+    // Assert banner text is visible within the card (ENG-3)
+    const banner = card.locator('[data-testid="just-revealed-banner"]')
+    await expect(banner).toBeVisible()
+    await expect(banner).toContainText('Architect info revealed')
   })
 })

@@ -14,6 +14,7 @@ export default function TopBar({ hash, view }: TopBarProps) {
           <Link
             href={`/reveals/${hash}`}
             className="text-sm text-[#2563eb] hover:text-[#1d4ed8] font-medium"
+            data-testid="topbar-link-reveals"
           >
             My Reveals →
           </Link>
@@ -21,6 +22,7 @@ export default function TopBar({ hash, view }: TopBarProps) {
           <Link
             href={`/browse/${hash}`}
             className="text-sm text-[#2563eb] hover:text-[#1d4ed8] font-medium"
+            data-testid="topbar-link-browse"
           >
             ← Browse more projects
           </Link>

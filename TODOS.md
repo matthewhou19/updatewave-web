@@ -74,3 +74,12 @@ Design audit scored the site B- → B+ after fixing all 4 high-impact findings. 
 - **What:** Architect website links rely solely on blue color to distinguish from surrounding text. WCAG 1.4.1 requires a non-color indicator (underline, bold, icon).
 - **Where:** `ProjectCard.tsx:105-112`, `reveals/[hash]/page.tsx:162-169`.
 - **Effort:** Small. Add `underline` or `hover:underline` class to link elements.
+
+## E2E Test Selector Migration — data-testid
+- **What:** Migrate existing E2E selectors from CSS class matching (`[class*="bg-white rounded-lg"]`) to `data-testid` attributes across `browse.spec.ts`, `reveal.spec.ts`, and `filters.spec.ts`.
+- **Why:** CSS selectors break when styling changes (dark mode, Tailwind version bump, design polish). `data-testid` is behavior-stable. New tests already use `data-testid`, creating a split in selector strategies that confuses future test authors.
+- **Pros:** All tests use one selector strategy. Styling changes never break tests. Cleaner test code.
+- **Cons:** Requires adding `data-testid` to more components (ProjectCard on browse page, filter elements). ~20 min of work.
+- **Context:** New tests from the test gap close plan (2026-04-07) use `data-testid` exclusively. Existing tests still use `[class*=...]`. The split is manageable now (4 files) but will compound with each new test file.
+- **Trigger:** Next time E2E tests touch `browse.spec.ts` or `filters.spec.ts`.
+- **Depends on:** data-testid attributes from the test gap close plan must land first.
