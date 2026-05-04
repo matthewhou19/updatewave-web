@@ -1,5 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getCurrentUser } from '@/lib/auth'
 import { createStripeClient } from '@/lib/stripe'
 import { resolveUserByHash } from '@/lib/queries'
 
@@ -17,21 +19,38 @@ export async function POST(request: NextRequest) {
   if (
     typeof body !== 'object' ||
     body === null ||
-    typeof (body as Record<string, unknown>).hash !== 'string' ||
     typeof (body as Record<string, unknown>).projectId !== 'number'
   ) {
-    return Response.json({ error: 'Missing or invalid fields: hash, projectId' }, { status: 400 })
+    return Response.json({ error: 'Missing or invalid field: projectId' }, { status: 400 })
   }
 
-  const { hash, projectId } = body as { hash: string; projectId: number }
+  const rawHash = (body as Record<string, unknown>).hash
+  const requestedHash = typeof rawHash === 'string' && rawHash.length > 0 ? rawHash : null
+  const { projectId } = body as { projectId: number }
 
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash -> get user (filters on deleted_at IS NULL)
-  const { user, error: userError } = await resolveUserByHash(supabase, hash)
-
-  if (userError || !user) {
-    return Response.json({ error: 'Invalid link.' }, { status: 403 })
+  // Two entry paths:
+  //   - Hash from URL (cold-email funnel): existing behavior, takes precedence.
+  //   - Cookie session (logged-in user): resolved via getCurrentUser, then we
+  //     reuse the same downstream flow with the user's hash.
+  let hash: string
+  let user: { id: number; hash: string } | null
+  if (requestedHash) {
+    hash = requestedHash
+    const result = await resolveUserByHash(supabase, hash)
+    user = result.user
+    if (result.error || !user) {
+      return Response.json({ error: 'Invalid link.' }, { status: 403 })
+    }
+  } else {
+    const cookieClient = await createSupabaseServerClient()
+    const sessionUser = await getCurrentUser(cookieClient)
+    if (!sessionUser) {
+      return Response.json({ error: 'Not signed in.' }, { status: 401 })
+    }
+    user = { id: sessionUser.id, hash: sessionUser.hash }
+    hash = sessionUser.hash
   }
 
   // Validate project exists and is published

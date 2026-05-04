@@ -1,12 +1,19 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
+import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getCurrentUser } from '@/lib/auth'
 import { createStripeClient } from '@/lib/stripe'
 import { fetchCityList, fetchListPurchase, resolveUserByHash } from '@/lib/queries'
 
 /**
  * Create a Stripe Checkout session for a city list purchase.
  *
- * Body: { hash: string, city: string }
+ * Body: { hash?: string, city: string }
+ *
+ * Two entry paths:
+ *   - Hash from URL (cold-email funnel): existing behavior, takes precedence.
+ *   - Cookie session (logged-in user): resolved via getCurrentUser, then we
+ *     reuse the user's hash for downstream metadata.
  *
  * Mirrors the existing /api/create-checkout (reveal) pattern:
  *   - inline price_data (unit_amount from city_lists.price_cents)
@@ -27,20 +34,34 @@ export async function POST(request: NextRequest) {
   if (
     typeof body !== 'object' ||
     body === null ||
-    typeof (body as Record<string, unknown>).hash !== 'string' ||
     typeof (body as Record<string, unknown>).city !== 'string'
   ) {
-    return Response.json({ error: 'Missing or invalid fields: hash, city' }, { status: 400 })
+    return Response.json({ error: 'Missing or invalid field: city' }, { status: 400 })
   }
 
-  const { hash, city } = body as { hash: string; city: string }
+  const rawHash = (body as Record<string, unknown>).hash
+  const requestedHash = typeof rawHash === 'string' && rawHash.length > 0 ? rawHash : null
+  const { city } = body as { city: string }
 
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash → get user (filters on deleted_at IS NULL)
-  const { user, error: userError } = await resolveUserByHash(supabase, hash)
-  if (userError || !user) {
-    return Response.json({ error: 'Invalid link.' }, { status: 403 })
+  let hash: string
+  let user: { id: number; hash: string } | null
+  if (requestedHash) {
+    hash = requestedHash
+    const result = await resolveUserByHash(supabase, hash)
+    user = result.user
+    if (result.error || !user) {
+      return Response.json({ error: 'Invalid link.' }, { status: 403 })
+    }
+  } else {
+    const cookieClient = await createSupabaseServerClient()
+    const sessionUser = await getCurrentUser(cookieClient)
+    if (!sessionUser) {
+      return Response.json({ error: 'Not signed in.' }, { status: 401 })
+    }
+    user = { id: sessionUser.id, hash: sessionUser.hash }
+    hash = sessionUser.hash
   }
 
   // Look up active city_list by slug
