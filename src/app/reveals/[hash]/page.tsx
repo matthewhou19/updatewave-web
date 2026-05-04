@@ -3,16 +3,11 @@ import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User, RevealWithProject } from '@/lib/types'
 import { fetchUserByHash } from '@/lib/queries'
 import { formatProjectType } from '@/lib/utils'
+import { formatDate } from '@/lib/format'
 import TopBar from '@/components/TopBar'
 
 interface RevealsPageProps {
   params: Promise<{ hash: string }>
-}
-
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return '—'
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
 export default async function RevealsPage({ params }: RevealsPageProps) {
