@@ -75,6 +75,15 @@ Design audit scored the site B- → B+ after fixing all 4 high-impact findings. 
 - **Where:** `ProjectCard.tsx:105-112`, `reveals/[hash]/page.tsx:162-169`.
 - **Effort:** Small. Add `underline` or `hover:underline` class to link elements.
 
+## Soft-Delete on Read Paths — fetchUserByHash
+- **What:** Add `.is('deleted_at', null)` filter to `fetchUserByHash` in `src/lib/queries.ts`.
+- **Why:** Migration 001 added `users.deleted_at` for soft-delete to prevent payment loss in webhooks, but the read paths (browse, reveals pages) still resolve deleted users. A deleted user can still see their browse/reveals pages with full data, even though they shouldn't exist anymore. Same root cause as the webhook gap, different blast radius.
+- **Pros:** One-line fix, propagates to all read callers via the helper. Makes soft-delete actually work consistently across the app.
+- **Cons:** Minor scope. Need regression tests for browse and reveals pages (deleted user → "link isn't valid" message).
+- **Context:** Discovered during /plan-eng-review for the SJ list product (2026-04-28). The webhook soft-delete gap is being fixed in that PR; this read-path gap was deemed out-of-scope to keep the PR tight. Read-only impact (deleted user sees their pages but can't pay), so lower urgency than the webhook fix.
+- **Trigger:** Anytime. Independent workstream from any other roadmap item.
+- **Depends on:** SJ list PR landing first (so the soft-delete pattern is consistent across webhook + read paths).
+
 ## E2E Test Selector Migration — data-testid
 - **What:** Migrate existing E2E selectors from CSS class matching (`[class*="bg-white rounded-lg"]`) to `data-testid` attributes across `browse.spec.ts`, `reveal.spec.ts`, and `filters.spec.ts`.
 - **Why:** CSS selectors break when styling changes (dark mode, Tailwind version bump, design polish). `data-testid` is behavior-stable. New tests already use `data-testid`, creating a split in selector strategies that confuses future test authors.

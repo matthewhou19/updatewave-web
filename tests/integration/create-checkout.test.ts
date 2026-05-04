@@ -8,6 +8,7 @@ function createMockSupabase() {
   const chain = {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
     single: vi.fn(),
     insert: vi.fn(),
   }
@@ -131,6 +132,9 @@ describe('POST /api/create-checkout', () => {
       expect.objectContaining({
         mode: 'payment',
         client_reference_id: `${TEST_USER.hash}:${TEST_PROJECT.id}`,
+        metadata: expect.objectContaining({
+          product_type: 'reveal',
+        }),
         line_items: expect.arrayContaining([
           expect.objectContaining({
             price_data: expect.objectContaining({
@@ -141,5 +145,19 @@ describe('POST /api/create-checkout', () => {
         ]),
       })
     )
+  })
+
+  it('soft-deleted user gets 403 (resolveUserByHash filters deleted_at IS NULL)', async () => {
+    // resolveUserByHash applies .is('deleted_at', null) — so a deleted user
+    // returns null from the chain. Mock that behavior here.
+    mockSupabase._chain.single.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'PGRST116', message: 'no rows' },
+    })
+
+    const res = await POST(makeRequest({ hash: TEST_USER.hash, projectId: TEST_PROJECT.id }))
+    expect(res.status).toBe(403)
+    // The chain should have been told to filter on deleted_at IS NULL
+    expect(mockSupabase._chain.is).toHaveBeenCalledWith('deleted_at', null)
   })
 })
