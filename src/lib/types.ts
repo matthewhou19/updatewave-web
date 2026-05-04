@@ -56,3 +56,34 @@ export interface RevealWithProject extends Reveal {
   source_url: string | null
   status: 'candidate' | 'published' | 'stale' | 'archived'
 }
+
+export interface CityList {
+  id: number
+  city: string
+  year: number
+  title: string
+  description: string | null
+  headline_insight: string | null
+  headline_insight_subtext: string | null
+  price_cents: number
+  anchor_price_cents: number | null
+  active: boolean
+  created_at: string
+  updated_at: string
+}
+
+export interface CityListWithStoragePath extends CityList {
+  pdf_storage_path: string
+}
+
+export interface ListPurchase {
+  id: number
+  user_id: number
+  city_list_id: number
+  stripe_session_id: string
+  stripe_payment_id: string | null
+  amount_cents: number
+  purchased_at: string
+}
+
+export type ProductType = 'reveal' | 'list'
