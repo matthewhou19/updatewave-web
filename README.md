@@ -26,27 +26,42 @@ No registration. Hash in URL = identity.
 ```
 src/
   app/
-    page.tsx                  # Public homepage: all project listings
-    not-found.tsx             # Custom 404 page
-    browse/[hash]/page.tsx    # Server component: project list
-    reveals/[hash]/page.tsx   # Server component: past reveals
-    api/create-checkout/      # Stripe Checkout session
-    api/webhook/              # Stripe webhook (idempotent)
+    page.tsx                          # Public homepage: all project listings
+    layout.tsx                        # Root layout (referrer-policy meta, fonts)
+    not-found.tsx                     # Custom 404 page
+    browse/[hash]/page.tsx            # Server component: project list
+    reveals/[hash]/page.tsx           # Server component: past reveals
+    list/[hash]/[city]/
+      page.tsx                        # City market report landing (preview + CTA)
+      BuyButton.tsx                   # Client: POSTs /api/create-list-checkout
+      success/
+        page.tsx                      # Post-purchase confirmation + download
+        DownloadButton.tsx            # Client: fetches signed Storage URL
+    api/create-checkout/              # Stripe Checkout for $25 reveals
+    api/create-list-checkout/         # Stripe Checkout for $349 city reports
+    api/download-list/[hash]/[city]/  # Signed URL for paid PDF download (2h TTL)
+    api/webhook/                      # Stripe webhook (dispatches on metadata.product_type)
   components/
-    ProjectList.tsx           # Client: filters + card grid
-    ProjectCard.tsx           # Client: reveal button + states
-    TopBar.tsx                # Shared nav header
+    ProjectList.tsx                   # Client: filters + card grid
+    ProjectCard.tsx                   # Client: reveal button + states
+    TopBar.tsx                        # Shared nav header
   lib/
-    supabase.ts               # Supabase client factories
-    stripe.ts                 # Stripe client factory
-    queries.ts                # Database query helpers
-    utils.ts                  # Shared utilities
-    types.ts                  # TypeScript interfaces
+    supabase.ts                       # Supabase client factories
+    stripe.ts                         # Stripe client factory
+    queries.ts                        # DB query helpers (resolveUserByHash, fetchCityList, ...)
+    format.ts                         # Date / price formatters
+    utils.ts                          # Shared utilities
+    types.ts                          # TypeScript interfaces
 scripts/
-  setup-local.sh              # One-command local dev setup
+  setup-local.sh                      # One-command local dev setup
+  publish_csv.ts                      # CSV → Supabase publish
+  render-report-pdf.ts                # HTML report → PDF (Playwright headless)
 supabase/
-  schema.sql                  # Database schema (tables, indexes, RLS)
-  seed-test-data.sql          # Test data for development
+  schema.sql                          # Database schema (tables, indexes, RLS)
+  seed-test-data.sql                  # Test data for development
+  migrations/
+    001-reveal-count-trigger-and-soft-delete.sql
+    002-city-lists-and-list-purchases.sql
 ```
 
 ## Setup
@@ -81,6 +96,41 @@ npm run build
 # Lint
 npm run lint
 ```
+
+## Local Test Hashes
+
+Pre-defined hashes for local development. Hash in URL = user identity, so
+hitting any `/browse/{hash}` or `/list/{hash}/{city}` route in the browser
+needs a row in the `users` table.
+
+| Hash | Profile | What it exercises |
+|---|---|---|
+| `dev-test-001` | Generic dev user | Any route: browse, reveals, list landing |
+| `test_abcdefghijklmnopqrstuvwxyz1234567890A` | Mike Johnson @ Pacific Coast Builders, has reveals | Reveals page with data |
+| `empty_reveals_test_user_hash_000000000000` | Test Empty User, no reveals | Empty-state of reveals page |
+
+**Seed:**
+
+```sql
+-- The two test_/empty_ hashes are in supabase/seed-test-data.sql.
+-- For dev-test-001, run this once in Supabase SQL Editor:
+INSERT INTO users (hash, name, company, email, source_campaign)
+VALUES ('dev-test-001', 'Dev Test', 'Test GC', 'dev@example.com', 'local-dev')
+ON CONFLICT (hash) DO NOTHING;
+```
+
+**Test URLs (after `npm run dev`):**
+
+- Browse: `http://localhost:3000/browse/dev-test-001`
+- Reveals: `http://localhost:3000/reveals/dev-test-001`
+- City list landing (SJ): `http://localhost:3000/list/dev-test-001/sj`
+- City list success: `http://localhost:3000/list/dev-test-001/sj/success`
+
+**Prerequisites for the `/list` routes:**
+
+1. Migration `supabase/migrations/002-city-lists-and-list-purchases.sql` applied (creates `city_lists` + `list_purchases` tables and seeds the SJ row).
+2. `STRIPE_SECRET_KEY` set in `.env.local` (Buy button calls Stripe Checkout).
+3. PDF uploaded to Supabase Storage at `city-lists-pdfs/sj-2025.pdf` (Download button needs the file to exist).
 
 ## Testing
 
