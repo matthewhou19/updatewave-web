@@ -26,7 +26,29 @@ CREATE INDEX IF NOT EXISTS idx_users_auth_user_id
   ON users(auth_user_id) WHERE auth_user_id IS NOT NULL;
 
 -- ============================================================
--- Step 2: Partial UNIQUE on users.email WHERE NOT NULL
+-- Step 2a: Normalize existing emails to lowercase
+-- ============================================================
+-- Supabase Auth always lowercases emails, so case-sensitive joins
+-- against users.email would miss legacy mixed-case rows produced by
+-- publish_leads.py. Normalize once, then enforce going forward.
+UPDATE users
+  SET email = lower(email)
+  WHERE email IS NOT NULL AND email <> lower(email);
+
+-- ============================================================
+-- Step 2b: Enforce lowercase emails going forward
+-- ============================================================
+-- After this CHECK lands, publish_leads.py (and any other writer of
+-- users.email) MUST insert lowercased emails or the write will fail.
+-- That loud failure is preferred over silent case-sensitivity bugs.
+ALTER TABLE users
+  DROP CONSTRAINT IF EXISTS users_email_lowercase;
+ALTER TABLE users
+  ADD CONSTRAINT users_email_lowercase
+  CHECK (email IS NULL OR email = lower(email));
+
+-- ============================================================
+-- Step 2c: Partial UNIQUE on users.email WHERE NOT NULL
 -- ============================================================
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_users_email_not_null
   ON users(email) WHERE email IS NOT NULL;
@@ -71,3 +93,22 @@ ALTER TABLE auth_login_events ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "auth_login_events_service_role_all" ON auth_login_events;
 CREATE POLICY "auth_login_events_service_role_all" ON auth_login_events
   FOR ALL TO service_role USING (true);
+
+-- ============================================================
+-- Step 5: paid_user_ids RPC (DISTINCT user_ids across reveals + list_purchases)
+-- ============================================================
+-- Used by auth-resolution.ts identity-fork detection. Runs DISTINCT at the
+-- DB layer so the result is bounded by paid-user count, not purchase count.
+-- Without this, a SELECT user_id FROM reveals on a growing reveals table
+-- silently truncates at PostgREST's default 1000-row cap, which would let
+-- fork detection miss real paid customers as the dataset grows.
+CREATE OR REPLACE FUNCTION paid_user_ids()
+RETURNS TABLE(user_id BIGINT)
+LANGUAGE sql STABLE AS $$
+  SELECT DISTINCT r.user_id FROM reveals r
+  UNION
+  SELECT DISTINCT lp.user_id FROM list_purchases lp
+$$;
+
+REVOKE ALL ON FUNCTION paid_user_ids() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION paid_user_ids() TO service_role;

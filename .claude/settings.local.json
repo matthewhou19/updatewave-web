@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(rm F:/Github/updatewave-web/supabase/migrations/003-email-login-auth.sql)",
+      "Bash(git merge *)",
+      "Bash(npm test *)",
+      "Bash(npm run *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}

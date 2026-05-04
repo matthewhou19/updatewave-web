@@ -30,7 +30,6 @@ const SEND_DELAY_MS = 1000
 interface Tier1Target {
   user_id: number
   email: string
-  hash: string
   product_label: string
   purchased_on: string
 }
@@ -127,11 +126,14 @@ function resolveRedirectBase(): string {
 async function detectDuplicateEmails(
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<Array<{ email: string; count: number }>> {
+  // The migration's UNIQUE index applies to ALL non-null emails (no
+  // deleted_at filter). To match that predicate exactly — and avoid a
+  // pre-flight pass followed by a mid-migration UNIQUE failure — scan
+  // every row with a non-null email regardless of soft-delete state.
   const { data, error } = await supabase
     .from('users')
     .select('email')
     .not('email', 'is', null)
-    .is('deleted_at', null)
   if (error) throw new Error(`duplicate scan failed: ${error.message}`)
 
   const counts = new Map<string, number>()
@@ -180,20 +182,19 @@ async function loadTier1Targets(
 
   const { data: users, error: userErr } = await supabase
     .from('users')
-    .select('id, email, hash')
+    .select('id, email')
     .in('id', [...purchaseByUser.keys()])
     .not('email', 'is', null)
     .is('deleted_at', null)
   if (userErr) throw new Error(`user scan failed: ${userErr.message}`)
 
   const targets: Tier1Target[] = []
-  for (const u of (users ?? []) as { id: number; email: string; hash: string }[]) {
+  for (const u of (users ?? []) as { id: number; email: string }[]) {
     const purchase = purchaseByUser.get(u.id)
     if (!purchase) continue
     targets.push({
       user_id: u.id,
       email: u.email,
-      hash: u.hash,
       product_label: purchase.product_label,
       purchased_on: purchase.purchased_on,
     })

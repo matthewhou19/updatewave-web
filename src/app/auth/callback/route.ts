@@ -16,10 +16,20 @@ import { resolveAuthLogin } from '@/lib/auth-resolution'
  * The cookie client handles the session writes; the service-role client
  * handles RLS-bypassing writes for identity resolution and event logging.
  */
+const VALID_OTP_TYPES = ['magiclink', 'email', 'recovery', 'invite'] as const
+type ValidOtpType = (typeof VALID_OTP_TYPES)[number]
+
+function parseOtpType(raw: string | null): ValidOtpType {
+  if (raw && (VALID_OTP_TYPES as readonly string[]).includes(raw)) {
+    return raw as ValidOtpType
+  }
+  return 'magiclink'
+}
+
 export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const tokenHash = url.searchParams.get('token_hash')
-  const type = url.searchParams.get('type') ?? 'magiclink'
+  const type = parseOtpType(url.searchParams.get('type'))
   const origin = baseUrl(request)
 
   if (!tokenHash) {
@@ -33,7 +43,7 @@ export async function GET(request: NextRequest) {
 
   const { error: verifyError } = await cookieClient.auth.verifyOtp({
     token_hash: tokenHash,
-    type: type as 'magiclink' | 'email' | 'recovery' | 'invite',
+    type,
   })
 
   if (verifyError) {

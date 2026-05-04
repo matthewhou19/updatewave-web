@@ -1,9 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
-import { getCurrentUser } from '@/lib/auth'
 import { createStripeClient } from '@/lib/stripe'
-import { resolveUserByHash } from '@/lib/queries'
+import { resolveCheckoutUser } from '@/lib/checkout-auth'
 
 // Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
 // not shared across instances). See TODOS.md for Upstash Redis migration plan.
@@ -30,28 +28,11 @@ export async function POST(request: NextRequest) {
 
   const supabase = createSupabaseServiceClient()
 
-  // Two entry paths:
-  //   - Hash from URL (cold-email funnel): existing behavior, takes precedence.
-  //   - Cookie session (logged-in user): resolved via getCurrentUser, then we
-  //     reuse the same downstream flow with the user's hash.
-  let hash: string
-  let user: { id: number; hash: string } | null
-  if (requestedHash) {
-    hash = requestedHash
-    const result = await resolveUserByHash(supabase, hash)
-    user = result.user
-    if (result.error || !user) {
-      return Response.json({ error: 'Invalid link.' }, { status: 403 })
-    }
-  } else {
-    const cookieClient = await createSupabaseServerClient()
-    const sessionUser = await getCurrentUser(cookieClient)
-    if (!sessionUser) {
-      return Response.json({ error: 'Not signed in.' }, { status: 401 })
-    }
-    user = { id: sessionUser.id, hash: sessionUser.hash }
-    hash = sessionUser.hash
+  const authResult = await resolveCheckoutUser(supabase, requestedHash)
+  if ('errorResponse' in authResult) {
+    return authResult.errorResponse
   }
+  const { user, hash } = authResult
 
   // Validate project exists and is published
   const { data: project, error: projectError } = await supabase

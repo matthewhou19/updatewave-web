@@ -38,6 +38,12 @@ export async function resolveAuthLogin(
   authUserId: string,
   authEmail: string
 ): Promise<AuthResolutionResult> {
+  // Normalize the email before any equality comparison. Supabase Auth
+  // already lowercases, but explicit normalization defends against any
+  // future caller that passes through non-Supabase-Auth-sourced emails,
+  // and the CHECK constraint on users.email enforces it on the write side.
+  const email = authEmail.toLowerCase()
+
   // Case 1: linked match
   const linked = await findUserByAuthUserId(supabase, authUserId)
   if (linked) {
@@ -45,21 +51,21 @@ export async function resolveAuthLogin(
   }
 
   // Case 2: stale auth_user_id rotation
-  const stale = await findUserByEmailWithStaleAuth(supabase, authEmail)
+  const stale = await findUserByEmailWithStaleAuth(supabase, email)
   if (stale) {
     const rotated = await setAuthUserId(supabase, stale.id, authUserId)
     return { user: rotated, isNew: false, forkAlert: null }
   }
 
   // Case 3: first link of existing user
-  const unlinked = await findUserByEmailUnlinked(supabase, authEmail)
+  const unlinked = await findUserByEmailUnlinked(supabase, email)
   if (unlinked) {
     const linkedNow = await setAuthUserId(supabase, unlinked.id, authUserId)
     return { user: linkedNow, isNew: false, forkAlert: null }
   }
 
   // Case 4: brand-new user
-  const inserted = await insertBrandNewUser(supabase, authUserId, authEmail)
+  const inserted = await insertBrandNewUser(supabase, authUserId, email)
   if (!inserted) {
     // Race: another tab created the row first. Re-query case 1.
     const winner = await findUserByAuthUserId(supabase, authUserId)
@@ -69,7 +75,7 @@ export async function resolveAuthLogin(
     return { user: winner, isNew: false, forkAlert: null }
   }
 
-  const forkAlert = await detectIdentityFork(supabase, authEmail, inserted.id)
+  const forkAlert = await detectIdentityFork(supabase, email, inserted.id)
   if (forkAlert) {
     await writeForkAlert(supabase, inserted.id, forkAlert)
   }
@@ -131,14 +137,22 @@ async function setAuthUserId(
   userId: number,
   authUserId: string
 ): Promise<User> {
+  // The deleted_at filter guards a narrow race: the row was non-deleted
+  // when we read it for case 2 / case 3, but an admin soft-deleted it
+  // before this UPDATE landed. Without the filter we would write
+  // auth_user_id onto a deleted row and return it as a "logged in" user.
   const { data, error } = await supabase
     .from('users')
     .update({ auth_user_id: authUserId })
     .eq('id', userId)
+    .is('deleted_at', null)
     .select('*')
-    .single()
-  if (error || !data) {
-    throw new Error(`Failed to set auth_user_id on user ${userId}: ${error?.message ?? 'no row returned'}`)
+    .maybeSingle()
+  if (error) {
+    throw new Error(`Failed to set auth_user_id on user ${userId}: ${error.message}`)
+  }
+  if (!data) {
+    throw new Error(`User ${userId} was soft-deleted between read and write`)
   }
   return data as User
 }
@@ -227,11 +241,18 @@ async function writeForkAlert(
 }
 
 async function listPaidUserIds(supabase: SupabaseClient): Promise<Set<number>> {
+  // Calls the `paid_user_ids` Postgres function (defined in migration 003).
+  // Returns DISTINCT user_ids across reveals + list_purchases at the DB
+  // layer, so the result size is bounded by paid-user count rather than
+  // purchase-row count — and avoids PostgREST's default 1000-row cap.
+  const { data, error } = await supabase.rpc('paid_user_ids')
+  if (error) {
+    throw new Error(`paid_user_ids RPC failed: ${error.message}`)
+  }
   const ids = new Set<number>()
-  const { data: revealUsers } = await supabase.from('reveals').select('user_id')
-  for (const r of (revealUsers ?? []) as { user_id: number }[]) ids.add(r.user_id)
-  const { data: listUsers } = await supabase.from('list_purchases').select('user_id')
-  for (const r of (listUsers ?? []) as { user_id: number }[]) ids.add(r.user_id)
+  for (const r of (data ?? []) as { user_id: number }[]) {
+    ids.add(r.user_id)
+  }
   return ids
 }
 

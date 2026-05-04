@@ -47,30 +47,39 @@ export default function LoginForm() {
     }
   }
 
+  const errorId = 'login-form-error'
+
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-4"
       data-testid="login-form"
       noValidate
+      aria-busy={submitting}
     >
-      <label className="block">
-        <span className="text-sm text-[#6b7280]">Email</span>
+      <div>
+        <label htmlFor="login-email" className="block text-sm text-[#6b7280]">
+          Email
+        </label>
         <input
+          id="login-email"
           type="email"
           autoComplete="email"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
-          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base text-[#111827] focus:border-[#2563eb] focus:outline-none focus:ring-1 focus:ring-[#2563eb] disabled:opacity-60"
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? errorId : undefined}
+          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base text-[#111827] focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] disabled:opacity-60"
           data-testid="login-email-input"
           placeholder="you@company.com"
         />
-      </label>
+      </div>
 
       {error && (
         <p
+          id={errorId}
           className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
           data-testid="login-error"
           role="alert"

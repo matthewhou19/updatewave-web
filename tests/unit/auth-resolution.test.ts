@@ -58,6 +58,10 @@ function buildMockClient() {
 
       return chain
     }),
+    rpc: vi.fn(async (fnName: string) => {
+      calls.push({ table: `rpc:${fnName}`, chain: ['call'] })
+      return nextResponse(`rpc(${fnName})`)
+    }),
   } as unknown as SupabaseClient
 
   return {
@@ -108,8 +112,7 @@ describe('resolveAuthLogin', () => {
     queue({ data: null }) // case 2 maybeSingle
     queue({ data: null }) // case 3 maybeSingle
     queue({ data: { ...STORED_USER, auth_user_id: AUTH_USER_ID, hash: 'newhash' } }) // case 4 upsert.maybeSingle
-    queue({ data: [] }) // listPaidUserIds: reveals
-    queue({ data: [] }) // listPaidUserIds: list_purchases
+    queue({ data: [] }) // listPaidUserIds: paid_user_ids RPC
 
     const result = await resolveAuthLogin(supabase, AUTH_USER_ID, AUTH_EMAIL)
 
@@ -185,8 +188,7 @@ describe('resolveAuthLogin', () => {
     queue({ data: null }) // case 2
     queue({ data: null }) // case 3
     queue({ data: newUser }) // case 4 upsert.maybeSingle
-    queue({ data: [{ user_id: 50 }] }) // listPaidUserIds: reveals (user 50 paid)
-    queue({ data: [] }) // listPaidUserIds: list_purchases
+    queue({ data: [{ user_id: 50 }] }) // listPaidUserIds: paid_user_ids RPC (user 50 paid)
     queue({ data: [{ id: 50, email: 'matthew@gmail.com' }] }) // paidUsers query
     queue({ data: null }) // identity_fork_alerts insert
 
@@ -218,7 +220,6 @@ describe('resolveAuthLogin', () => {
     queue({ data: null })
     queue({ data: newUser })
     queue({ data: [{ user_id: 50 }] })
-    queue({ data: [] })
     queue({ data: [{ id: 50, email: 'matt@acme.com' }] }) // same domain, different local
     queue({ data: null }) // alert insert
 
@@ -243,7 +244,6 @@ describe('resolveAuthLogin', () => {
     queue({ data: null })
     queue({ data: newUser })
     queue({ data: [{ user_id: 50 }] })
-    queue({ data: [] })
     queue({ data: [{ id: 50, email: 'totally-different@another.com' }] })
 
     const result = await resolveAuthLogin(supabase, AUTH_USER_ID, 'matthew@updatewave.com')
