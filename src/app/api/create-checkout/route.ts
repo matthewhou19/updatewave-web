@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { createStripeClient } from '@/lib/stripe'
+import { resolveUserByHash } from '@/lib/queries'
 
 // Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
 // not shared across instances). See TODOS.md for Upstash Redis migration plan.
@@ -26,12 +27,8 @@ export async function POST(request: NextRequest) {
 
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash -> get user
-  const { data: user, error: userError } = await supabase
-    .from('users')
-    .select('id, hash')
-    .eq('hash', hash)
-    .single()
+  // Validate hash -> get user (filters on deleted_at IS NULL)
+  const { user, error: userError } = await resolveUserByHash(supabase, hash)
 
   if (userError || !user) {
     return Response.json({ error: 'Invalid link.' }, { status: 403 })
@@ -84,6 +81,9 @@ export async function POST(request: NextRequest) {
     ],
     mode: 'payment',
     client_reference_id: `${hash}:${projectId}`,
+    metadata: {
+      product_type: 'reveal',
+    },
     success_url: `${origin}/browse/${hash}?revealed=${projectId}`,
     cancel_url: `${origin}/browse/${hash}`,
   })
