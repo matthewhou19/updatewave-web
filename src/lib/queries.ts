@@ -102,6 +102,13 @@ export async function resolveUserByHash(supabase: SupabaseClient, hash: string) 
 /**
  * Fetch a city_list by its slug (city column doubles as URL slug).
  * Only returns active rows. Public columns only — does NOT include pdf_storage_path.
+ *
+ * Filters on service_tier='report' to disambiguate after migration 004.
+ * Migration 002 set UNIQUE(city, year) so SJ had at most one row per year.
+ * Migration 004 lifts that to UNIQUE(city, year, service_tier), so SJ now
+ * has TWO rows: the $349 'report' SKU and the $1999 'research' SKU. This
+ * helper is for the existing /list product (the $349 report) — research
+ * pages use fetchActiveResearchCities or a tier-filtered direct query.
  */
 export async function fetchCityList(supabase: SupabaseClient, city: string) {
   const { data, error } = await supabase
@@ -109,6 +116,7 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
     .select(CITY_LIST_PUBLIC_COLUMNS)
     .eq('city', city)
     .eq('active', true)
+    .eq('service_tier', 'report')
     .single()
 
   return { cityList: (data as CityList | null), error }
@@ -118,6 +126,10 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
  * Fetch a city_list INCLUDING pdf_storage_path. For server-side use only
  * (download API after purchase verification). Never expose this result to
  * the client.
+ *
+ * Same service_tier='report' filter as fetchCityList — the $349 report's
+ * download API points here. The research download API has its own helper
+ * with service_tier='research'.
  */
 export async function fetchCityListWithStoragePath(supabase: SupabaseClient, city: string) {
   const { data, error } = await supabase
@@ -125,6 +137,7 @@ export async function fetchCityListWithStoragePath(supabase: SupabaseClient, cit
     .select(`${CITY_LIST_PUBLIC_COLUMNS}, pdf_storage_path`)
     .eq('city', city)
     .eq('active', true)
+    .eq('service_tier', 'report')
     .single()
 
   return { cityList: (data as CityListWithStoragePath | null), error }
