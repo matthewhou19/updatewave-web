@@ -102,13 +102,45 @@ CREATE POLICY "auth_login_events_service_role_all" ON auth_login_events
 -- Without this, a SELECT user_id FROM reveals on a growing reveals table
 -- silently truncates at PostgREST's default 1000-row cap, which would let
 -- fork detection miss real paid customers as the dataset grows.
+--
+-- SECURITY INVOKER + explicit search_path defends against search-path
+-- injection in the unlikely case a non-service-role caller gains EXECUTE
+-- (defense in depth — current grants only service_role).
 CREATE OR REPLACE FUNCTION paid_user_ids()
 RETURNS TABLE(user_id BIGINT)
-LANGUAGE sql STABLE AS $$
-  SELECT DISTINCT r.user_id FROM reveals r
+LANGUAGE sql STABLE
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+  SELECT DISTINCT r.user_id FROM public.reveals r
   UNION
-  SELECT DISTINCT lp.user_id FROM list_purchases lp
+  SELECT DISTINCT lp.user_id FROM public.list_purchases lp
 $$;
 
 REVOKE ALL ON FUNCTION paid_user_ids() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION paid_user_ids() TO service_role;
+
+-- ============================================================
+-- Step 6: find_duplicate_emails RPC (matches the partial UNIQUE predicate)
+-- ============================================================
+-- Used by scripts/run-tier-1-migration.ts pre-flight scan. Bypasses the
+-- PostgREST 1000-row default cap that would otherwise let duplicate-email
+-- pairs slip past pre-flight and cause Step 2c's CREATE UNIQUE INDEX to
+-- fail mid-migration. Note the predicate matches the partial UNIQUE
+-- exactly — no deleted_at filter, since soft-deleted emails count
+-- against the constraint.
+CREATE OR REPLACE FUNCTION find_duplicate_emails()
+RETURNS TABLE(email TEXT, count BIGINT)
+LANGUAGE sql STABLE
+SECURITY INVOKER
+SET search_path = public, pg_temp
+AS $$
+  SELECT u.email, COUNT(*)::BIGINT AS count
+  FROM public.users u
+  WHERE u.email IS NOT NULL
+  GROUP BY u.email
+  HAVING COUNT(*) > 1
+$$;
+
+REVOKE ALL ON FUNCTION find_duplicate_emails() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION find_duplicate_emails() TO service_role;

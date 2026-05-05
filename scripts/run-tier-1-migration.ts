@@ -126,23 +126,15 @@ function resolveRedirectBase(): string {
 async function detectDuplicateEmails(
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<Array<{ email: string; count: number }>> {
-  // The migration's UNIQUE index applies to ALL non-null emails (no
-  // deleted_at filter). To match that predicate exactly — and avoid a
-  // pre-flight pass followed by a mid-migration UNIQUE failure — scan
-  // every row with a non-null email regardless of soft-delete state.
-  const { data, error } = await supabase
-    .from('users')
-    .select('email')
-    .not('email', 'is', null)
-  if (error) throw new Error(`duplicate scan failed: ${error.message}`)
-
-  const counts = new Map<string, number>()
-  for (const row of (data ?? []) as { email: string }[]) {
-    counts.set(row.email, (counts.get(row.email) ?? 0) + 1)
-  }
-  return [...counts.entries()]
-    .filter(([, count]) => count > 1)
-    .map(([email, count]) => ({ email, count }))
+  // Calls the `find_duplicate_emails` Postgres RPC defined in migration 003.
+  // The RPC predicate matches the partial UNIQUE constraint exactly (all
+  // non-null emails, no deleted_at filter). Done in SQL so the result is
+  // not subject to PostgREST's default 1000-row cap on table scans.
+  const { data, error } = await supabase.rpc('find_duplicate_emails')
+  if (error) throw new Error(`find_duplicate_emails RPC failed: ${error.message}`)
+  return ((data ?? []) as Array<{ email: string; count: number }>).map(
+    (row) => ({ email: row.email, count: Number(row.count) })
+  )
 }
 
 async function loadTier1Targets(
