@@ -130,6 +130,10 @@ describe('fetchCityList', () => {
     expect(selectArg).toContain('price_cents')
     expect(chain.eq).toHaveBeenCalledWith('city', 'sj')
     expect(chain.eq).toHaveBeenCalledWith('active', true)
+    // Migration 004 added service_tier; fetchCityList must explicitly filter
+    // for the 'report' tier so SJ (which now has both 'report' and 'research'
+    // rows) doesn't trigger a multi-row .single() error.
+    expect(chain.eq).toHaveBeenCalledWith('service_tier', 'report')
     expect(cityList?.city).toBe('sj')
   })
 
