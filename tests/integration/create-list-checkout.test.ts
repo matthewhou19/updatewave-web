@@ -30,9 +30,18 @@ function createMockSupabase() {
 let mockSupabase: ReturnType<typeof createMockSupabase>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let mockStripeCreate: any
+let mockGetCurrentUser: ReturnType<typeof vi.fn>
 
 vi.mock('@/lib/supabase', () => ({
   createSupabaseServiceClient: () => mockSupabase,
+}))
+
+vi.mock('@/lib/supabase-server', () => ({
+  createSupabaseServerClient: () => Promise.resolve({}),
+}))
+
+vi.mock('@/lib/auth', () => ({
+  getCurrentUser: (...args: unknown[]) => mockGetCurrentUser(...args),
 }))
 
 vi.mock('@/lib/stripe', () => ({
@@ -63,6 +72,7 @@ describe('POST /api/create-list-checkout', () => {
     vi.clearAllMocks()
     mockSupabase = createMockSupabase()
     mockStripeCreate = vi.fn()
+    mockGetCurrentUser = vi.fn().mockResolvedValue(null)
   })
 
   it('returns 400 for invalid JSON body', async () => {
@@ -75,11 +85,14 @@ describe('POST /api/create-list-checkout', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 400 when hash or city missing', async () => {
+  it('returns 400 when city is missing', async () => {
+    // hash is now optional (cookie session is the alternative entry path),
+    // so the only required field is city.
     const res = await POST(makeRequest({ hash: 'abc' }))
     expect(res.status).toBe(400)
     const json = await res.json()
-    expect(json.error).toContain('Missing or invalid fields')
+    expect(json.error).toContain('Missing or invalid field')
+    expect(json.error).toContain('city')
   })
 
   it('returns 403 for invalid hash', async () => {
@@ -164,6 +177,38 @@ describe('POST /api/create-list-checkout', () => {
       expect.objectContaining({
         idempotencyKey: `list:${TEST_USER.id}:${TEST_CITY_LIST.id}`,
       })
+    )
+  })
+
+  it('returns 401 when no hash and no cookie session', async () => {
+    mockGetCurrentUser.mockResolvedValueOnce(null)
+    const res = await POST(makeRequest({ city: 'sj' }))
+    expect(res.status).toBe(401)
+  })
+
+  it('logged-in user (no hash in body) — uses cookie session and metadata.hash matches', async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: TEST_USER.id,
+      hash: TEST_USER.hash,
+      email: 'cookie@example.com',
+    })
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_CITY_LIST, error: null })  // city list
+      .mockResolvedValueOnce({ data: null, error: { code: 'PGRST116' } })  // no existing purchase
+    mockStripeCreate.mockResolvedValue({ url: 'https://checkout.stripe.com/cookie_list' })
+
+    const res = await POST(makeRequest({ city: 'sj' }))
+    expect(res.status).toBe(200)
+
+    expect(mockStripeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_reference_id: `${TEST_USER.hash}:list:${TEST_CITY_LIST.id}`,
+        metadata: expect.objectContaining({
+          hash: TEST_USER.hash,
+          user_id: String(TEST_USER.id),
+        }),
+      }),
+      expect.any(Object)
     )
   })
 })

@@ -125,12 +125,20 @@ ON CONFLICT (hash) DO NOTHING;
 - Reveals: `http://localhost:3000/reveals/dev-test-001`
 - City list landing (SJ): `http://localhost:3000/list/dev-test-001/sj`
 - City list success: `http://localhost:3000/list/dev-test-001/sj/success`
+- Email login form: `http://localhost:3000/login`
+- Magic-link callback (hit by Supabase Auth): `http://localhost:3000/auth/callback`
 
 **Prerequisites for the `/list` routes:**
 
 1. Migration `supabase/migrations/002-city-lists-and-list-purchases.sql` applied (creates `city_lists` + `list_purchases` tables and seeds the SJ row).
 2. `STRIPE_SECRET_KEY` set in `.env.local` (Buy button calls Stripe Checkout).
 3. PDF uploaded to Supabase Storage at `city-lists-pdfs/sj-2025.pdf` (Download button needs the file to exist).
+
+**Prerequisites for the email login flow (`/login` + `/auth/callback`):**
+
+1. Migration `supabase/migrations/003-email-login-auth.sql` applied (adds `users.auth_user_id`, partial UNIQUE on email, `identity_fork_alerts` and `auth_login_events` tables, `paid_user_ids()` and `find_duplicate_emails()` RPCs).
+2. Supabase Auth SMTP configured to send via Resend from `auth.updatewave.com` (DNS: SPF, DKIM, DMARC).
+3. Redirect URL allowlist in Supabase Auth includes `http://localhost:3000/auth/callback` for local dev and `https://updatewave-web.vercel.app/auth/callback` for production.
 
 ## Testing
 

@@ -38,22 +38,20 @@ export async function fetchPublishedProjects(supabase: SupabaseClient) {
 }
 
 /**
- * Look up a user by their unique hash. Returns null if not found.
+ * Look up a user by their unique hash. Filters on deleted_at IS NULL so a
+ * soft-deleted user's hash URL behaves as if invalid.
  *
- * NOTE: this helper does not filter on deleted_at. For payment-critical paths
- * (webhook handlers, checkout creators, downloads) use resolveUserByHash instead,
- * which enforces the soft-delete filter.
- *
- * Tracked: TODOS.md "Soft-Delete on Read Paths — fetchUserByHash" — read pages
- * (browse, reveals) intentionally do not enforce soft-delete yet to keep the
- * SJ list product PR scope tight.
+ * Used by read pages (browse, reveals, list) and shares the same soft-delete
+ * enforcement as the email-login path. Soft-delete is now consistent across
+ * both entry points.
  */
 export async function fetchUserByHash(supabase: SupabaseClient, hash: string) {
   const { data, error } = await supabase
     .from('users')
     .select('*')
     .eq('hash', hash)
-    .single()
+    .is('deleted_at', null)
+    .maybeSingle()
 
   return { user: data as User | null, error }
 }

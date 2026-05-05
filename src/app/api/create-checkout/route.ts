@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { createStripeClient } from '@/lib/stripe'
-import { resolveUserByHash } from '@/lib/queries'
+import { resolveCheckoutUser } from '@/lib/checkout-auth'
 
 // Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
 // not shared across instances). See TODOS.md for Upstash Redis migration plan.
@@ -17,22 +17,22 @@ export async function POST(request: NextRequest) {
   if (
     typeof body !== 'object' ||
     body === null ||
-    typeof (body as Record<string, unknown>).hash !== 'string' ||
     typeof (body as Record<string, unknown>).projectId !== 'number'
   ) {
-    return Response.json({ error: 'Missing or invalid fields: hash, projectId' }, { status: 400 })
+    return Response.json({ error: 'Missing or invalid field: projectId' }, { status: 400 })
   }
 
-  const { hash, projectId } = body as { hash: string; projectId: number }
+  const rawHash = (body as Record<string, unknown>).hash
+  const requestedHash = typeof rawHash === 'string' && rawHash.length > 0 ? rawHash : null
+  const { projectId } = body as { projectId: number }
 
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash -> get user (filters on deleted_at IS NULL)
-  const { user, error: userError } = await resolveUserByHash(supabase, hash)
-
-  if (userError || !user) {
-    return Response.json({ error: 'Invalid link.' }, { status: 403 })
+  const authResult = await resolveCheckoutUser(supabase, requestedHash)
+  if ('errorResponse' in authResult) {
+    return authResult.errorResponse
   }
+  const { user, hash } = authResult
 
   // Validate project exists and is published
   const { data: project, error: projectError } = await supabase

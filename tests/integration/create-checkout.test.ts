@@ -21,9 +21,18 @@ function createMockSupabase() {
 let mockSupabase: ReturnType<typeof createMockSupabase>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let mockStripeCreate: any
+let mockGetCurrentUser: ReturnType<typeof vi.fn>
 
 vi.mock('@/lib/supabase', () => ({
   createSupabaseServiceClient: () => mockSupabase,
+}))
+
+vi.mock('@/lib/supabase-server', () => ({
+  createSupabaseServerClient: () => Promise.resolve({}),
+}))
+
+vi.mock('@/lib/auth', () => ({
+  getCurrentUser: (...args: unknown[]) => mockGetCurrentUser(...args),
 }))
 
 vi.mock('@/lib/stripe', () => ({
@@ -54,6 +63,7 @@ describe('POST /api/create-checkout', () => {
     vi.clearAllMocks()
     mockSupabase = createMockSupabase()
     mockStripeCreate = vi.fn()
+    mockGetCurrentUser = vi.fn().mockResolvedValue(null)
   })
 
   it('returns 400 for invalid JSON body', async () => {
@@ -66,16 +76,46 @@ describe('POST /api/create-checkout', () => {
     expect(res.status).toBe(400)
   })
 
-  it('returns 400 for missing fields', async () => {
+  it('returns 400 when projectId is missing', async () => {
     const res = await POST(makeRequest({ hash: 'abc' }))
     expect(res.status).toBe(400)
     const json = await res.json()
-    expect(json.error).toContain('Missing or invalid fields')
+    expect(json.error).toContain('projectId')
   })
 
   it('returns 400 when projectId is not a number', async () => {
     const res = await POST(makeRequest({ hash: 'abc', projectId: 'not-a-number' }))
     expect(res.status).toBe(400)
+  })
+
+  it('returns 401 when no hash and no cookie session', async () => {
+    mockGetCurrentUser.mockResolvedValueOnce(null)
+    const res = await POST(makeRequest({ projectId: 42 }))
+    expect(res.status).toBe(401)
+  })
+
+  it('logged-in user (no hash in body) — resolves user via cookie and creates checkout', async () => {
+    mockGetCurrentUser.mockResolvedValueOnce({
+      id: TEST_USER.id,
+      hash: TEST_USER.hash,
+      email: 'cookie@example.com',
+    })
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_PROJECT, error: null })  // project lookup
+      .mockResolvedValueOnce({ data: null, error: { message: 'not found' } })  // no existing reveal
+    mockStripeCreate.mockResolvedValue({ url: 'https://checkout.stripe.com/cookie_session' })
+
+    const res = await POST(makeRequest({ projectId: TEST_PROJECT.id }))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.url).toBe('https://checkout.stripe.com/cookie_session')
+
+    // Hash from cookie session was used for client_reference_id
+    expect(mockStripeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_reference_id: `${TEST_USER.hash}:${TEST_PROJECT.id}`,
+      })
+    )
   })
 
   it('returns 403 for invalid hash', async () => {

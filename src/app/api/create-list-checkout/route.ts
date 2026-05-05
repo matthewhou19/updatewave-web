@@ -1,12 +1,18 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { createStripeClient } from '@/lib/stripe'
-import { fetchCityList, fetchListPurchase, resolveUserByHash } from '@/lib/queries'
+import { fetchCityList, fetchListPurchase } from '@/lib/queries'
+import { resolveCheckoutUser } from '@/lib/checkout-auth'
 
 /**
  * Create a Stripe Checkout session for a city list purchase.
  *
- * Body: { hash: string, city: string }
+ * Body: { hash?: string, city: string }
+ *
+ * Two entry paths:
+ *   - Hash from URL (cold-email funnel): existing behavior, takes precedence.
+ *   - Cookie session (logged-in user): resolved via getCurrentUser, then we
+ *     reuse the user's hash for downstream metadata.
  *
  * Mirrors the existing /api/create-checkout (reveal) pattern:
  *   - inline price_data (unit_amount from city_lists.price_cents)
@@ -27,21 +33,22 @@ export async function POST(request: NextRequest) {
   if (
     typeof body !== 'object' ||
     body === null ||
-    typeof (body as Record<string, unknown>).hash !== 'string' ||
     typeof (body as Record<string, unknown>).city !== 'string'
   ) {
-    return Response.json({ error: 'Missing or invalid fields: hash, city' }, { status: 400 })
+    return Response.json({ error: 'Missing or invalid field: city' }, { status: 400 })
   }
 
-  const { hash, city } = body as { hash: string; city: string }
+  const rawHash = (body as Record<string, unknown>).hash
+  const requestedHash = typeof rawHash === 'string' && rawHash.length > 0 ? rawHash : null
+  const { city } = body as { city: string }
 
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash → get user (filters on deleted_at IS NULL)
-  const { user, error: userError } = await resolveUserByHash(supabase, hash)
-  if (userError || !user) {
-    return Response.json({ error: 'Invalid link.' }, { status: 403 })
+  const authResult = await resolveCheckoutUser(supabase, requestedHash)
+  if ('errorResponse' in authResult) {
+    return authResult.errorResponse
   }
+  const { user, hash } = authResult
 
   // Look up active city_list by slug
   const { cityList, error: cityListError } = await fetchCityList(supabase, city)

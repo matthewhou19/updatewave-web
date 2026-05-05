@@ -32,6 +32,32 @@ export interface User {
   created_at: string
   last_seen_at: string | null
   deleted_at: string | null
+  auth_user_id: string | null
+}
+
+export type IdentitySimilaritySignal = 'same_local_part' | 'same_domain'
+
+export interface IdentityForkAlert {
+  id: number
+  user_id_new: number
+  user_id_likely_old: number
+  similarity_signal: IdentitySimilaritySignal
+  created_at: string
+  reviewed_at: string | null
+}
+
+export type AuthLoginEventType =
+  | 'link_requested'
+  | 'link_clicked'
+  | 'callback_succeeded'
+  | 'callback_failed'
+
+export interface AuthLoginEvent {
+  id: number
+  user_id: number | null
+  auth_user_id: string | null
+  event_type: AuthLoginEventType
+  occurred_at: string
 }
 
 export interface Reveal {

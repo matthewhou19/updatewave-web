@@ -4,6 +4,7 @@ import {
   fetchCityList,
   fetchCityListWithStoragePath,
   fetchListPurchase,
+  fetchUserByHash,
   resolveUserByHash,
 } from '../../src/lib/queries'
 
@@ -24,6 +25,7 @@ interface ChainStubs {
   eq?: ReturnType<typeof vi.fn>
   is?: ReturnType<typeof vi.fn>
   single?: ReturnType<typeof vi.fn>
+  maybeSingle?: ReturnType<typeof vi.fn>
 }
 
 function makeChain(overrides: ChainStubs = {}) {
@@ -32,6 +34,7 @@ function makeChain(overrides: ChainStubs = {}) {
     eq: overrides.eq ?? vi.fn().mockReturnThis(),
     is: overrides.is ?? vi.fn().mockReturnThis(),
     single: overrides.single ?? vi.fn(),
+    maybeSingle: overrides.maybeSingle ?? vi.fn(),
   }
   return chain
 }
@@ -168,6 +171,38 @@ describe('fetchCityListWithStoragePath', () => {
     const selectArg = chain.select.mock.calls[0][0] as string
     expect(selectArg).toContain('pdf_storage_path')
     expect(cityList?.pdf_storage_path).toBe('sj-2025.pdf')
+  })
+})
+
+describe('fetchUserByHash (regression: deleted_at filter)', () => {
+  it('applies deleted_at IS NULL so a soft-deleted user is not returned', async () => {
+    const chain = makeChain()
+    chain.maybeSingle.mockResolvedValue({ data: null, error: null })
+    const supabase = makeSupabase(chain)
+
+    const { user } = await fetchUserByHash(supabase, 'deleted-user-hash')
+
+    expect(user).toBeNull()
+    expect(chain.is).toHaveBeenCalledWith('deleted_at', null)
+    expect(chain.eq).toHaveBeenCalledWith('hash', 'deleted-user-hash')
+  })
+
+  it('returns the user when the hash matches an active row', async () => {
+    const chain = makeChain()
+    chain.maybeSingle.mockResolvedValue({
+      data: {
+        id: 1,
+        hash: 'active',
+        email: 'user@example.com',
+        deleted_at: null,
+        auth_user_id: null,
+      },
+      error: null,
+    })
+    const supabase = makeSupabase(chain)
+
+    const { user } = await fetchUserByHash(supabase, 'active')
+    expect(user?.id).toBe(1)
   })
 })
 

@@ -43,3 +43,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .gstack/
+
+# worktrees
+.worktrees/
+
+# Claude Code local settings (per-developer, not shared)
+.claude/settings.local.json
