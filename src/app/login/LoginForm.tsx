@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
-const FOUNDER_EMAIL = 'matthew@updatewave.com'
+const FOUNDER_EMAIL = 'matthew@updatewave.org'
 
 export default function LoginForm() {
   const router = useRouter()

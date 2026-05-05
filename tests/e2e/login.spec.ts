@@ -64,7 +64,7 @@ test.describe('/login form', () => {
     await page.click('[data-testid="login-submit"]')
 
     await expect(page.locator('[data-testid="login-error"]')).toContainText(
-      'matthew@updatewave.com'
+      'matthew@updatewave.org'
     )
   })
 

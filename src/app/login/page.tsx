@@ -10,7 +10,7 @@ const ERROR_COPY: Record<string, string> = {
   link_expired: 'That link has expired or already been used. Please request a new one.',
   session_failed: 'We couldn’t finish signing you in. Please try again.',
   account_unavailable:
-    'This account is no longer active. Email matthew@updatewave.com if you think this is a mistake.',
+    'This account is no longer active. Email matthew@updatewave.org if you think this is a mistake.',
 }
 
 interface LoginPageProps {

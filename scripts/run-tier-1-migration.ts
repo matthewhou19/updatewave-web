@@ -13,7 +13,7 @@
  *   NEXT_PUBLIC_SUPABASE_URL
  *   SUPABASE_SERVICE_ROLE_KEY
  *   RESEND_API_KEY              (only required when --confirm)
- *   AUTH_FROM_EMAIL             defaults to "UpdateWave <auth@auth.updatewave.com>"
+ *   AUTH_FROM_EMAIL             defaults to "UpdateWave <auth@auth.updatewave.org>"
  *   AUTH_REDIRECT_URL           defaults to NEXT_PUBLIC_BASE_URL || production URL
  *
  * Pre-flight halts:
@@ -76,7 +76,7 @@ async function main() {
 
   // --confirm path: actually send.
   const apiKey = requireEnv('RESEND_API_KEY')
-  const fromAddress = process.env.AUTH_FROM_EMAIL ?? 'UpdateWave <auth@auth.updatewave.com>'
+  const fromAddress = process.env.AUTH_FROM_EMAIL ?? 'UpdateWave <auth@auth.updatewave.org>'
   const redirectBase = resolveRedirectBase()
 
   let sent = 0

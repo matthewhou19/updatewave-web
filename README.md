@@ -137,7 +137,7 @@ ON CONFLICT (hash) DO NOTHING;
 **Prerequisites for the email login flow (`/login` + `/auth/callback`):**
 
 1. Migration `supabase/migrations/003-email-login-auth.sql` applied (adds `users.auth_user_id`, partial UNIQUE on email, `identity_fork_alerts` and `auth_login_events` tables, `paid_user_ids()` and `find_duplicate_emails()` RPCs).
-2. Supabase Auth SMTP configured to send via Resend from `auth.updatewave.com` (DNS: SPF, DKIM, DMARC).
+2. Supabase Auth SMTP configured to send via Resend from `auth.updatewave.org` (DNS: SPF, DKIM, DMARC).
 3. Redirect URL allowlist in Supabase Auth includes `http://localhost:3000/auth/callback` for local dev and `https://updatewave-web.vercel.app/auth/callback` for production.
 
 ## Testing
