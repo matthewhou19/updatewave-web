@@ -130,9 +130,11 @@ test.describe('Public /pricing page', () => {
     // SJ tier shows the $499 anchor strikethrough
     await expect(page.locator('[data-testid="pricing-anchor-sj-report"]')).toContainText('$499')
 
-    // CTAs are mailto: links (v1 sign-in fallback)
+    // CTAs route to /login with a tier-specific `next` param (v2 self-serve
+    // signup contract — replaces the v1 mailto fallback).
     const revealCta = page.locator('[data-testid="pricing-cta-reveal"]')
-    await expect(revealCta).toHaveAttribute('href', /^mailto:matthew@updatewave\.com/)
+    await expect(revealCta).toHaveAttribute('href', /^\/login\?next=/)
+    await expect(revealCta).toHaveAttribute('href', new RegExp(encodeURIComponent('{hash}')))
   })
 
   test('does NOT show a Recommended badge anywhere (anti-slop guardrail)', async ({ page }) => {

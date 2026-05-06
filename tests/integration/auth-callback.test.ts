@@ -119,6 +119,48 @@ describe('GET /auth/callback', () => {
     )
   })
 
+  it('honors a sanitized `next` query param with {hash} substitution', async () => {
+    mockVerifyOtp.mockResolvedValueOnce({ data: { user: { id: 'auth-uuid-7' } }, error: null })
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'auth-uuid-7', email: 'user@example.com' } },
+      error: null,
+    })
+    mockResolveAuthLogin.mockResolvedValueOnce({
+      user: TEST_USER,
+      isNew: false,
+      forkAlert: null,
+    })
+
+    const res = await GET(
+      makeRequest(
+        'https://example.com/auth/callback?token_hash=ok&type=magiclink&next=%2Flist%2F%7Bhash%7D%2Fsj'
+      )
+    )
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toBe('https://example.com/list/h7/sj')
+  })
+
+  it('falls back to /browse/[hash] when next is unsafe (open-redirect attempt)', async () => {
+    mockVerifyOtp.mockResolvedValueOnce({ data: { user: { id: 'auth-uuid-7' } }, error: null })
+    mockGetUser.mockResolvedValueOnce({
+      data: { user: { id: 'auth-uuid-7', email: 'user@example.com' } },
+      error: null,
+    })
+    mockResolveAuthLogin.mockResolvedValueOnce({
+      user: TEST_USER,
+      isNew: false,
+      forkAlert: null,
+    })
+
+    const res = await GET(
+      makeRequest(
+        'https://example.com/auth/callback?token_hash=ok&type=magiclink&next=https%3A%2F%2Fevil.example.com'
+      )
+    )
+    expect(res.status).toBe(303)
+    expect(res.headers.get('location')).toBe('https://example.com/browse/h7')
+  })
+
   it('on resolveAuthLogin throw, redirects with account_unavailable and logs callback_failed', async () => {
     mockVerifyOtp.mockResolvedValueOnce({ data: { user: { id: 'auth-uuid-X' } }, error: null })
     mockGetUser.mockResolvedValueOnce({

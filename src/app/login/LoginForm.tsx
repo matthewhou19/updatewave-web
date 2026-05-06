@@ -6,7 +6,18 @@ import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
 
 const FOUNDER_EMAIL = 'matthew@updatewave.org'
 
-export default function LoginForm() {
+interface LoginFormProps {
+  /**
+   * Optional sanitized `next` path (already validated server-side by
+   * sanitizeNextParam). Forwarded to /auth/callback so the post-login
+   * redirect lands on the tier-specific page the visitor was shopping for.
+   * The `{hash}` placeholder, if present, is substituted by /auth/callback
+   * after identity resolution.
+   */
+  next?: string | null
+}
+
+export default function LoginForm({ next }: LoginFormProps = {}) {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -27,9 +38,12 @@ export default function LoginForm() {
       const supabase = createSupabaseBrowserClient()
       const origin =
         typeof window !== 'undefined' ? window.location.origin : ''
+      const callbackUrl = next
+        ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
+        : `${origin}/auth/callback`
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: trimmed,
-        options: { emailRedirectTo: `${origin}/auth/callback` },
+        options: { emailRedirectTo: callbackUrl },
       })
       if (otpError) {
         setError(
