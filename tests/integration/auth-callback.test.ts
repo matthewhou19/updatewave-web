@@ -15,10 +15,11 @@ const TEST_USER = {
   auth_user_id: 'auth-uuid-7',
 }
 
-let mockVerifyOtp: ReturnType<typeof vi.fn>
-let mockGetUser: ReturnType<typeof vi.fn>
-let mockResolveAuthLogin: ReturnType<typeof vi.fn>
-let mockLogInsert: ReturnType<typeof vi.fn>
+type AnyMockFn = (...args: unknown[]) => unknown
+let mockVerifyOtp: ReturnType<typeof vi.fn<AnyMockFn>>
+let mockGetUser: ReturnType<typeof vi.fn<AnyMockFn>>
+let mockResolveAuthLogin: ReturnType<typeof vi.fn<AnyMockFn>>
+let mockLogInsert: ReturnType<typeof vi.fn<AnyMockFn>>
 
 vi.mock('@/lib/supabase-server', () => ({
   createSupabaseServerClient: () =>

@@ -21,7 +21,7 @@ function createMockSupabase() {
 let mockSupabase: ReturnType<typeof createMockSupabase>
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let mockStripeCreate: any
-let mockGetCurrentUser: ReturnType<typeof vi.fn>
+let mockGetCurrentUser: ReturnType<typeof vi.fn<(...args: unknown[]) => unknown>>
 
 vi.mock('@/lib/supabase', () => ({
   createSupabaseServiceClient: () => mockSupabase,
