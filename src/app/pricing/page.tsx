@@ -1,4 +1,4 @@
-import { PRICING_TIERS, type PricingTier, type PricingTierSlug } from '@/lib/pricing'
+import { PRICING_TIERS, type PricingTier } from '@/lib/pricing'
 
 /**
  * /pricing — public pricing comparison page (no hash required).
@@ -12,14 +12,12 @@ import { PRICING_TIERS, type PricingTier, type PricingTierSlug } from '@/lib/pri
  * colored circles, no decorative checkmark icons, no accent color outside
  * CTAs and the eyebrow.
  *
- * V1 CTA implementation: all three CTAs are mailto: links targeting
- * matthew@updatewave.com with tier-specific subjects. Cold-email recipients
- * see this page, click their tier, and email the founder for an access
- * link. Manual but unblocks shipping today.
- *
- * TODO: replace mailto CTAs with proper /signup?next=... routing once
- * the sign-in system lands. The current mailto fallback is intentional —
- * see docs/product-roadmap design Locked Decision #15.
+ * CTA routing: each tier's CTA links to /login with a `next` query param
+ * carrying the tier-specific destination (using the `{hash}` placeholder
+ * from pricing.ts ctaPathTemplate). After magic-link login, /auth/callback
+ * substitutes the new user's hash and redirects them to the right page.
+ * This replaces the v1 mailto fallback now that anonymous self-serve
+ * signup is wired up.
  *
  * ISR: 1-hour cache. Page content is static (reads pricing.ts which is a
  * config file that only changes when we ship new pricing).
@@ -93,7 +91,7 @@ interface TierRowProps {
 }
 
 function TierRow({ tier, isFirst }: TierRowProps) {
-  const ctaHref = mailtoForTier(tier)
+  const ctaHref = signupHrefForTier(tier)
   const showAnchor = tier.anchorDisplay !== null
 
   return (
@@ -151,23 +149,13 @@ function TierRow({ tier, isFirst }: TierRowProps) {
 }
 
 /**
- * Build the mailto: href for a tier's CTA.
+ * Build the signup-redirect href for a tier's CTA.
  *
- * V1 implementation per spec: all CTAs route to matthew@updatewave.com with
- * a tier-specific subject. Founder responds with an access URL. This is
- * intentional — coupling /pricing CTAs to the sign-in flow is deferred
- * until that system lands.
- *
- * The tier.ctaPathTemplate string still describes where the CTA *should*
- * eventually route once /signup integration is in place. We don't use it
- * here, but keep it in the config so the future migration is one swap.
+ * Routes the visitor to /login with `next` set to the tier's ctaPathTemplate
+ * (e.g. `/list/{hash}/sj`). The `{hash}` token is left literal — /auth/callback
+ * substitutes it with the freshly-resolved user.hash after magic-link login
+ * so first-time signups land directly on the page they were shopping for.
  */
-function mailtoForTier(tier: PricingTier): string {
-  const subjects: Record<PricingTierSlug, string> = {
-    reveal: 'Get access to UpdateWave (per-lead reveals)',
-    'sj-report': 'Get access to UpdateWave (SJ market structure report)',
-    research: 'Get access to UpdateWave (custom city research)',
-  }
-  const subject = encodeURIComponent(subjects[tier.slug])
-  return `mailto:matthew@updatewave.com?subject=${subject}`
+function signupHrefForTier(tier: PricingTier): string {
+  return `/login?next=${encodeURIComponent(tier.ctaPathTemplate)}`
 }

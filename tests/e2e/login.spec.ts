@@ -74,4 +74,35 @@ test.describe('/login form', () => {
       'expired'
     )
   })
+
+  test('renders sign-up affordance in the title', async ({ page }) => {
+    await page.goto('/login')
+    await expect(page.locator('h1')).toContainText('sign up')
+  })
+})
+
+test.describe('anonymous signup entry points', () => {
+  test('homepage header link routes to /login', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('[data-testid="home-login-link"]')).toBeVisible()
+    await page.locator('[data-testid="home-login-link"]').click()
+    await page.waitForURL(/\/login/)
+    await expect(page.locator('[data-testid="login-form"]')).toBeVisible()
+  })
+
+  test('homepage hero CTA routes to /login', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('[data-testid="home-hero-cta"]')).toBeVisible()
+    await page.locator('[data-testid="home-hero-cta"]').click()
+    await page.waitForURL(/\/login/)
+  })
+
+  test('pricing CTA routes to /login with a next param', async ({ page }) => {
+    await page.goto('/pricing')
+    const cta = page.locator('[data-testid="pricing-cta-reveal"]')
+    await expect(cta).toBeVisible()
+    const href = await cta.getAttribute('href')
+    expect(href).toMatch(/^\/login\?next=/)
+    expect(href).toContain(encodeURIComponent('{hash}'))
+  })
 })

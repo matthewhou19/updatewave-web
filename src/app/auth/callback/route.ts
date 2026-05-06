@@ -2,16 +2,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { resolveAuthLogin } from '@/lib/auth-resolution'
+import { sanitizeNext, applyHashToNext } from '@/lib/safe-next'
 
 /**
  * Magic-link callback. Hit by the user clicking the link in their email.
  *
  * Flow:
- *   1. Read `token_hash` + `type` from query string.
+ *   1. Read `token_hash` + `type` (+ optional `next`) from query string.
  *   2. Verify with Supabase Auth (sets the cookie session).
  *   3. Resolve `auth.users.id` → `public.users` row via 4-case identity logic.
  *   4. Track outcome via `auth_login_events` (best-effort).
- *   5. Redirect to /browse/[hash] on success or /login with error otherwise.
+ *   5. Redirect to `next` (with `{hash}` substituted) on success, or to
+ *      /browse/[hash] if no next was provided. Errors → /login.
  *
  * The cookie client handles the session writes; the service-role client
  * handles RLS-bypassing writes for identity resolution and event logging.
@@ -30,6 +32,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url)
   const tokenHash = url.searchParams.get('token_hash')
   const type = parseOtpType(url.searchParams.get('type'))
+  const next = sanitizeNext(url.searchParams.get('next'))
   const origin = baseUrl(request)
 
   if (!tokenHash) {
@@ -71,10 +74,10 @@ export async function GET(request: NextRequest) {
 
     await logEvent(service, 'callback_succeeded', result.user.id, authUser.id)
 
-    return NextResponse.redirect(
-      `${origin}/browse/${result.user.hash}`,
-      { status: 303 }
-    )
+    const dest = next
+      ? applyHashToNext(next, result.user.hash)
+      : `/browse/${result.user.hash}`
+    return NextResponse.redirect(`${origin}${dest}`, { status: 303 })
   } catch (err) {
     await logEvent(service, 'callback_failed', null, authUser.id)
     // Soft-deleted account or other resolution failure surfaces as a

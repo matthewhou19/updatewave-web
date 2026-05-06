@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getCurrentUser } from '@/lib/auth'
+import { sanitizeNext, applyHashToNext } from '@/lib/safe-next'
 import LoginForm from './LoginForm'
 
 export const dynamic = 'force-dynamic'
@@ -14,28 +15,32 @@ const ERROR_COPY: Record<string, string> = {
 }
 
 interface LoginPageProps {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; next?: string }>
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const supabase = await createSupabaseServerClient()
   const user = await getCurrentUser(supabase)
+  const params = await searchParams
+  const next = sanitizeNext(params.next)
 
   if (user) {
-    redirect(`/browse/${user.hash}`)
+    const dest = next ? applyHashToNext(next, user.hash) : `/browse/${user.hash}`
+    redirect(dest)
   }
 
-  const { error } = await searchParams
+  const { error } = params
   const errorMessage = error && ERROR_COPY[error] ? ERROR_COPY[error] : null
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f5f5]">
       <main className="mx-auto w-full max-w-md flex-1 px-4 py-16">
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h1 className="mb-2 text-xl font-bold text-[#111827]">Log in</h1>
+          <h1 className="mb-2 text-xl font-bold text-[#111827]">Log in or sign up</h1>
           <p className="mb-6 text-sm text-[#6b7280]">
-            Enter your email. We&apos;ll send you a one-time link to access
-            your account.
+            Enter your email. We&apos;ll send you a one-time link. New here?
+            We&apos;ll create your account on the first click — no password
+            required.
           </p>
 
           {errorMessage && (
@@ -48,7 +53,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
             </p>
           )}
 
-          <LoginForm />
+          <LoginForm next={next} />
         </div>
 
         <p className="mt-6 text-center text-xs text-[#9ca3af]">
