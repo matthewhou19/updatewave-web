@@ -184,6 +184,12 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
         <p className="text-xs text-[#9ca3af]">
           All listings sourced from public planning commission filings.
         </p>
+        <Link
+          href="/pricing"
+          className="text-xs text-[#9ca3af] hover:text-[#6b7280] underline mt-2 inline-block"
+        >
+          See all plans
+        </Link>
       </footer>
     </div>
   )

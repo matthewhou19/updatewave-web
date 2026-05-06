@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { fetchCityList, fetchListPurchase, resolveUserByHash } from '@/lib/queries'
@@ -96,6 +97,12 @@ export default async function ListSuccessPage({ params }: SuccessPageProps) {
         <p className="text-xs text-[#9ca3af]">
           All data sourced from public planning commission filings.
         </p>
+        <Link
+          href="/pricing"
+          className="text-xs text-[#9ca3af] hover:text-[#6b7280] underline mt-2 inline-block"
+        >
+          See all plans
+        </Link>
       </footer>
     </div>
   )

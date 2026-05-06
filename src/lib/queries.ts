@@ -6,7 +6,15 @@
  */
 
 import { SupabaseClient } from '@supabase/supabase-js'
-import { CityList, CityListWithStoragePath, ListPurchase, Project, User } from './types'
+import {
+  CityList,
+  CityListWithStoragePath,
+  DigestSubscription,
+  ListPurchase,
+  Project,
+  ResearchPurchase,
+  User,
+} from './types'
 
 /**
  * Explicit columns for project listings. Architect fields are intentionally
@@ -19,9 +27,21 @@ const PROJECT_LIST_COLUMNS =
  * Public columns for city_lists. pdf_storage_path is intentionally excluded
  * to prevent leaking the storage path to the client. Only the download API
  * (server-side, with purchase verification) reads pdf_storage_path.
+ *
+ * service_tier and delivery_window_days are added by migration 003 to support
+ * the $1999 research SKU; safe to expose publicly.
  */
 const CITY_LIST_PUBLIC_COLUMNS =
-  'id, city, year, title, description, headline_insight, headline_insight_subtext, price_cents, anchor_price_cents, active, created_at, updated_at'
+  'id, city, year, title, description, headline_insight, headline_insight_subtext, price_cents, anchor_price_cents, active, service_tier, delivery_window_days, created_at, updated_at'
+
+/**
+ * Public columns for research_purchases. Mirrors CITY_LIST_PUBLIC_COLUMNS
+ * pattern: full row is safe to expose to the row's owner (no secret-bearing
+ * columns), but the constant exists so future schema additions stay
+ * intentional rather than implicit on `select('*')`.
+ */
+export const RESEARCH_PURCHASE_PUBLIC_COLUMNS =
+  'id, user_id, city_list_id, stripe_session_id, stripe_payment_id, amount_cents, delivery_status, digest_subscription_until, purchased_at, delivered_at'
 
 /**
  * Fetch published projects without architect fields.
@@ -82,6 +102,13 @@ export async function resolveUserByHash(supabase: SupabaseClient, hash: string) 
 /**
  * Fetch a city_list by its slug (city column doubles as URL slug).
  * Only returns active rows. Public columns only — does NOT include pdf_storage_path.
+ *
+ * Filters on service_tier='report' to disambiguate after migration 004.
+ * Migration 002 set UNIQUE(city, year) so SJ had at most one row per year.
+ * Migration 004 lifts that to UNIQUE(city, year, service_tier), so SJ now
+ * has TWO rows: the $349 'report' SKU and the $1999 'research' SKU. This
+ * helper is for the existing /list product (the $349 report) — research
+ * pages use fetchActiveResearchCities or a tier-filtered direct query.
  */
 export async function fetchCityList(supabase: SupabaseClient, city: string) {
   const { data, error } = await supabase
@@ -89,6 +116,7 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
     .select(CITY_LIST_PUBLIC_COLUMNS)
     .eq('city', city)
     .eq('active', true)
+    .eq('service_tier', 'report')
     .single()
 
   return { cityList: (data as CityList | null), error }
@@ -98,6 +126,10 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
  * Fetch a city_list INCLUDING pdf_storage_path. For server-side use only
  * (download API after purchase verification). Never expose this result to
  * the client.
+ *
+ * Same service_tier='report' filter as fetchCityList — the $349 report's
+ * download API points here. The research download API has its own helper
+ * with service_tier='research'.
  */
 export async function fetchCityListWithStoragePath(supabase: SupabaseClient, city: string) {
   const { data, error } = await supabase
@@ -105,6 +137,7 @@ export async function fetchCityListWithStoragePath(supabase: SupabaseClient, cit
     .select(`${CITY_LIST_PUBLIC_COLUMNS}, pdf_storage_path`)
     .eq('city', city)
     .eq('active', true)
+    .eq('service_tier', 'report')
     .single()
 
   return { cityList: (data as CityListWithStoragePath | null), error }
@@ -192,4 +225,103 @@ export function mergeArchitectData(
       architect_website: arch?.architect_website ?? null,
     }
   })
+}
+
+/**
+ * Fetch all active city_lists rows with service_tier='research'.
+ * Used by /research/[hash] to populate the Bay Area city dropdown.
+ *
+ * Public columns only — does NOT include pdf_storage_path.
+ * Sorted alphabetically by city slug per design Locked Decision #23.
+ */
+export async function fetchActiveResearchCities(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('city_lists')
+    .select(CITY_LIST_PUBLIC_COLUMNS)
+    .eq('active', true)
+    .eq('service_tier', 'research')
+    .order('city', { ascending: true })
+
+  return { cityLists: ((data ?? []) as CityList[]), error }
+}
+
+/**
+ * Look up an existing research purchase. Returns the row or null.
+ *
+ * Used by:
+ *   - /research/[hash]/[city]/status (read state for delivery status display)
+ *   - /api/webhook handleResearchPurchase (idempotency check before insert)
+ *   - /api/download-research/[hash]/[city] (delivered-only download gate)
+ */
+export async function fetchResearchPurchase(
+  supabase: SupabaseClient,
+  userId: number,
+  cityListId: number
+) {
+  const { data, error } = await supabase
+    .from('research_purchases')
+    .select(RESEARCH_PURCHASE_PUBLIC_COLUMNS)
+    .eq('user_id', userId)
+    .eq('city_list_id', cityListId)
+    .single()
+
+  return { purchase: (data as ResearchPurchase | null), error }
+}
+
+/**
+ * Detect $349-then-$1999 SJ collision before rendering the /research dropdown.
+ *
+ * Returns whether the user already owns the $349 city report for the given
+ * city_list_id. The /research page uses this to surface the SJ collision
+ * warning copy per design Locked Decision #20.
+ *
+ * Mirrors fetchListPurchase but exposes a boolean instead of the row, since
+ * the call site only needs presence/absence.
+ */
+export async function fetchListPurchaseForCollisionCheck(
+  supabase: SupabaseClient,
+  userId: number,
+  cityListId: number
+): Promise<{ owns: boolean; error: unknown }> {
+  const { data, error } = await supabase
+    .from('list_purchases')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('city_list_id', cityListId)
+    .maybeSingle()
+
+  return { owns: data !== null, error }
+}
+
+/**
+ * Create a digest_subscriptions row for a fresh research_purchase.
+ *
+ * Generates the unsubscribe_token via crypto.randomUUID() (URL-safe, 36 chars,
+ * sufficient entropy for the use case — token is the only auth on the public
+ * /unsubscribe/[token] page).
+ *
+ * Returns the inserted row. The caller (webhook handleResearchPurchase) is
+ * responsible for handling the case where research_purchase already has a
+ * digest_subscriptions row (no UNIQUE constraint on research_purchase_id —
+ * by design, in case the digest is ever re-subscribed after unsubscribe).
+ */
+export async function createDigestSubscription(
+  supabase: SupabaseClient,
+  researchPurchaseId: number,
+  city: string
+) {
+  const unsubscribeToken = crypto.randomUUID()
+
+  const { data, error } = await supabase
+    .from('digest_subscriptions')
+    .insert({
+      research_purchase_id: researchPurchaseId,
+      city,
+      unsubscribe_token: unsubscribeToken,
+      active: true,
+    })
+    .select()
+    .single()
+
+  return { subscription: (data as DigestSubscription | null), error }
 }
