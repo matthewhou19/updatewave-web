@@ -16,6 +16,7 @@
     "setup": "bash scripts/setup-local.sh"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.101.1",
     "next": "16.2.2",
     "react": "19.2.4",
