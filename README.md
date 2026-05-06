@@ -139,6 +139,15 @@ ON CONFLICT (hash) DO NOTHING;
 1. Migration `supabase/migrations/003-email-login-auth.sql` applied (adds `users.auth_user_id`, partial UNIQUE on email, `identity_fork_alerts` and `auth_login_events` tables, `paid_user_ids()` and `find_duplicate_emails()` RPCs).
 2. Supabase Auth SMTP configured to send via Resend from `auth.updatewave.org` (DNS: SPF, DKIM, DMARC).
 3. Redirect URL allowlist in Supabase Auth includes `http://localhost:3000/auth/callback` for local dev and `https://updatewave-web.vercel.app/auth/callback` for production.
+4. Supabase Auth `magic_link` email template overridden to embed `{{ .TokenHash }}` directly in the callback URL (the default `{{ .ConfirmationURL }}` template goes through Supabase's `/verify` endpoint and does not produce the `token_hash` query param our `/auth/callback` route handler expects). Use this template body:
+   ```html
+   <h2>Log in to UpdateWave</h2>
+   <p>Click the link below to log into your UpdateWave account:</p>
+   <p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=magiclink">Log in to UpdateWave</a></p>
+   <p>Or paste this URL into your browser:</p>
+   <p>{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=magiclink</p>
+   <p>This link expires in 1 hour. If you did not request it, you can ignore this email.</p>
+   ```
 
 ## Testing
 
