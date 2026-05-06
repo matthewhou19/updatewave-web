@@ -15,12 +15,17 @@ test.describe('Public browse (homepage)', () => {
     await expect(cards.first()).toBeVisible()
   })
 
-  test('shows disabled "$25 to reveal" span for public visitors', async ({ page }) => {
+  test('shows "Sign in to reveal" login link for public visitors', async ({ page }) => {
     await page.goto('/')
-    const revealSpan = page.locator('span:has-text("$25 to reveal")').first()
-    await expect(revealSpan).toBeVisible()
-    // Should be a span (not a button) — public visitors can't reveal
-    expect(await revealSpan.evaluate((el) => el.tagName)).toBe('SPAN')
+    const cta = page.getByTestId('anonymous-reveal-cta').first()
+    await expect(cta).toBeVisible()
+    await expect(cta).toHaveText(/Sign in to reveal · \$25/)
+    // Should be an anchor with a /login?next=... href — public visitors get
+    // routed through magic-link signup, which substitutes {hash} on callback.
+    expect(await cta.evaluate((el) => el.tagName)).toBe('A')
+    const href = await cta.getAttribute('href')
+    expect(href).toMatch(/^\/login\?next=/)
+    expect(href).toContain(encodeURIComponent('/browse/{hash}'))
   })
 
   test('filter sidebar renders with city checkboxes', async ({ page }) => {
