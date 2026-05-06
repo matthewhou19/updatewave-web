@@ -84,6 +84,46 @@ Design audit scored the site B- → B+ after fixing all 4 high-impact findings. 
 - **Trigger:** Anytime. Independent workstream from any other roadmap item.
 - **Depends on:** SJ list PR landing first (so the soft-delete pattern is consistent across webhook + read paths).
 
+## Email Change UI — Self-Serve
+
+- **What:** `/account` page that lets a logged-in user change their email. Sends magic link to the new email; only swaps `users.email` after the new address is verified.
+- **Why:** v1 of email login auth (this design) defers email change to founder-manual SQL update. As the user base grows, founder gets requests like "I changed jobs, my work email is X now". Manual SQL becomes a chore + risks incorrect updates.
+- **Pros:** User self-service. Removes a class of founder support tickets.
+- **Cons:** Adds a 2-email transition state (old email + pending new email), validation flow, edge cases (cancel pending, resend). Probably 4-6h CC time.
+- **Context:** Email login auth design (2026-05-04) explicitly defers this. The `users.email` column has UNIQUE constraint after migration 003, so collision handling is required in the swap code.
+- **Trigger:** First time founder gets a "please update my email" request, OR v1 14-day metric reaches the subscription product threshold (≥ 5 unique activations in 14 days).
+- **Depends on:** Email login auth (design 2026-05-04) must land first.
+
+## Subscription Billing Portal Integration
+
+- **What:** Wire Stripe Customer Portal into the app so subscribed users can view invoices, upgrade plans, cancel subscriptions self-serve.
+- **Why:** The email login auth design (2026-05-04) builds the auth foundation for subscription products, but no actual subscription product exists yet. When the first one launches, billing portal is needed.
+- **Pros:** Standard Stripe-hosted UI, minimal custom code. Supports invoice history, payment method updates, cancellation.
+- **Cons:** Requires a subscription product designed first (price, term, product name, what gets gated). Cannot be built standalone.
+- **Context:** Stripe Customer Portal is configured per-customer via `stripe.billingPortal.sessions.create({ customer: stripe_customer_id })`. The link is short-lived. Need to map `users.id` to `stripe.customers.id` (new column or lookup via past payment intents).
+- **Trigger:** First customer asks "I want to subscribe annually" — that's the v1 14-day metric trigger. Until then, building this is speculative.
+- **Depends on:** Email login auth foundation + a designed subscription product.
+
+## Identity-Fork Manual Merge UI
+
+- **What:** Admin page for founder to review `identity_fork_alerts` entries (created when a new login email looks suspiciously similar to an existing paid user). Selecting "merge X into Y" runs a transaction: UPDATE reveals/list_purchases user_id from X to Y, soft-delete X, mark alert reviewed.
+- **Why:** The email login auth design writes alert rows but provides no UI to act on them. Without a UI, alerts pile up and forks are never merged.
+- **Pros:** Founder doesn't need to write transactional SQL by hand. Audit trail (`identity_fork_alerts.reviewed_at`) is set automatically.
+- **Cons:** Admin page needs its own auth (role check on Supabase Auth user, or restrict to founder's email). Code complexity for transactional merge isn't trivial. Probably 3-4h CC time.
+- **Context:** Migration 003 creates `identity_fork_alerts` with `(user_id_new, user_id_likely_old, similarity_signal, created_at, reviewed_at)`. SQL queries can do the inspection today. The merge transaction is the only meaningful new code.
+- **Trigger:** First identity_fork_alerts row with a real fork (not a false positive). Until then, founder reviews via SQL.
+- **Depends on:** Email login auth design landing + admin auth pattern decision.
+
+## Lost Hash + Lost Email Recovery — Admin Lookup
+
+- **What:** Admin page where founder searches users by name/company/phone and re-issues a hash URL to a known-good email or resets the user's email so they can log in.
+- **Why:** v1 of the email login auth design has no recovery path for users who lost both their hash URL AND access to their original email. Founder runs SQL today.
+- **Pros:** Reduces founder SQL labor for an edge-case-but-real recovery scenario.
+- **Cons:** Admin page needs auth. Most data fields needed for lookup (name, company) are stored on `users` already, so the SQL query is short. UI is overhead.
+- **Context:** Edge case. Probably happens < 5 times/year at current scale. SQL fallback is acceptable for a long time.
+- **Trigger:** First time a user emails support saying "I lost my link AND my old email is gone". Until then, founder handles ad-hoc.
+- **Depends on:** Identity-fork merge UI (above) probably should share the admin auth pattern.
+
 ## E2E Test Selector Migration — data-testid
 - **What:** Migrate existing E2E selectors from CSS class matching (`[class*="bg-white rounded-lg"]`) to `data-testid` attributes across `browse.spec.ts`, `reveal.spec.ts`, and `filters.spec.ts`.
 - **Why:** CSS selectors break when styling changes (dark mode, Tailwind version bump, design polish). `data-testid` is behavior-stable. New tests already use `data-testid`, creating a split in selector strategies that confuses future test authors.
