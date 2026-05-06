@@ -1,8 +1,11 @@
 'use client'
 
+import Link from 'next/link'
 import { useState } from 'react'
 import { Project } from '@/lib/types'
 import { formatRelativeTime, formatProjectType, maskStreetNumber } from '@/lib/utils'
+
+const ANONYMOUS_REVEAL_LOGIN_HREF = `/login?next=${encodeURIComponent('/browse/{hash}')}`
 
 interface ProjectCardProps {
   project: Project
@@ -132,9 +135,13 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
                 {loading ? 'Processing...' : 'Reveal · $25'}
               </button>
             ) : (
-              <span className="flex-shrink-0 px-4 py-2 bg-gray-300 text-[#6b7280] text-sm font-medium rounded-md min-w-[120px] text-center">
-                $25 to reveal
-              </span>
+              <Link
+                href={ANONYMOUS_REVEAL_LOGIN_HREF}
+                data-testid="anonymous-reveal-cta"
+                className="flex-shrink-0 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium rounded-md transition-colors cursor-pointer min-w-[120px] text-center"
+              >
+                Sign in to reveal · $25
+              </Link>
             )}
           </div>
           {loading && hash && (
