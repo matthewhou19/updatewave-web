@@ -418,4 +418,271 @@ describe('POST /api/webhook', () => {
     expect(res.status).toBe(200)
     expect(mockSupabase.from).toHaveBeenCalledWith('reveals')
   })
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Research flow ($1,999 Custom Research + 90-Day Monitoring SKU)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const RESEARCH_METADATA = {
+    product_type: 'research',
+    hash: TEST_USER.hash,
+    user_id: String(TEST_USER.id),
+    city_list_id: '7',
+    city: 'sj',
+  }
+
+  // SJ research-tier row: delivery_window_days=null → instant SKU →
+  // handleResearchPurchase auto-flips delivery_status='delivered' on insert.
+  const TEST_RESEARCH_CITY_LIST_INSTANT = {
+    id: 7,
+    city: 'sj',
+    year: 2025,
+    title: 'San Jose 2025 Custom Research + 90-Day Permit Monitoring',
+    description: 'desc',
+    headline_insight: null,
+    headline_insight_subtext: null,
+    price_cents: 199900,
+    anchor_price_cents: null,
+    active: true,
+    service_tier: 'research',
+    delivery_window_days: null,
+    created_at: '2026-05-04T00:00:00Z',
+    updated_at: '2026-05-04T00:00:00Z',
+  }
+
+  /**
+   * The research branch uses .insert(row).select().single() to fetch the
+   * inserted row id back (needed by createDigestSubscription side effect).
+   * Wire the chain so:
+   *   .insert(...) returns a chainable object whose .select().single()
+   *   resolves to a queue of values configurable via .mockResolvedValueOnce.
+   *
+   * Rebuild the mock supabase entirely for these research tests so we have
+   * full control over insert chaining without breaking the list/reveal
+   * tests above.
+   */
+  function rebuildSupabaseForResearch() {
+    const insertSingle = vi.fn()
+    const insertChain = {
+      select: vi.fn().mockReturnThis(),
+      single: insertSingle,
+    }
+    const insertFn = vi.fn((_row: Record<string, unknown>) => insertChain)
+    const baseChain = {
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      insert: insertFn,
+      update: vi.fn().mockReturnThis(),
+    }
+    mockSupabase = {
+      from: vi.fn(() => ({ ...baseChain })),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      _chain: baseChain as any,
+    }
+    return { insertFn, insertSingle, insertChain }
+  }
+
+  it('research flow: inserts research_purchases with delivered status for instant SJ SKU', async () => {
+    const insertedRow = {
+      id: 11,
+      user_id: TEST_USER.id,
+      city_list_id: 7,
+      delivery_status: 'delivered',
+    }
+    const { insertFn, insertSingle } = rebuildSupabaseForResearch()
+    insertSingle
+      .mockResolvedValueOnce({ data: insertedRow, error: null })          // research_purchases insert
+      .mockResolvedValueOnce({ data: { id: 99 }, error: null })           // digest_subscriptions insert
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })            // resolveUserByHash
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null }) // fetchCityListByTier
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+
+    // The research_purchases insert was called with delivery_status='delivered'
+    expect(mockSupabase.from).toHaveBeenCalledWith('research_purchases')
+    const insertPayload = insertFn.mock.calls[0][0] as Record<string, unknown>
+    expect(insertPayload.user_id).toBe(TEST_USER.id)
+    expect(insertPayload.city_list_id).toBe(7)
+    expect(insertPayload.stripe_session_id).toBe('cs_test_123')
+    expect(insertPayload.amount_cents).toBe(199900)
+    expect(insertPayload.delivery_status).toBe('delivered')
+    expect(insertPayload.delivered_at).not.toBeNull()
+    expect(typeof insertPayload.digest_subscription_until).toBe('string')
+
+    // After insert, digest_subscriptions row was created
+    expect(mockSupabase.from).toHaveBeenCalledWith('digest_subscriptions')
+  })
+
+  it('research flow: returns 200 without insert when metadata is missing', async () => {
+    rebuildSupabaseForResearch()
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, { product_type: 'research' })
+    )
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
+  })
+
+  it('research flow: handles duplicate (UNIQUE 23505) idempotently', async () => {
+    const { insertSingle } = rebuildSupabaseForResearch()
+    insertSingle.mockResolvedValueOnce({
+      data: null,
+      error: { code: '23505', message: 'duplicate key value' },
+    })
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.received).toBe(true)
+    // After a duplicate insert, the digest_subscriptions side effect must NOT run.
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('digest_subscriptions')
+  })
+
+  it('research flow: returns 500 on non-duplicate DB error during insert', async () => {
+    const { insertSingle } = rebuildSupabaseForResearch()
+    insertSingle.mockResolvedValueOnce({
+      data: null,
+      error: { code: '42P01', message: 'relation does not exist' },
+    })
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(500)
+  })
+
+  it('research flow: deleted user does NOT receive research_purchases row', async () => {
+    rebuildSupabaseForResearch()
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    // resolveUserByHash returns null because deleted_at filter excludes the row
+    mockSupabase._chain.single.mockResolvedValueOnce({
+      data: null,
+      error: { code: 'PGRST116', message: 'no rows' },
+    })
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    expect(mockSupabase._chain.is).toHaveBeenCalledWith('deleted_at', null)
+    expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
+  })
+
+  it('research flow: amount mismatch ($50 instead of $1999) does NOT insert', async () => {
+    rebuildSupabaseForResearch()
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 5000)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
+  })
+
+  it('research flow: missing metadata.city does NOT insert', async () => {
+    rebuildSupabaseForResearch()
+    const metadataNoCity = { ...RESEARCH_METADATA }
+    delete (metadataNoCity as Record<string, string>).city
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, metadataNoCity, 199900)
+    )
+    mockSupabase._chain.single.mockResolvedValueOnce({ data: TEST_USER, error: null })
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
+  })
+
+  it('research flow: unpaid payment_status does NOT insert (regression for shared paid guard)', async () => {
+    rebuildSupabaseForResearch()
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900, 'unpaid')
+    )
+
+    const res = await POST(makeRequest('{}'))
+    expect(res.status).toBe(200)
+    expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
+  })
+
+  it('research flow: filters city_lists query by service_tier=research (avoids matching $349 row)', async () => {
+    const { insertSingle } = rebuildSupabaseForResearch()
+    insertSingle
+      .mockResolvedValueOnce({ data: { id: 11 }, error: null })
+      .mockResolvedValueOnce({ data: { id: 99 }, error: null })
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    await POST(makeRequest('{}'))
+    expect(mockSupabase._chain.eq).toHaveBeenCalledWith('service_tier', 'research')
+  })
+
+  it('research flow: digest_subscriptions side-effect failure does NOT fail the webhook', async () => {
+    const { insertSingle } = rebuildSupabaseForResearch()
+    insertSingle
+      .mockResolvedValueOnce({ data: { id: 11 }, error: null })            // research_purchases OK
+      .mockResolvedValueOnce({                                              // digest insert fails
+        data: null,
+        error: { code: '23505', message: 'unique violation on unsubscribe_token' },
+      })
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    const res = await POST(makeRequest('{}'))
+    // Webhook still 200s — purchase is recorded; digest is non-fatal.
+    expect(res.status).toBe(200)
+  })
+
+  it('research flow: dispatches via metadata.product_type="research"', async () => {
+    const { insertSingle } = rebuildSupabaseForResearch()
+    insertSingle
+      .mockResolvedValueOnce({ data: { id: 11 }, error: null })
+      .mockResolvedValueOnce({ data: { id: 99 }, error: null })
+
+    mockStripeConstructEvent.mockReturnValue(
+      makeCheckoutEvent(null, RESEARCH_METADATA, 199900)
+    )
+    mockSupabase._chain.single
+      .mockResolvedValueOnce({ data: TEST_USER, error: null })
+      .mockResolvedValueOnce({ data: TEST_RESEARCH_CITY_LIST_INSTANT, error: null })
+
+    await POST(makeRequest('{}'))
+    expect(mockSupabase.from).toHaveBeenCalledWith('research_purchases')
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('reveals')
+    expect(mockSupabase.from).not.toHaveBeenCalledWith('list_purchases')
+  })
 })

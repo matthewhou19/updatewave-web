@@ -21,6 +21,8 @@ export interface Project {
   created_at: string
 }
 
+export type EmailStatus = 'unknown' | 'verified' | 'bounced' | 'complained'
+
 export interface User {
   id: number
   hash: string
@@ -33,6 +35,7 @@ export interface User {
   last_seen_at: string | null
   deleted_at: string | null
   auth_user_id: string | null
+  email_status?: EmailStatus
 }
 
 export type IdentitySimilaritySignal = 'same_local_part' | 'same_domain'
@@ -83,6 +86,8 @@ export interface RevealWithProject extends Reveal {
   status: 'candidate' | 'published' | 'stale' | 'archived'
 }
 
+export type ServiceTier = 'report' | 'research'
+
 export interface CityList {
   id: number
   city: string
@@ -94,6 +99,8 @@ export interface CityList {
   price_cents: number
   anchor_price_cents: number | null
   active: boolean
+  service_tier: ServiceTier
+  delivery_window_days: number | null
   created_at: string
   updated_at: string
 }
@@ -112,4 +119,48 @@ export interface ListPurchase {
   purchased_at: string
 }
 
-export type ProductType = 'reveal' | 'list'
+export type DeliveryStatus = 'pending' | 'in_research' | 'delivered' | 'cancelled'
+
+export interface ResearchPurchase {
+  id: number
+  user_id: number
+  city_list_id: number
+  stripe_session_id: string
+  stripe_payment_id: string | null
+  amount_cents: number
+  delivery_status: DeliveryStatus
+  digest_subscription_until: string
+  purchased_at: string
+  delivered_at: string | null
+}
+
+export interface DigestSubscription {
+  id: number
+  research_purchase_id: number
+  city: string
+  unsubscribe_token: string
+  active: boolean
+  unsubscribed_at: string | null
+  last_sent_at: string | null
+  created_at: string
+}
+
+export type EventType =
+  | 'sent'
+  | 'delivered'
+  | 'bounced'
+  | 'complained'
+  | 'unsubscribed'
+  | 'admin_action'
+
+export interface DeliveryEvent {
+  id: number
+  user_id: number | null
+  email: string
+  event_type: EventType
+  resend_message_id: string | null
+  payload: unknown
+  created_at: string
+}
+
+export type ProductType = 'reveal' | 'list' | 'research'

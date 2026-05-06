@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User } from '@/lib/types'
 import { fetchPublishedProjects, fetchUserByHash, fetchUserReveals, fetchArchitectData, mergeArchitectData } from '@/lib/queries'
@@ -52,6 +53,12 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
         <p className="text-xs text-[#9ca3af]">
           All listings sourced from public planning commission filings.
         </p>
+        <Link
+          href="/pricing"
+          className="text-xs text-[#9ca3af] hover:text-[#6b7280] underline mt-2 inline-block"
+        >
+          See all plans
+        </Link>
       </footer>
     </div>
   )

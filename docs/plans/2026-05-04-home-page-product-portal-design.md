@@ -1,3 +1,32 @@
+# [SUPERSEDED 2026-05-04] Home Page Product Portal Design
+
+> **STATUS: SUPERSEDED — historical record only.**
+>
+> This design (drafted morning of 2026-05-04) proposed a `$129 / $499 / $1999`
+> pricing ladder. It was superseded later the same day by an /office-hours
+> session that locked the ladder at `$25 / $349 / $1999`, reflecting shipped
+> reality:
+>
+> - `$25/reveal` is LIVE in production, generating revenue
+> - `$349 SJ city market structure report` shipped 2026-04-28 (commit `59bf5b8`)
+> - `$1999 custom city research` is the next product; foundation merged via
+>   PR #11 (commit `36c4130` on `docs/product-roadmap`, 2026-05-04)
+>
+> **Current source of truth:**
+> `~/.gstack/projects/matthewhou19-updatewave-web/matthewhou19-docs-product-roadmap-design-20260504-143211.md`
+> (Status: APPROVED, Lane A MERGED).
+>
+> The pivot is also visible in the parallel worktree branch
+> `feat/pricing-and-research-product`: commit `2f2c7b8 feat(pricing): tier
+> config for /pricing ladder ($25 / $349 / $1999)` and the explicit checkpoint
+> commit `197aef6 wip(home): Phase 2.1 portal skeleton + 5 stub components
+> (CHECKPOINT BEFORE PIVOT)`.
+>
+> The original design is preserved below as historical record. Do not implement
+> from this document.
+
+---
+
 # UpdateWave Web — New Home Page (Product Portal) Design
 
 **Date:** 2026-05-04

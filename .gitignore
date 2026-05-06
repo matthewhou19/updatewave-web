@@ -44,8 +44,9 @@ yarn-error.log*
 next-env.d.ts
 .gstack/
 
-# worktrees
+# worktrees (parallel feature branches sharing this repo)
 .worktrees/
+.claude/worktrees/
 
-# Claude Code local settings (per-developer, not shared)
+# local Claude Code settings (per-user, not shared)
 .claude/settings.local.json
