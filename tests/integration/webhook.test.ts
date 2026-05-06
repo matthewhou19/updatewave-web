@@ -467,7 +467,7 @@ describe('POST /api/webhook', () => {
       select: vi.fn().mockReturnThis(),
       single: insertSingle,
     }
-    const insertFn = vi.fn(() => insertChain)
+    const insertFn = vi.fn((_row: Record<string, unknown>) => insertChain)
     const baseChain = {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
