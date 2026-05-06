@@ -127,6 +127,6 @@ test.describe('Existing flows still work (regression)', () => {
       test.skip(true, 'Test data not seeded')
       return
     }
-    await expect(page.locator('h1')).toContainText('My Reveals')
+    await expect(page.locator('h1')).toContainText('My purchases')
   })
 })

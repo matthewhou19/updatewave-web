@@ -13,14 +13,14 @@ test.describe('TopBar navigation', () => {
       return
     }
 
-    // Click "My Reveals →" in TopBar
+    // Click "My purchases →" in TopBar
     await page.locator('[data-testid="topbar-link-reveals"]').click()
 
     // Wait for navigation (ENG-4)
     await page.waitForURL(`**/reveals/${TEST_HASH}`)
 
     // Assert reveals page loaded
-    await expect(page.locator('h1')).toContainText('My Reveals')
+    await expect(page.locator('h1')).toContainText('My purchases')
   })
 
   test('reveals to browse navigation', async ({ page }) => {

@@ -119,6 +119,17 @@ export interface ListPurchase {
   purchased_at: string
 }
 
+export interface ListPurchaseWithCityList {
+  id: number
+  user_id: number
+  city_list_id: number
+  amount_cents: number
+  purchased_at: string
+  city: string
+  title: string
+  year: number | null
+}
+
 export type DeliveryStatus = 'pending' | 'in_research' | 'delivered' | 'cancelled'
 
 export interface ResearchPurchase {
@@ -132,6 +143,20 @@ export interface ResearchPurchase {
   digest_subscription_until: string
   purchased_at: string
   delivered_at: string | null
+}
+
+export interface ResearchPurchaseWithCityList {
+  id: number
+  user_id: number
+  city_list_id: number
+  amount_cents: number
+  delivery_status: DeliveryStatus
+  digest_subscription_until: string
+  purchased_at: string
+  delivered_at: string | null
+  city: string
+  title: string
+  year: number | null
 }
 
 export interface DigestSubscription {
