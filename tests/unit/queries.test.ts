@@ -10,6 +10,8 @@ import {
   fetchListPurchaseForCollisionCheck,
   fetchResearchPurchase,
   fetchUserByHash,
+  fetchUserListPurchases,
+  fetchUserResearchPurchases,
   resolveUserByHash,
 } from '../../src/lib/queries'
 
@@ -462,5 +464,171 @@ describe('createDigestSubscription', () => {
     const { subscription, error } = await createDigestSubscription(supabase, 11, 'fremont')
     expect(subscription).toBeNull()
     expect(error).toMatchObject({ code: '23505' })
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────
+// Aggregate-purchases helpers used by the My Purchases page
+// ─────────────────────────────────────────────────────────────────────────
+
+describe('fetchUserListPurchases', () => {
+  it('queries list_purchases by user_id, ordered by purchased_at desc, joining city_lists', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({
+      data: [
+        {
+          id: 5,
+          user_id: 7,
+          city_list_id: 1,
+          amount_cents: 34900,
+          purchased_at: '2026-04-28T01:00:00Z',
+          city_lists: { city: 'sj', title: 'San Jose 2025 GC Market Structure Report', year: 2025 },
+        },
+      ],
+      error: null,
+    })
+    const supabase = makeSupabase(chain)
+
+    const { purchases, error } = await fetchUserListPurchases(supabase, 7)
+
+    expect(supabase.from).toHaveBeenCalledWith('list_purchases')
+    expect(chain.eq).toHaveBeenCalledWith('user_id', 7)
+    expect(chain.order).toHaveBeenCalledWith('purchased_at', { ascending: false })
+
+    // Defense in depth: pdf_storage_path must NEVER appear in the projected join
+    const selectArg = chain.select.mock.calls[0][0] as string
+    expect(selectArg).not.toContain('pdf_storage_path')
+    expect(selectArg).toContain('city_lists')
+
+    expect(error).toBeNull()
+    expect(purchases).toHaveLength(1)
+    expect(purchases[0]).toMatchObject({
+      id: 5,
+      city: 'sj',
+      title: 'San Jose 2025 GC Market Structure Report',
+      year: 2025,
+    })
+  })
+
+  it('flattens city_lists when supabase returns it as an array', async () => {
+    // PostgREST sometimes returns the joined row as a 1-element array depending
+    // on relationship cardinality detection. The helper must handle both.
+    const chain = makeChain()
+    chain.order.mockResolvedValue({
+      data: [
+        {
+          id: 6,
+          user_id: 7,
+          city_list_id: 2,
+          amount_cents: 34900,
+          purchased_at: '2026-04-30T00:00:00Z',
+          city_lists: [{ city: 'fremont', title: 'Fremont 2026', year: 2026 }],
+        },
+      ],
+      error: null,
+    })
+    const supabase = makeSupabase(chain)
+
+    const { purchases } = await fetchUserListPurchases(supabase, 7)
+    expect(purchases[0].city).toBe('fremont')
+    expect(purchases[0].title).toBe('Fremont 2026')
+  })
+
+  it('returns empty array when user has no list purchases', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({ data: [], error: null })
+    const supabase = makeSupabase(chain)
+
+    const { purchases } = await fetchUserListPurchases(supabase, 99)
+    expect(purchases).toEqual([])
+  })
+
+  it('returns empty array when supabase returns null data', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({ data: null, error: null })
+    const supabase = makeSupabase(chain)
+
+    const { purchases } = await fetchUserListPurchases(supabase, 99)
+    expect(purchases).toEqual([])
+  })
+})
+
+describe('fetchUserResearchPurchases', () => {
+  it('queries research_purchases by user_id, ordered desc, includes delivery_status', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({
+      data: [
+        {
+          id: 11,
+          user_id: 7,
+          city_list_id: 2,
+          amount_cents: 199900,
+          delivery_status: 'delivered',
+          digest_subscription_until: '2026-08-02T00:00:00Z',
+          purchased_at: '2026-05-04T00:00:00Z',
+          delivered_at: '2026-05-05T12:00:00Z',
+          city_lists: { city: 'fremont', title: 'Fremont 2026 Custom Research', year: 2026 },
+        },
+      ],
+      error: null,
+    })
+    const supabase = makeSupabase(chain)
+
+    const { purchases, error } = await fetchUserResearchPurchases(supabase, 7)
+
+    expect(supabase.from).toHaveBeenCalledWith('research_purchases')
+    expect(chain.eq).toHaveBeenCalledWith('user_id', 7)
+    expect(chain.order).toHaveBeenCalledWith('purchased_at', { ascending: false })
+
+    const selectArg = chain.select.mock.calls[0][0] as string
+    expect(selectArg).not.toContain('pdf_storage_path')
+    expect(selectArg).toContain('delivery_status')
+    expect(selectArg).toContain('city_lists')
+
+    expect(error).toBeNull()
+    expect(purchases).toHaveLength(1)
+    expect(purchases[0]).toMatchObject({
+      id: 11,
+      delivery_status: 'delivered',
+      delivered_at: '2026-05-05T12:00:00Z',
+      city: 'fremont',
+      title: 'Fremont 2026 Custom Research',
+      year: 2026,
+    })
+  })
+
+  it('preserves pending status (and null delivered_at) for in-progress research', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({
+      data: [
+        {
+          id: 12,
+          user_id: 7,
+          city_list_id: 3,
+          amount_cents: 199900,
+          delivery_status: 'pending',
+          digest_subscription_until: '2026-08-04T00:00:00Z',
+          purchased_at: '2026-05-06T00:00:00Z',
+          delivered_at: null,
+          city_lists: [{ city: 'oakland', title: 'Oakland 2026 Custom Research', year: 2026 }],
+        },
+      ],
+      error: null,
+    })
+    const supabase = makeSupabase(chain)
+
+    const { purchases } = await fetchUserResearchPurchases(supabase, 7)
+    expect(purchases[0].delivery_status).toBe('pending')
+    expect(purchases[0].delivered_at).toBeNull()
+    expect(purchases[0].city).toBe('oakland')
+  })
+
+  it('returns empty array when user has no research purchases', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({ data: [], error: null })
+    const supabase = makeSupabase(chain)
+
+    const { purchases } = await fetchUserResearchPurchases(supabase, 99)
+    expect(purchases).toEqual([])
   })
 })

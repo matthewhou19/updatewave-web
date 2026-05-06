@@ -16,7 +16,7 @@ export default function TopBar({ hash, view }: TopBarProps) {
             className="text-sm text-[#2563eb] hover:text-[#1d4ed8] font-medium"
             data-testid="topbar-link-reveals"
           >
-            My Reveals →
+            My purchases →
           </Link>
         ) : (
           <Link

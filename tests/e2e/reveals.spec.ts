@@ -6,7 +6,7 @@ test.describe('Reveals page', () => {
     await page.goto(`/reveals/${TEST_HASH}`)
 
     // Assert heading
-    await expect(page.locator('h1')).toContainText('My Reveals')
+    await expect(page.locator('h1')).toContainText('My purchases')
 
     // Assert at least 1 reveal card
     const cards = page.locator('[data-testid="project-card"]')
@@ -48,7 +48,7 @@ test.describe('Reveals page', () => {
     // Assert empty state
     const emptyState = page.locator('[data-testid="empty-reveals"]')
     await expect(emptyState).toBeVisible()
-    await expect(page.locator('text=You haven\'t revealed any projects yet')).toBeVisible()
+    await expect(page.locator('text=You haven\'t bought anything yet')).toBeVisible()
 
     // Assert browse link with correct hash
     const browseLink = emptyState.locator(`a[href="/browse/${TEST_HASH_NO_REVEALS}"]`)

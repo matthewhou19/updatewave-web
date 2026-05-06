@@ -11,8 +11,10 @@ import {
   CityListWithStoragePath,
   DigestSubscription,
   ListPurchase,
+  ListPurchaseWithCityList,
   Project,
   ResearchPurchase,
+  ResearchPurchaseWithCityList,
   User,
 } from './types'
 
@@ -289,6 +291,119 @@ export async function fetchListPurchaseForCollisionCheck(
     .maybeSingle()
 
   return { owns: data !== null, error }
+}
+
+/**
+ * List all $349 city-report purchases for a user, joined with the city_lists
+ * row so the caller can render title + city slug without a second round trip.
+ *
+ * Sorted purchased_at descending (newest first). pdf_storage_path is NEVER
+ * selected — defense-in-depth alongside CITY_LIST_PUBLIC_COLUMNS.
+ */
+export async function fetchUserListPurchases(
+  supabase: SupabaseClient,
+  userId: number
+) {
+  const { data, error } = await supabase
+    .from('list_purchases')
+    .select(`
+      id,
+      user_id,
+      city_list_id,
+      amount_cents,
+      purchased_at,
+      city_lists ( city, title, year )
+    `)
+    .eq('user_id', userId)
+    .order('purchased_at', { ascending: false })
+
+  type Raw = {
+    id: number
+    user_id: number
+    city_list_id: number
+    amount_cents: number
+    purchased_at: string
+    // Supabase may return array or object depending on relationship type
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    city_lists: any
+  }
+
+  const purchases: ListPurchaseWithCityList[] = (data ?? []).map((r: Raw) => {
+    const cl = Array.isArray(r.city_lists) ? r.city_lists[0] : r.city_lists
+    return {
+      id: r.id,
+      user_id: r.user_id,
+      city_list_id: r.city_list_id,
+      amount_cents: r.amount_cents,
+      purchased_at: r.purchased_at,
+      city: cl?.city ?? '',
+      title: cl?.title ?? '',
+      year: cl?.year ?? null,
+    }
+  })
+
+  return { purchases, error }
+}
+
+/**
+ * List all $1999 custom-research purchases for a user, joined with city_lists
+ * for title + city slug. Caller links each row to /research/[hash]/[city]/status,
+ * which is the canonical bookmarkable status + download page.
+ *
+ * Sorted purchased_at descending. delivery_status is included so the UI can
+ * label rows as "Delivered" / "In progress" / "Refunded" without a second join.
+ */
+export async function fetchUserResearchPurchases(
+  supabase: SupabaseClient,
+  userId: number
+) {
+  const { data, error } = await supabase
+    .from('research_purchases')
+    .select(`
+      id,
+      user_id,
+      city_list_id,
+      amount_cents,
+      delivery_status,
+      digest_subscription_until,
+      purchased_at,
+      delivered_at,
+      city_lists ( city, title, year )
+    `)
+    .eq('user_id', userId)
+    .order('purchased_at', { ascending: false })
+
+  type Raw = {
+    id: number
+    user_id: number
+    city_list_id: number
+    amount_cents: number
+    delivery_status: 'pending' | 'in_research' | 'delivered' | 'cancelled'
+    digest_subscription_until: string
+    purchased_at: string
+    delivered_at: string | null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    city_lists: any
+  }
+
+  const purchases: ResearchPurchaseWithCityList[] = (data ?? []).map((r: Raw) => {
+    const cl = Array.isArray(r.city_lists) ? r.city_lists[0] : r.city_lists
+    return {
+      id: r.id,
+      user_id: r.user_id,
+      city_list_id: r.city_list_id,
+      amount_cents: r.amount_cents,
+      delivery_status: r.delivery_status,
+      digest_subscription_until: r.digest_subscription_until,
+      purchased_at: r.purchased_at,
+      delivered_at: r.delivered_at,
+      city: cl?.city ?? '',
+      title: cl?.title ?? '',
+      year: cl?.year ?? null,
+    }
+  })
+
+  return { purchases, error }
 }
 
 /**
