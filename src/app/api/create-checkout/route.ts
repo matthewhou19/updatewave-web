@@ -1,12 +1,15 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { createStripeClient } from '@/lib/stripe'
+import { createStripeClient, ensureStripeConfigured } from '@/lib/stripe'
 import { resolveCheckoutUser } from '@/lib/checkout-auth'
 
 // Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
 // not shared across instances). See TODOS.md for Upstash Redis migration plan.
 
 export async function POST(request: NextRequest) {
+  const stripeNotConfigured = ensureStripeConfigured()
+  if (stripeNotConfigured) return stripeNotConfigured
+
   let body: unknown
   try {
     body = await request.json()

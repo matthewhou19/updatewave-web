@@ -43,6 +43,7 @@ vi.mock('@/lib/stripe', () => ({
       },
     },
   }),
+  ensureStripeConfigured: () => null,
 }))
 
 const { POST } = await import('../../src/app/api/create-checkout/route')
