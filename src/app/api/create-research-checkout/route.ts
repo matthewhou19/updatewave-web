@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { createStripeClient } from '@/lib/stripe'
+import { createStripeClient, ensureStripeConfigured } from '@/lib/stripe'
 import {
   fetchResearchPurchase,
   resolveUserByHash,
@@ -26,6 +26,9 @@ import { SupabaseClient } from '@supabase/supabase-js'
  * Rate limiting: same gap as create-list-checkout — see TODOS.md (Upstash Redis).
  */
 export async function POST(request: NextRequest) {
+  const stripeNotConfigured = ensureStripeConfigured()
+  if (stripeNotConfigured) return stripeNotConfigured
+
   let body: unknown
   try {
     body = await request.json()
