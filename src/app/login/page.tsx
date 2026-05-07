@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { getCurrentUser } from '@/lib/auth'
 import { sanitizeNext, applyHashToNext } from '@/lib/safe-next'
+import TopBar from '@/components/TopBar'
 import LoginForm from './LoginForm'
 
 export const dynamic = 'force-dynamic'
@@ -33,32 +34,37 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const errorMessage = error && ERROR_COPY[error] ? ERROR_COPY[error] : null
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f5f5f5]">
-      <main className="mx-auto w-full max-w-md flex-1 px-4 py-16">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <h1 className="mb-2 text-xl font-bold text-[#111827]">Log in or sign up</h1>
-          <p className="mb-6 text-sm text-[#6b7280]">
-            Enter your email. We&apos;ll send you a one-time link. New here?
-            We&apos;ll create your account on the first click — no password
-            required.
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <TopBar view="public" />
+      <main className="mx-auto w-full max-w-md flex-1 px-6 py-16">
+        <div className="border border-ink bg-paper p-8">
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted mb-3">
+            Sign in
+          </p>
+          <h1 className="font-serif text-[28px] font-semibold tracking-tight mb-4">
+            Log in or sign up
+          </h1>
+          <p className="font-mono text-[13px] text-ink leading-relaxed mb-6">
+            Enter your email. We&apos;ll send you a one-time link. New here? We&apos;ll create your
+            account on the first click — no password required.
           </p>
 
           {errorMessage && (
-            <p
-              className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+            <div
+              className="mb-5 border border-accent px-3 py-2 text-[12px] font-mono leading-relaxed"
               data-testid="login-callback-error"
               role="alert"
             >
+              <span className="text-accent uppercase tracking-wider mr-1">Error ·</span>
               {errorMessage}
-            </p>
+            </div>
           )}
 
           <LoginForm next={next} />
         </div>
 
-        <p className="mt-6 text-center text-xs text-[#9ca3af]">
-          Already have your UpdateWave link from email? Just click that link
-          again.
+        <p className="mt-6 text-center font-mono text-[11px] text-muted">
+          Already have your UpdateWave link from email? Just click that link again.
         </p>
       </main>
     </div>

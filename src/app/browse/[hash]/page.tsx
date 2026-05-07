@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User } from '@/lib/types'
 import { fetchPublishedProjects, fetchUserByHash, fetchUserReveals, fetchArchitectData, mergeArchitectData } from '@/lib/queries'
 import TopBar from '@/components/TopBar'
 import ProjectList from '@/components/ProjectList'
+import Footer from '@/components/marketing/Footer'
 
 interface BrowsePageProps {
   params: Promise<{ hash: string }>
@@ -13,15 +13,17 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
   const { hash } = await params
   const supabase = createSupabaseServiceClient()
 
-  // Validate hash
   const { user, error: userError } = await fetchUserByHash(supabase, hash)
 
   if (userError || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
-        <p className="text-base text-[#6b7280]">
-          This link isn&apos;t valid. Check your email for the correct URL.
-        </p>
+      <div className="min-h-screen bg-paper text-ink flex flex-col">
+        <TopBar view="public" />
+        <main className="flex-1 flex items-center justify-center px-6 py-24">
+          <p className="font-mono text-[14px] text-muted text-center max-w-md">
+            This link isn&apos;t valid. Check your email for the correct URL.
+          </p>
+        </main>
       </div>
     )
   }
@@ -35,31 +37,18 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
     .eq('id', typedUser.id)
     .then(() => {}, () => {})
 
-  // Fetch projects + reveals + architect data using query helpers
   const { projects } = await fetchPublishedProjects(supabase)
   const { revealedProjectIds } = await fetchUserReveals(supabase, typedUser.id)
   const architectData = await fetchArchitectData(supabase, revealedProjectIds)
   const sanitizedProjects = mergeArchitectData(projects, architectData)
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
       <TopBar hash={hash} view="browse" />
-      <ProjectList
-        projects={sanitizedProjects}
-        revealedProjectIds={revealedProjectIds}
-        hash={hash}
-      />
-      <footer className="max-w-6xl mx-auto px-4 py-6 text-center">
-        <p className="text-xs text-[#9ca3af]">
-          All listings sourced from public planning commission filings.
-        </p>
-        <Link
-          href="/pricing"
-          className="text-xs text-[#9ca3af] hover:text-[#6b7280] underline mt-2 inline-block"
-        >
-          See all plans
-        </Link>
-      </footer>
+      <main className="flex-1">
+        <ProjectList projects={sanitizedProjects} revealedProjectIds={revealedProjectIds} hash={hash} />
+      </main>
+      <Footer />
     </div>
   )
 }

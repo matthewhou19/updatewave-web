@@ -46,6 +46,48 @@ export const RESEARCH_PURCHASE_PUBLIC_COLUMNS =
   'id, user_id, city_list_id, stripe_session_id, stripe_payment_id, amount_cents, delivery_status, digest_subscription_until, purchased_at, delivered_at'
 
 /**
+ * Aggregated homepage stats for the social-proof strip.
+ *
+ * Returns counts as raw numbers; the SocialProofStrip component decides whether
+ * to render the live numbers or fall back to a generic banner if any number is
+ * embarrassingly low (the rendering policy lives with the UI, not the query).
+ *
+ * avgValueCents is computed in JS because PostgREST doesn't expose AVG() via
+ * the standard table API. For our current dataset size this is acceptable; if
+ * `projects` ever grows past ~10k published rows, switch to a Postgres RPC.
+ */
+export interface HomepageStats {
+  gcCount: number
+  monthlyReveals: number
+  avgValueCents: number | null
+}
+
+export async function fetchHomepageStats(supabase: SupabaseClient): Promise<HomepageStats> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [usersRes, revealsRes, projectsRes] = await Promise.all([
+    supabase.from('users').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('reveals').select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo),
+    supabase
+      .from('projects')
+      .select('estimated_value_cents')
+      .eq('status', 'published')
+      .not('estimated_value_cents', 'is', null),
+  ])
+
+  const gcCount = usersRes.count ?? 0
+  const monthlyReveals = revealsRes.count ?? 0
+
+  const values = ((projectsRes.data ?? []) as { estimated_value_cents: number | null }[])
+    .map((r) => r.estimated_value_cents)
+    .filter((v): v is number => typeof v === 'number')
+
+  const avgValueCents = values.length > 0 ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : null
+
+  return { gcCount, monthlyReveals, avgValueCents }
+}
+
+/**
  * Fetch published projects without architect fields.
  * Sorted by filing_date descending (newest first).
  */

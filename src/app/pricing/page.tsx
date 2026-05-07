@@ -1,4 +1,7 @@
 import { PRICING_TIERS, type PricingTier } from '@/lib/pricing'
+import TopBar from '@/components/TopBar'
+import Footer from '@/components/marketing/Footer'
+import { buttonStyles } from '@/components/ui/Button'
 
 /**
  * /pricing — public pricing comparison page (no hash required).
@@ -12,75 +15,44 @@ import { PRICING_TIERS, type PricingTier } from '@/lib/pricing'
  * colored circles, no decorative checkmark icons, no accent color outside
  * CTAs and the eyebrow.
  *
- * CTA routing: each tier's CTA links to /login with a `next` query param
- * carrying the tier-specific destination (using the `{hash}` placeholder
- * from pricing.ts ctaPathTemplate). After magic-link login, /auth/callback
- * substitutes the new user's hash and redirects them to the right page.
- * This replaces the v1 mailto fallback now that anonymous self-serve
- * signup is wired up.
+ * Visual design ported from the wireframe: warm-paper aesthetic, Fraunces
+ * serif headings + JetBrains Mono body, hairline ink borders, square corners.
  *
- * ISR: 1-hour cache. Page content is static (reads pricing.ts which is a
- * config file that only changes when we ship new pricing).
+ * ISR: 1-hour cache.
  */
 export const revalidate = 3600
 
 export default function PricingPage() {
-  // Defensive copy + sort by `order` so we don't depend on the array order
-  // in pricing.ts (the test asserts unique orders, not array index).
   const tiers = [...PRICING_TIERS].sort((a, b) => a.order - b.order)
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
-      <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center">
-          <span className="font-bold text-[18px] text-[#111827]">UpdateWave</span>
-        </div>
-      </header>
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
+      <TopBar view="public" />
 
-      <main className="max-w-3xl mx-auto px-4 py-10">
-        {/* Hero */}
-        <section className="mb-10" data-testid="pricing-hero">
-          <p className="text-xs uppercase tracking-wider font-semibold text-[#2563eb] mb-2">
+      <main className="max-w-3xl w-full mx-auto px-6 py-12 flex-1">
+        <section className="mb-12" data-testid="pricing-hero">
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-accent mb-3">
             Plans
           </p>
-          <h1 className="text-[32px] font-bold text-[#111827] leading-tight mb-4">
+          <h1 className="font-serif text-[36px] md:text-[44px] font-semibold leading-tight tracking-tight mb-5">
             Three ways to find your next project
           </h1>
-          <p className="text-base text-[#374151] leading-relaxed">
-            Start with $25-per-lead reveals if you want zero commitment. Buy a
-            $349 city report if you want the structural picture for San Jose
-            today. Pay $1,999 if you want a custom research PDF for the city
-            you actually work in, plus 90 days of weekly permit monitoring on
-            top.
+          <p className="font-mono text-[13px] text-ink leading-relaxed">
+            Start with $25-per-lead reveals if you want zero commitment. Buy a $349 city report if
+            you want the structural picture for San Jose today. Pay $1,999 if you want a custom
+            research PDF for the city you actually work in, plus 90 days of weekly permit
+            monitoring on top.
           </p>
         </section>
 
-        {/* Tier ladder */}
         <section data-testid="pricing-tiers">
           {tiers.map((tier, index) => (
-            <TierRow
-              key={tier.slug}
-              tier={tier}
-              isFirst={index === 0}
-            />
+            <TierRow key={tier.slug} tier={tier} isFirst={index === 0} />
           ))}
         </section>
       </main>
 
-      <footer className="border-t border-gray-200 max-w-3xl mx-auto px-4 py-6 text-center">
-        <p className="text-xs text-[#9ca3af]">
-          All data sourced from public planning commission filings.
-        </p>
-        <p className="text-xs text-[#9ca3af] mt-2">
-          Questions?{' '}
-          <a
-            href="mailto:matthew@updatewave.com"
-            className="hover:text-[#6b7280] underline"
-          >
-            matthew@updatewave.com
-          </a>
-        </p>
-      </footer>
+      <Footer />
     </div>
   )
 }
@@ -97,50 +69,42 @@ function TierRow({ tier, isFirst }: TierRowProps) {
   return (
     <article
       data-testid={`pricing-tier-${tier.slug}`}
-      className={`py-8 ${isFirst ? '' : 'border-t border-gray-200'}`}
+      className={`py-10 ${isFirst ? '' : 'border-t border-ink'}`}
     >
-      <p className="text-xs uppercase tracking-wider font-semibold text-[#6b7280] mb-2">
+      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted mb-3">
         {tier.title}
       </p>
 
       <div className="flex items-baseline gap-3 flex-wrap mb-3">
         {showAnchor && (
           <span
-            className="text-base text-[#9ca3af] line-through tabular-nums"
+            className="font-mono text-[14px] text-muted line-through tabular-nums"
             data-testid={`pricing-anchor-${tier.slug}`}
           >
             {tier.anchorDisplay}
           </span>
         )}
         <span
-          className="text-[28px] font-bold text-[#111827] tabular-nums"
+          className="font-serif text-[36px] md:text-[40px] font-semibold text-ink tabular-nums leading-none"
           data-testid={`pricing-price-${tier.slug}`}
         >
           {tier.priceDisplay}
         </span>
       </div>
 
-      <p className="text-base text-[#374151] leading-relaxed mb-4">
-        {tier.subtitle}
-      </p>
+      <p className="font-mono text-[13px] text-ink leading-relaxed mb-5">{tier.subtitle}</p>
 
-      <ul className="space-y-2 mb-5">
+      <ul className="mb-6 list-none">
         {tier.features.map((feature, i) => (
-          <li
-            key={i}
-            className="text-sm text-[#374151] leading-relaxed"
-          >
+          <li key={i} className="font-mono text-[13px] text-ink leading-relaxed py-1">
+            <span className="text-muted mr-1">—</span>
             {feature}
           </li>
         ))}
       </ul>
 
       <div className="flex sm:justify-end">
-        <a
-          href={ctaHref}
-          data-testid={`pricing-cta-${tier.slug}`}
-          className="inline-flex items-center justify-center px-5 py-2.5 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-semibold rounded-md transition-colors min-h-[40px]"
-        >
+        <a href={ctaHref} data-testid={`pricing-cta-${tier.slug}`} className={buttonStyles('primary')}>
           {tier.ctaText}
         </a>
       </div>
@@ -148,14 +112,6 @@ function TierRow({ tier, isFirst }: TierRowProps) {
   )
 }
 
-/**
- * Build the signup-redirect href for a tier's CTA.
- *
- * Routes the visitor to /login with `next` set to the tier's ctaPathTemplate
- * (e.g. `/list/{hash}/sj`). The `{hash}` token is left literal — /auth/callback
- * substitutes it with the freshly-resolved user.hash after magic-link login
- * so first-time signups land directly on the page they were shopping for.
- */
 function signupHrefForTier(tier: PricingTier): string {
   return `/login?next=${encodeURIComponent(tier.ctaPathTemplate)}`
 }

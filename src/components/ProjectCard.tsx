@@ -4,19 +4,33 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Project } from '@/lib/types'
 import { formatRelativeTime, formatProjectType, maskStreetNumber } from '@/lib/utils'
+import { buttonStyles } from './ui/Button'
 
 const ANONYMOUS_REVEAL_LOGIN_HREF = `/login?next=${encodeURIComponent('/browse/{hash}')}`
 
 interface ProjectCardProps {
   project: Project
   isRevealed: boolean
-  hash?: string           // undefined = public visitor (no reveal capability)
-  justRevealed?: boolean  // true if this card was just purchased (post-payment redirect)
+  hash?: string
+  justRevealed?: boolean
 }
 
-// formatRelativeTime extracted to @/lib/utils for testability and reuse.
-// Re-export for backwards compatibility.
+// Re-export for backwards compatibility with tests that import from this module.
 export { formatRelativeTime } from '@/lib/utils'
+
+function MaskedAddress({ address }: { address: string }) {
+  const masked = maskStreetNumber(address)
+  // maskStreetNumber returns "••• Oak St". Split on the first space-then-letter boundary
+  // so we can wrap the bullet prefix in a blur span.
+  const idx = masked.search(/\s[A-Za-z]/)
+  if (idx <= 0) return <>{masked}</>
+  return (
+    <>
+      <span className="bg-grey-200 text-transparent px-1.5 select-none">{masked.slice(0, idx)}</span>
+      {masked.slice(idx)}
+    </>
+  )
+}
 
 export default function ProjectCard({ project, isRevealed, hash, justRevealed }: ProjectCardProps) {
   const [loading, setLoading] = useState(false)
@@ -54,107 +68,121 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
     }
   }
 
+  const borderClass = justRevealed ? 'border-accent ring-2 ring-accent/20' : 'border-ink'
+
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 border ${justRevealed ? 'border-[#16a34a] ring-2 ring-[#16a34a]/20' : 'border-gray-100'}`} data-testid={justRevealed ? 'just-revealed-card' : undefined}>
-      {justRevealed && (
-        <div className="mb-3 px-3 py-1.5 bg-[#16a34a]/10 rounded text-sm text-[#16a34a] font-medium" data-testid="just-revealed-banner">
-          ✓ Architect info revealed!
+    <article
+      className={`border ${borderClass} bg-paper p-5 grid grid-cols-[1fr_auto] gap-4`}
+      data-testid={justRevealed ? 'just-revealed-card' : undefined}
+    >
+      <div className="min-w-0">
+        {justRevealed && (
+          <div
+            className="mb-3 px-2 py-1 border border-accent text-accent font-mono text-[11px] uppercase tracking-wider inline-block"
+            data-testid="just-revealed-banner"
+          >
+            ✓ Architect info revealed
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mb-1.5 font-mono text-[10px] text-muted uppercase tracking-wider">
+          <span className="text-accent" aria-hidden>●●●</span>
+          <span>{formatRelativeTime(project.filing_date)}</span>
+          {project.city && (
+            <>
+              <span aria-hidden>·</span>
+              <span>{project.city.toUpperCase()}</span>
+            </>
+          )}
         </div>
-      )}
 
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <span className="font-bold text-[16px] text-[#111827] leading-snug">
-          {isRevealed ? project.address : maskStreetNumber(project.address)}
-        </span>
-        <span className="text-xs text-[#9ca3af] whitespace-nowrap mt-0.5 flex-shrink-0">
-          {formatRelativeTime(project.filing_date)}
-        </span>
-      </div>
+        <div className="font-serif text-[22px] font-semibold leading-tight tracking-tight mb-2 break-words">
+          {isRevealed ? project.address : <MaskedAddress address={project.address} />}
+        </div>
 
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        {project.project_type && (
-          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
-            {formatProjectType(project.project_type)}
-          </span>
+        {project.description && (
+          <p className="font-mono text-[12px] text-ink leading-relaxed mb-3">{project.description}</p>
         )}
-        {project.city && (
-          <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
-            {project.city}
-          </span>
-        )}
-        {project.estimated_value && (
-          <span className="text-sm text-[#6b7280]">{project.estimated_value}</span>
-        )}
-      </div>
 
-      {project.description && (
-        <p className="text-sm text-[#374151] mb-3 leading-relaxed">{project.description}</p>
-      )}
+        <div className="flex gap-1.5 flex-wrap">
+          {project.project_type && (
+            <span className="font-mono text-[10px] px-2 py-0.5 border border-grey-300 text-muted uppercase tracking-wider">
+              {formatProjectType(project.project_type)}
+            </span>
+          )}
+          {project.estimated_value && (
+            <span className="font-mono text-[10px] px-2 py-0.5 border border-grey-300 text-muted">
+              {project.estimated_value}
+            </span>
+          )}
+        </div>
 
-      {isRevealed ? (
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
+        {isRevealed && (project.architect_firm || project.architect_contact || project.architect_website) && (
+          <div className="mt-4 pt-4 border-t border-grey-300">
             {project.architect_firm && (
-              <span className="font-bold text-sm text-[#111827]">{project.architect_firm}</span>
+              <div className="font-serif text-[16px] font-semibold mb-1">{project.architect_firm}</div>
             )}
-            <span className="inline-block px-2 py-0.5 text-xs font-medium bg-[#16a34a]/10 text-[#16a34a] rounded-full">
+            {project.architect_contact && (
+              <p className="font-mono text-[12px] text-muted mb-1">{project.architect_contact}</p>
+            )}
+            {project.architect_website && (
+              <>
+                <a
+                  href={project.architect_website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[12px] text-accent border-b border-accent break-all"
+                >
+                  {project.architect_website}
+                </a>
+                <p className="font-mono text-[10px] text-muted mt-1">Visit their portfolio →</p>
+              </>
+            )}
+          </div>
+        )}
+
+        {loading && hash && (
+          <p className="font-mono text-[10px] text-muted mt-3">
+            You&apos;ll be redirected to Stripe to complete payment. You&apos;ll return here automatically.
+          </p>
+        )}
+      </div>
+
+      <div className="flex flex-col items-end justify-between text-right gap-3">
+        <div>
+          {!isRevealed && (
+            <>
+              <div className="font-serif text-[24px] font-semibold leading-none">$25</div>
+              <div className="font-mono text-[10px] text-muted mt-1">
+                {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
+              </div>
+            </>
+          )}
+          {isRevealed && (
+            <span className="font-mono text-[10px] text-accent uppercase tracking-wider border border-accent px-2 py-1 inline-block">
               ✓ Revealed
             </span>
-          </div>
-          {project.architect_contact && (
-            <p className="text-sm text-[#6b7280]">{project.architect_contact}</p>
           )}
-          {project.architect_website && (
-            <a
-              href={project.architect_website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-[#2563eb] hover:text-[#1d4ed8] break-all"
+        </div>
+        {!isRevealed &&
+          (hash ? (
+            <button
+              onClick={handleReveal}
+              disabled={loading}
+              className={buttonStyles('primary', 'sm')}
             >
-              {project.architect_website}
-            </a>
-          )}
-          {project.architect_website && (
-            <p className="text-xs text-[#9ca3af] mt-1">Visit their website to see their portfolio →</p>
-          )}
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-3">
-            <div
-              className="h-10 flex-1 bg-gray-200 rounded blur-sm"
-              aria-label="Architect details hidden"
-              role="img"
-            />
-            {hash ? (
-              <button
-                onClick={handleReveal}
-                disabled={loading}
-                className="flex-shrink-0 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#93c5fd] text-white text-sm font-medium rounded-md transition-colors cursor-pointer disabled:cursor-wait min-w-[120px] text-center"
-              >
-                {loading ? 'Processing...' : 'Reveal · $25'}
-              </button>
-            ) : (
-              <Link
-                href={ANONYMOUS_REVEAL_LOGIN_HREF}
-                data-testid="anonymous-reveal-cta"
-                className="flex-shrink-0 px-4 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium rounded-md transition-colors cursor-pointer min-w-[120px] text-center"
-              >
-                Sign in to reveal · $25
-              </Link>
-            )}
-          </div>
-          {loading && hash && (
-            <p className="text-xs text-[#9ca3af] mt-2">
-              You&apos;ll be redirected to Stripe to complete payment. You&apos;ll return here automatically.
-            </p>
-          )}
-        </div>
-      )}
-
-      <p className="text-xs text-[#9ca3af] mt-3">
-        {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
-      </p>
-    </div>
+              {loading ? 'Processing...' : 'Reveal · $25'}
+            </button>
+          ) : (
+            <Link
+              href={ANONYMOUS_REVEAL_LOGIN_HREF}
+              data-testid="anonymous-reveal-cta"
+              className={buttonStyles('primary', 'sm')}
+            >
+              Sign in to reveal · $25
+            </Link>
+          ))}
+      </div>
+    </article>
   )
 }

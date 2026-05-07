@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { createSupabaseBrowserClient } from '@/lib/supabase-browser'
+import { buttonStyles } from '@/components/ui/Button'
 
 const FOUNDER_EMAIL = 'matthew@updatewave.org'
 
@@ -36,8 +37,7 @@ export default function LoginForm({ next }: LoginFormProps = {}) {
     setSubmitting(true)
     try {
       const supabase = createSupabaseBrowserClient()
-      const origin =
-        typeof window !== 'undefined' ? window.location.origin : ''
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
       const callbackUrl = next
         ? `${origin}/auth/callback?next=${encodeURIComponent(next)}`
         : `${origin}/auth/callback`
@@ -72,7 +72,10 @@ export default function LoginForm({ next }: LoginFormProps = {}) {
       aria-busy={submitting}
     >
       <div>
-        <label htmlFor="login-email" className="block text-sm text-[#6b7280]">
+        <label
+          htmlFor="login-email"
+          className="block font-mono text-[11px] uppercase tracking-[0.1em] text-muted mb-2"
+        >
           Email
         </label>
         <input
@@ -85,30 +88,31 @@ export default function LoginForm({ next }: LoginFormProps = {}) {
           disabled={submitting}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? errorId : undefined}
-          className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base text-[#111827] focus:border-[#2563eb] focus:ring-1 focus:ring-[#2563eb] disabled:opacity-60"
+          className="block w-full border border-ink bg-paper px-3 py-2.5 font-mono text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-ink disabled:opacity-60"
           data-testid="login-email-input"
           placeholder="you@company.com"
         />
       </div>
 
       {error && (
-        <p
+        <div
           id={errorId}
-          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          className="border border-accent px-3 py-2 font-mono text-[12px] leading-relaxed"
           data-testid="login-error"
           role="alert"
         >
+          <span className="text-accent uppercase tracking-wider mr-1">Error ·</span>
           {error}
-        </p>
+        </div>
       )}
 
       <button
         type="submit"
         disabled={submitting}
-        className="w-full rounded-md bg-[#2563eb] px-4 py-3 text-base font-medium text-white transition-colors hover:bg-[#1d4ed8] disabled:opacity-60"
+        className={`w-full ${buttonStyles('primary')}`}
         data-testid="login-submit"
       >
-        {submitting ? 'Sending…' : 'Send link'}
+        {submitting ? 'Sending…' : 'Send link →'}
       </button>
     </form>
   )

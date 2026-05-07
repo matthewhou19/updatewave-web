@@ -45,7 +45,7 @@ export default function CitySelectorWithBuy({
   // SJ seeded), but defend rather than crash.
   if (cities.length === 0) {
     return (
-      <p className="text-sm text-[#6b7280]" data-testid="research-no-cities">
+      <p className="font-mono text-[13px] text-muted" data-testid="research-no-cities">
         No cities are open for research right now. Check back soon.
       </p>
     )
@@ -55,7 +55,7 @@ export default function CitySelectorWithBuy({
     <div>
       <label
         htmlFor="research-city-select"
-        className="block text-xs uppercase tracking-wider font-semibold text-[#6b7280] mb-2"
+        className="block font-mono text-[11px] uppercase tracking-[0.1em] text-muted mb-2"
       >
         Choose your city
       </label>
@@ -64,7 +64,7 @@ export default function CitySelectorWithBuy({
         value={selectedSlug}
         onChange={(e) => setSelectedSlug(e.target.value)}
         data-testid="city-select"
-        className="block w-full sm:max-w-sm px-3 py-3 border border-gray-300 rounded-md bg-white text-base text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-[#2563eb] min-h-[44px]"
+        className="block w-full sm:max-w-sm px-3 py-2.5 border border-ink bg-paper font-mono text-[13px] text-ink focus:outline-none focus:ring-1 focus:ring-ink"
       >
         {cities.map((c) => (
           <option key={c.slug} value={c.slug}>
@@ -76,12 +76,13 @@ export default function CitySelectorWithBuy({
       {ownsExistingReport && (
         <div
           data-testid="sj-collision-warning"
-          className="mt-4 bg-yellow-50 border border-yellow-200 px-4 py-3 rounded-md"
+          className="mt-4 border border-accent px-4 py-3 bg-accent/5"
         >
-          <p className="text-sm text-[#854d0e] leading-relaxed">
-            You already own the San Jose historical report. Buying the $1,999
-            research adds 90 days of new permit monitoring on top, and your $349
-            7-day refund window will close upon checkout.
+          <p className="font-mono text-[12px] text-ink leading-relaxed">
+            <span className="text-accent uppercase tracking-wider mr-1">Note ·</span>
+            You already own the San Jose historical report. Buying the $1,999 research adds 90
+            days of new permit monitoring on top, and your $349 7-day refund window will close
+            upon checkout.
           </p>
         </div>
       )}

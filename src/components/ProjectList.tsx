@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import { Project } from '@/lib/types'
 import { formatProjectType } from '@/lib/utils'
 import ProjectCard from './ProjectCard'
+import { buttonStyles } from './ui/Button'
 
 interface ProjectListProps {
   projects: Project[]
@@ -30,10 +31,16 @@ function loadFilters(): Filters {
   return { cities: [], projectTypes: [] }
 }
 
+function pillStyles(active: boolean): string {
+  const base = 'font-mono text-[11px] px-3 py-1.5 border cursor-pointer transition-colors'
+  return active
+    ? `${base} border-ink bg-ink text-paper`
+    : `${base} border-ink bg-transparent text-ink hover:bg-ink/5`
+}
+
 function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListProps) {
   const searchParams = useSearchParams()
   const justRevealedId = searchParams.get('revealed') ? parseInt(searchParams.get('revealed')!, 10) : null
-  const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [filters, setFilters] = useState<Filters>({ cities: [], projectTypes: [] })
   const filtersLoaded = useRef(false)
 
@@ -101,126 +108,80 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
   const hasActiveFilters = filters.cities.length > 0 || filters.projectTypes.length > 0
   const revealedSet = new Set(revealedProjectIds)
 
-  const filterPanel = (
-    <div className="space-y-6">
-      {allCities.length > 0 && (
-        <fieldset>
-          <legend className="text-xs font-semibold text-[#6b7280] uppercase tracking-wide mb-2">
-            City
-          </legend>
-          <div className="space-y-1">
-            {allCities.map((city) => (
-              <label key={city} className="flex items-center gap-2 cursor-pointer py-1">
-                <input
-                  type="checkbox"
-                  checked={filters.cities.includes(city)}
-                  onChange={() => toggleCity(city)}
-                  className="accent-[#2563eb] w-4 h-4"
-                />
-                <span className="text-sm text-[#111827]">{city}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      )}
-
-      {allProjectTypes.length > 0 && (
-        <fieldset>
-          <legend className="text-xs font-semibold text-[#6b7280] uppercase tracking-wide mb-2">
-            Project Type
-          </legend>
-          <div className="space-y-1">
-            {allProjectTypes.map((type) => (
-              <label key={type} className="flex items-center gap-2 cursor-pointer py-1">
-                <input
-                  type="checkbox"
-                  checked={filters.projectTypes.includes(type)}
-                  onChange={() => toggleProjectType(type)}
-                  className="accent-[#2563eb] w-4 h-4"
-                />
-                <span className="text-sm text-[#111827]">{formatProjectType(type)}</span>
-              </label>
-            ))}
-          </div>
-        </fieldset>
-      )}
-
-      {hasActiveFilters && (
-        <button
-          onClick={clearFilters}
-          className="text-sm text-[#2563eb] hover:text-[#1d4ed8]"
-        >
-          Clear all filters
-        </button>
-      )}
-    </div>
-  )
-
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
-      {/* Mobile filter toggle */}
-      <div className="md:hidden mb-4">
-        <button
-          onClick={() => setShowMobileFilters(!showMobileFilters)}
-          className="w-full text-sm font-medium text-[#111827] bg-white border border-gray-200 rounded-md px-4 py-2.5 flex items-center justify-between"
-        >
-          <span>Filters {hasActiveFilters ? `(${filters.cities.length + filters.projectTypes.length})` : ''}</span>
-          <span>{showMobileFilters ? '▲' : '▼'}</span>
-        </button>
-        {showMobileFilters && (
-          <div className="mt-2 bg-white border border-gray-200 rounded-md p-4">
-            {filterPanel}
-          </div>
+    <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8">
+      <div className="flex flex-wrap items-center gap-2 mb-4">
+        {allCities.length > 0 && (
+          <>
+            <span className="font-mono text-[11px] text-muted uppercase tracking-wider mr-1">City:</span>
+            {allCities.map((city) => (
+              <button key={city} onClick={() => toggleCity(city)} className={pillStyles(filters.cities.includes(city))}>
+                {city}
+              </button>
+            ))}
+          </>
+        )}
+        {allProjectTypes.length > 0 && (
+          <>
+            <span className="font-mono text-[11px] text-muted uppercase tracking-wider md:ml-4 mr-1">Type:</span>
+            {allProjectTypes.map((type) => (
+              <button
+                key={type}
+                onClick={() => toggleProjectType(type)}
+                className={pillStyles(filters.projectTypes.includes(type))}
+              >
+                {formatProjectType(type)}
+              </button>
+            ))}
+          </>
+        )}
+        {hasActiveFilters && (
+          <button onClick={clearFilters} className="font-mono text-[11px] text-muted underline ml-2">
+            Clear
+          </button>
         )}
       </div>
 
-      <div className="flex gap-6">
-        {/* Desktop sidebar */}
-        <aside className="hidden md:block w-[240px] flex-shrink-0">
-          {filterPanel}
-        </aside>
+      <p className="font-mono text-[11px] text-muted uppercase tracking-wider mb-4">
+        Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
+      </p>
 
-        {/* Main content */}
-        <main className="flex-1 min-w-0">
-          <p className="text-sm text-[#6b7280] mb-4">
-            Showing {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}
-          </p>
-
-          {filteredProjects.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-[#6b7280] mb-1">No projects match your filters.</p>
-              <p className="text-sm text-[#9ca3af]">Try adjusting your city or project type.</p>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium rounded-md transition-colors"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredProjects.map((project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  isRevealed={revealedSet.has(project.id)}
-                  hash={hash}
-                  justRevealed={justRevealedId === project.id}
-                />
-              ))}
-            </div>
+      {filteredProjects.length === 0 ? (
+        <div className="text-center py-16 border border-grey-300 border-dashed">
+          <p className="font-serif text-[24px] mb-1">No projects match your filters.</p>
+          <p className="font-mono text-[12px] text-muted">Try adjusting your city or project type.</p>
+          {hasActiveFilters && (
+            <button onClick={clearFilters} className={`mt-4 ${buttonStyles('primary')}`}>
+              Clear filters
+            </button>
           )}
-        </main>
-      </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filteredProjects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              isRevealed={revealedSet.has(project.id)}
+              hash={hash}
+              justRevealed={justRevealedId === project.id}
+            />
+          ))}
+        </div>
+      )}
     </div>
   )
 }
 
 export default function ProjectList(props: ProjectListProps) {
   return (
-    <Suspense fallback={<div className="max-w-6xl mx-auto px-4 py-6"><p className="text-sm text-[#6b7280]">Loading...</p></div>}>
+    <Suspense
+      fallback={
+        <div className="max-w-[1200px] mx-auto px-6 md:px-12 py-8">
+          <p className="font-mono text-[11px] text-muted uppercase tracking-wider">Loading...</p>
+        </div>
+      }
+    >
       <ProjectListInner {...props} />
     </Suspense>
   )

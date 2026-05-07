@@ -1,5 +1,20 @@
 import type { Metadata } from 'next'
+import { Fraunces, JetBrains_Mono } from 'next/font/google'
 import './globals.css'
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  variable: '--font-fraunces',
+  display: 'swap',
+})
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500', '700'],
+  variable: '--font-jetbrains',
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'UpdateWave — Pre-Permit Leads',
@@ -12,16 +27,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className={`h-full ${fraunces.variable} ${jetbrainsMono.variable}`}>
       <head>
         <meta name="referrer" content="no-referrer" />
       </head>
-      <body
-        className="min-h-full"
-        style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" }}
-      >
-        {children}
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   )
 }

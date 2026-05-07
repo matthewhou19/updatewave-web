@@ -6,14 +6,12 @@ import {
   RevealWithProject,
   User,
 } from '@/lib/types'
-import {
-  fetchUserByHash,
-  fetchUserListPurchases,
-  fetchUserResearchPurchases,
-} from '@/lib/queries'
+import { fetchUserByHash, fetchUserListPurchases, fetchUserResearchPurchases } from '@/lib/queries'
 import { formatProjectType } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 import TopBar from '@/components/TopBar'
+import Footer from '@/components/marketing/Footer'
+import { buttonStyles } from '@/components/ui/Button'
 
 interface RevealsPageProps {
   params: Promise<{ hash: string }>
@@ -27,17 +25,19 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
 
   if (userError || !user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f5f5f5]">
-        <p className="text-base text-[#6b7280]">
-          This link isn&apos;t valid. Check your email for the correct URL.
-        </p>
+      <div className="min-h-screen bg-paper text-ink flex flex-col">
+        <TopBar view="public" />
+        <main className="flex-1 flex items-center justify-center px-6 py-24">
+          <p className="font-mono text-[14px] text-muted text-center max-w-md">
+            This link isn&apos;t valid. Check your email for the correct URL.
+          </p>
+        </main>
       </div>
     )
   }
 
   const typedUser = user as User
 
-  // Fetch all three product types in parallel.
   const [revealsResult, listsResult, researchResult] = await Promise.all([
     supabase
       .from('reveals')
@@ -104,50 +104,49 @@ export default async function RevealsPage({ params }: RevealsPageProps) {
 
   const listPurchases: ListPurchaseWithCityList[] = listsResult.purchases
   const researchPurchases: ResearchPurchaseWithCityList[] = researchResult.purchases
-
   const totalPurchases = revealList.length + listPurchases.length + researchPurchases.length
 
   return (
-    <div className="min-h-screen bg-[#f5f5f5]">
+    <div className="min-h-screen bg-paper text-ink flex flex-col">
       <TopBar hash={hash} view="reveals" />
 
-      <div className="max-w-3xl mx-auto px-4 py-6">
-        <h1 className="text-xl font-bold text-[#111827] mb-6">My purchases</h1>
+      <main className="max-w-3xl w-full mx-auto px-6 py-10 flex-1">
+        <h1 className="font-serif text-[32px] md:text-[40px] font-semibold tracking-tight mb-8">
+          My purchases
+        </h1>
 
         {totalPurchases === 0 ? (
-          <div className="text-center py-16" data-testid="empty-reveals">
-            <p className="text-[#6b7280] mb-4">You haven&apos;t bought anything yet.</p>
-            <Link
-              href={`/browse/${hash}`}
-              className="inline-block px-4 py-2 bg-[#2563eb] hover:bg-[#1d4ed8] text-white text-sm font-medium rounded-md transition-colors"
-            >
+          <div
+            className="text-center py-16 border border-dashed border-grey-300"
+            data-testid="empty-reveals"
+          >
+            <p className="font-serif text-[24px] mb-3">No purchases yet.</p>
+            <p className="font-mono text-[13px] text-muted mb-6">
+              Browse the listings and reveal the ones worth chasing.
+            </p>
+            <Link href={`/browse/${hash}`} className={buttonStyles('primary')}>
               Browse available projects →
             </Link>
           </div>
         ) : (
-          <div className="space-y-8">
-            {researchPurchases.length > 0 && (
-              <ResearchSection hash={hash} purchases={researchPurchases} />
-            )}
-            {listPurchases.length > 0 && (
-              <ListPurchasesSection hash={hash} purchases={listPurchases} />
-            )}
+          <div className="space-y-12">
+            {researchPurchases.length > 0 && <ResearchSection hash={hash} purchases={researchPurchases} />}
+            {listPurchases.length > 0 && <ListPurchasesSection hash={hash} purchases={listPurchases} />}
             {revealList.length > 0 && <RevealsSection reveals={revealList} />}
           </div>
         )}
-      </div>
+      </main>
 
-      <footer className="max-w-3xl mx-auto px-4 py-6 text-center">
-        <p className="text-xs text-[#9ca3af]">
-          All listings sourced from public planning commission filings.
-        </p>
-        <Link
-          href="/pricing"
-          className="text-xs text-[#9ca3af] hover:text-[#6b7280] underline mt-2 inline-block"
-        >
-          See all plans
-        </Link>
-      </footer>
+      <Footer />
+    </div>
+  )
+}
+
+function SectionHeading({ children, count }: { children: string; count: number }) {
+  return (
+    <div className="flex items-baseline gap-3 mb-4 border-b border-ink pb-2">
+      <h2 className="font-serif text-[22px] font-semibold tracking-tight">{children}</h2>
+      <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted">({count})</span>
     </div>
   )
 }
@@ -160,28 +159,24 @@ interface ResearchSectionProps {
 function ResearchSection({ hash, purchases }: ResearchSectionProps) {
   return (
     <section data-testid="section-research">
-      <h2 className="text-base font-semibold text-[#111827] mb-3">
-        Custom research ({purchases.length})
-      </h2>
+      <SectionHeading count={purchases.length}>Custom research</SectionHeading>
       <div className="space-y-3">
         {purchases.map((p) => (
           <Link
             key={p.id}
             href={`/research/${hash}/${p.city}/status`}
             data-testid="research-card"
-            className="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:border-gray-300 transition-colors"
+            className="block border border-ink bg-paper p-5 hover:bg-grey-100 transition-colors no-underline"
           >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="font-bold text-[16px] text-[#111827] leading-snug">
-                {p.title}
-              </span>
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <span className="font-serif text-[18px] font-semibold tracking-tight">{p.title}</span>
               <ResearchStatusBadge status={p.delivery_status} />
             </div>
-            <p className="text-sm text-[#6b7280]">
+            <p className="font-mono text-[12px] text-muted">
               Purchased {formatDate(p.purchased_at)}
               {p.delivered_at && <> · Delivered {formatDate(p.delivered_at)}</>}
             </p>
-            <p className="text-sm text-[#2563eb] mt-2">
+            <p className="font-mono text-[12px] text-accent mt-3">
               {p.delivery_status === 'delivered' ? 'View & download →' : 'View status →'}
             </p>
           </Link>
@@ -191,22 +186,19 @@ function ResearchSection({ hash, purchases }: ResearchSectionProps) {
   )
 }
 
-function ResearchStatusBadge({
-  status,
-}: {
-  status: ResearchPurchaseWithCityList['delivery_status']
-}) {
+function ResearchStatusBadge({ status }: { status: ResearchPurchaseWithCityList['delivery_status'] }) {
   const map = {
-    delivered: { label: 'Delivered', cls: 'bg-green-100 text-green-700' },
-    pending: { label: 'In progress', cls: 'bg-blue-100 text-blue-700' },
-    in_research: { label: 'In progress', cls: 'bg-blue-100 text-blue-700' },
-    cancelled: { label: 'Refunded', cls: 'bg-gray-100 text-gray-600' },
+    delivered: { label: 'Delivered', cls: 'border-accent text-accent', dot: '●' },
+    pending: { label: 'In progress', cls: 'border-ink text-ink', dot: '○' },
+    in_research: { label: 'In progress', cls: 'border-ink text-ink', dot: '○' },
+    cancelled: { label: 'Refunded', cls: 'border-grey-300 text-muted line-through', dot: '✕' },
   } as const
-  const { label, cls } = map[status]
+  const { label, cls, dot } = map[status]
   return (
     <span
-      className={`flex-shrink-0 inline-block px-2 py-0.5 text-xs font-medium rounded-full ${cls}`}
+      className={`flex-shrink-0 inline-block px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] border ${cls}`}
     >
+      <span className="mr-1" aria-hidden>{dot}</span>
       {label}
     </span>
   )
@@ -220,24 +212,20 @@ interface ListPurchasesSectionProps {
 function ListPurchasesSection({ hash, purchases }: ListPurchasesSectionProps) {
   return (
     <section data-testid="section-reports">
-      <h2 className="text-base font-semibold text-[#111827] mb-3">
-        City reports ({purchases.length})
-      </h2>
+      <SectionHeading count={purchases.length}>City reports</SectionHeading>
       <div className="space-y-3">
         {purchases.map((p) => (
           <Link
             key={p.id}
             href={`/list/${hash}/${p.city}/success`}
             data-testid="report-card"
-            className="block bg-white rounded-lg shadow-sm p-4 border border-gray-100 hover:border-gray-300 transition-colors"
+            className="block border border-ink bg-paper p-5 hover:bg-grey-100 transition-colors no-underline"
           >
-            <span className="block font-bold text-[16px] text-[#111827] leading-snug mb-1">
+            <span className="block font-serif text-[18px] font-semibold tracking-tight mb-1">
               {p.title}
             </span>
-            <p className="text-sm text-[#6b7280]">
-              Purchased {formatDate(p.purchased_at)}
-            </p>
-            <p className="text-sm text-[#2563eb] mt-2">Download report →</p>
+            <p className="font-mono text-[12px] text-muted">Purchased {formatDate(p.purchased_at)}</p>
+            <p className="font-mono text-[12px] text-accent mt-3">Download report →</p>
           </Link>
         ))}
       </div>
@@ -248,59 +236,55 @@ function ListPurchasesSection({ hash, purchases }: ListPurchasesSectionProps) {
 function RevealsSection({ reveals }: { reveals: RevealWithProject[] }) {
   return (
     <section data-testid="section-reveals">
-      <h2 className="text-base font-semibold text-[#111827] mb-3">
-        Reveals ({reveals.length})
-      </h2>
+      <SectionHeading count={reveals.length}>Reveals</SectionHeading>
       <div className="space-y-3">
         {reveals.map((reveal) => (
           <div
             key={reveal.id}
             data-testid="project-card"
-            className="bg-white rounded-lg shadow-sm p-4 border border-gray-100"
+            className="border border-ink bg-paper p-5"
           >
-            <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="font-bold text-[16px] text-[#111827] leading-snug">
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <span className="font-serif text-[20px] font-semibold tracking-tight leading-tight">
                 {reveal.address}
               </span>
               {reveal.status === 'stale' && (
-                <span className="flex-shrink-0 inline-block px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+                <span className="flex-shrink-0 inline-block px-2 py-1 font-mono text-[10px] uppercase tracking-[0.1em] border border-grey-300 text-muted">
                   Stale
                 </span>
               )}
             </div>
 
-            <div className="flex items-center gap-2 mb-3 flex-wrap">
+            <div className="flex items-center gap-2 mb-3 flex-wrap font-mono text-[11px]">
               {reveal.project_type && (
-                <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
+                <span className="px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] border border-grey-300 text-muted">
                   {formatProjectType(reveal.project_type)}
                 </span>
               )}
               {reveal.city && (
-                <span className="inline-block px-2 py-0.5 text-xs font-medium bg-gray-100 text-[#6b7280] rounded-full">
+                <span className="px-2 py-0.5 text-[10px] uppercase tracking-[0.1em] border border-grey-300 text-muted">
                   {reveal.city}
                 </span>
               )}
-              {reveal.estimated_value && (
-                <span className="text-sm text-[#6b7280]">{reveal.estimated_value}</span>
-              )}
+              {reveal.estimated_value && <span className="text-muted">{reveal.estimated_value}</span>}
               {reveal.filing_date && (
-                <span className="text-sm text-[#9ca3af]">Filed {formatDate(reveal.filing_date)}</span>
+                <span className="text-muted">Filed {formatDate(reveal.filing_date)}</span>
               )}
             </div>
 
-            <div className="space-y-0.5">
+            <div className="space-y-1">
               {reveal.architect_firm && (
-                <p className="font-bold text-sm text-[#111827]">{reveal.architect_firm}</p>
+                <p className="font-serif text-[16px] font-semibold">{reveal.architect_firm}</p>
               )}
               {reveal.architect_contact && (
-                <p className="text-sm text-[#6b7280]">{reveal.architect_contact}</p>
+                <p className="font-mono text-[12px] text-muted">{reveal.architect_contact}</p>
               )}
               {reveal.architect_website && (
                 <a
                   href={reveal.architect_website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[#2563eb] hover:text-[#1d4ed8] break-all"
+                  className="font-mono text-[12px] text-accent border-b border-accent break-all"
                 >
                   {reveal.architect_website}
                 </a>
@@ -310,7 +294,7 @@ function RevealsSection({ reveals }: { reveals: RevealWithProject[] }) {
                   href={reveal.source_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block text-xs text-[#9ca3af] hover:text-[#6b7280] mt-1"
+                  className="block font-mono text-[11px] text-muted hover:text-ink mt-2"
                 >
                   View permit filing ↗
                 </a>
