@@ -1,6 +1,6 @@
 # UpdateWave Web
 
-Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $25/reveal to see architect contact info.
+Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $25/reveal to see architect contact info, $349 for a city market-structure report, or $1999 for custom city research with a 90-day post-purchase digest.
 
 **Live:** https://updatewave-web.vercel.app
 
@@ -8,60 +8,77 @@ Pre-permit lead marketplace for general contractors. GCs browse project listings
 
 1. GC receives cold email with unique browse link (`/browse/{hash}`)
 2. Browses pre-permit project listings with city/type/value filters
-3. Pays $25 via Stripe to reveal architect contact info
-4. Views all past reveals at `/reveals/{hash}`
+3. Pays via Stripe to reveal architect info ($25), buy a city report ($349), or commission custom research ($1999)
+4. Views all past purchases at `/reveals/{hash}` ("My purchases" — reveals + reports + research aggregated)
 
-No registration. Hash in URL = identity.
+Authentication is dual-mode: hash-in-URL identity (cold-email entry point) plus magic-link email login for returning customers.
 
 ## Tech Stack
 
 - **Framework:** Next.js 16 (App Router, Turbopack)
 - **Database:** Supabase (Postgres + RLS)
+- **Auth:** Supabase Auth magic-link
 - **Payments:** Stripe Checkout + Webhooks
 - **Hosting:** Vercel
 - **Styling:** Tailwind CSS v4
+- **Local dev:** Supabase CLI (Docker)
 
 ## Project Structure
 
 ```
 src/
   app/
-    page.tsx                          # Public homepage: all project listings
-    layout.tsx                        # Root layout (referrer-policy meta, fonts)
-    not-found.tsx                     # Custom 404 page
-    browse/[hash]/page.tsx            # Server component: project list
-    reveals/[hash]/page.tsx           # Server component: past reveals
-    list/[hash]/[city]/
-      page.tsx                        # City market report landing (preview + CTA)
-      BuyButton.tsx                   # Client: POSTs /api/create-list-checkout
-      success/
-        page.tsx                      # Post-purchase confirmation + download
-        DownloadButton.tsx            # Client: fetches signed Storage URL
-    api/create-checkout/              # Stripe Checkout for $25 reveals
-    api/create-list-checkout/         # Stripe Checkout for $349 city reports
-    api/download-list/[hash]/[city]/  # Signed URL for paid PDF download (2h TTL)
-    api/webhook/                      # Stripe webhook (dispatches on metadata.product_type)
+    page.tsx                                  # Public homepage: all project listings
+    layout.tsx                                # Root layout (referrer-policy meta, fonts)
+    not-found.tsx                             # Custom 404 page
+    login/                                    # Magic-link login form
+    auth/callback/                            # Magic-link callback handler
+    browse/[hash]/page.tsx                    # Server component: project list
+    reveals/[hash]/page.tsx                   # "My purchases" — reveals + reports + research
+    list/[hash]/[city]/                       # $349 city market report
+      page.tsx                                # Landing (preview + CTA)
+      BuyButton.tsx                           # Client: POSTs /api/create-list-checkout
+      success/page.tsx                        # Post-purchase confirmation + download
+    research/[hash]/                          # $1999 custom city research
+      page.tsx                                # Landing (city dropdown + CTA)
+      [city]/status/page.tsx                  # Bookmarkable status + delivered download
+    api/create-checkout/                      # Stripe Checkout for $25 reveals
+    api/create-list-checkout/                 # Stripe Checkout for $349 reports
+    api/create-research-checkout/             # Stripe Checkout for $1999 research
+    api/download-list/[hash]/[city]/          # Signed URL for paid report download
+    api/download-research/[hash]/[city]/      # Signed URL for delivered research PDF
+    api/webhook/                              # Stripe webhook (dispatch on metadata.product_type)
   components/
-    ProjectList.tsx                   # Client: filters + card grid
-    ProjectCard.tsx                   # Client: reveal button + states
-    TopBar.tsx                        # Shared nav header
+    ProjectList.tsx                           # Client: filters + card grid
+    ProjectCard.tsx                           # Client: reveal button + states
+    TopBar.tsx                                # Shared nav header
   lib/
-    supabase.ts                       # Supabase client factories
-    stripe.ts                         # Stripe client factory
-    queries.ts                        # DB query helpers (resolveUserByHash, fetchCityList, ...)
-    format.ts                         # Date / price formatters
-    utils.ts                          # Shared utilities
-    types.ts                          # TypeScript interfaces
+    supabase.ts                               # Supabase client factories
+    supabase-server.ts                        # Cookie-aware SSR client (auth)
+    stripe.ts                                 # Stripe client factory
+    queries.ts                                # DB query helpers
+    auth.ts / auth-resolution.ts              # Magic-link auth + identity-fork detection
+    safe-next.ts                              # ?next= parameter sanitiser
+    format.ts                                 # Date / price formatters
+    utils.ts                                  # Shared utilities
+    types.ts                                  # TypeScript interfaces
 scripts/
-  setup-local.sh                      # One-command local dev setup
-  publish_csv.ts                      # CSV → Supabase publish
-  render-report-pdf.ts                # HTML report → PDF (Playwright headless)
+  setup-local.sh                              # One-command local dev setup
+  db-init.sh                                  # Apply schema + migrations + seed (idempotent)
+  db-seed.sh                                  # Re-seed only
+  publish_csv.ts                              # CSV → Supabase publish
+  render-report-pdf.ts                        # HTML report → PDF (Playwright headless)
+  run-tier-1-migration.ts                     # Pre-flight check before migration 005
 supabase/
-  schema.sql                          # Database schema (tables, indexes, RLS)
-  seed-test-data.sql                  # Test data for development
+  config.toml                                 # Supabase CLI local stack config
+  schema.sql                                  # Base tables (users, projects, reveals, ...)
+  seed-test-data.sql                          # Seed for testing
   migrations/
     001-reveal-count-trigger-and-soft-delete.sql
     002-city-lists-and-list-purchases.sql
+    003-research-and-digest.sql               # $1999 research + 90-day digest tables
+    004-research-tier-uniqueness-fix.sql
+    005-email-login-auth.sql                  # auth_user_id + magic-link login
 ```
 
 ## Setup
@@ -72,98 +89,106 @@ supabase/
 npm run setup
 ```
 
-This runs `scripts/setup-local.sh`, which checks prerequisites, copies `.env.example` to `.env.local`, installs dependencies, and prints next steps.
+`scripts/setup-local.sh`:
+- Verifies Node + Docker + Stripe CLI
+- Copies `.env.example` → `.env.local` (defaults to local Supabase URL + demo keys)
+- Installs dependencies
+- Starts the local Supabase stack via `npx supabase start` (first run pulls ~10 Docker images)
+- Applies `schema.sql` + all migrations + seed via `scripts/db-init.sh`
+
+After it finishes:
+
+```bash
+npm run dev
+```
+
+Visit `http://localhost:3000/reveals/a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ` to see the "My purchases" page populated with one reveal + one $349 report + one $1999 research-in-progress.
 
 ### Manual Setup
 
 ```bash
-# Install
 npm install
+cp .env.example .env.local           # defaults already point to local Supabase
 
-# Configure
-cp .env.example .env.local
-# Fill in Supabase + Stripe keys
-
-# Run schema
-# Paste supabase/schema.sql into Supabase SQL Editor
-
-# Dev
+npx supabase start                   # boots Postgres / Auth / Storage / etc.
+npm run db:reset                     # apply schema + migrations + seed (drops existing public)
 npm run dev
-
-# Build
-npm run build
-
-# Lint
-npm run lint
 ```
+
+### Switching to remote Supabase
+
+`.env.example` defaults to local. To use a remote Supabase project (staging or prod), overwrite each value in `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<remote anon>
+SUPABASE_SERVICE_ROLE_KEY=<remote service role>
+```
+
+The local-default keys (`...JhbGciOi...exp:1983812996`) are public CLI demo keys — never use them against a real Supabase project.
 
 ## Local Test Hashes
 
-Pre-defined hashes for local development. Hash in URL = user identity, so
-hitting any `/browse/{hash}` or `/list/{hash}/{city}` route in the browser
-needs a row in the `users` table.
+`scripts/db-init.sh --drop` (and `npm run setup`) seed two users via `supabase/seed-test-data.sql`:
 
 | Hash | Profile | What it exercises |
 |---|---|---|
-| `dev-test-001` | Generic dev user | Any route: browse, reveals, list landing |
-| `test_abcdefghijklmnopqrstuvwxyz1234567890A` | Mike Johnson @ Pacific Coast Builders, has reveals | Reveals page with data |
-| `empty_reveals_test_user_hash_000000000000` | Test Empty User, no reveals | Empty-state of reveals page |
-
-**Seed:**
-
-```sql
--- The two test_/empty_ hashes are in supabase/seed-test-data.sql.
--- For dev-test-001, run this once in Supabase SQL Editor:
-INSERT INTO users (hash, name, company, email, source_campaign)
-VALUES ('dev-test-001', 'Dev Test', 'Test GC', 'dev@example.com', 'local-dev')
-ON CONFLICT (hash) DO NOTHING;
-```
+| `a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ` | Mike Johnson @ Pacific Coast Builders — 1 reveal + 1 SJ report purchase + 1 LA research-in-progress | All three sections of `/reveals/{hash}` |
+| `empty_reveals_test_user_hash_000000000000` | Test Empty User — no purchases | Empty-state of `/reveals/{hash}` |
 
 **Test URLs (after `npm run dev`):**
 
-- Browse: `http://localhost:3000/browse/dev-test-001`
-- Reveals: `http://localhost:3000/reveals/dev-test-001`
-- City list landing (SJ): `http://localhost:3000/list/dev-test-001/sj`
-- City list success: `http://localhost:3000/list/dev-test-001/sj/success`
-- Email login form: `http://localhost:3000/login`
-- Magic-link callback (hit by Supabase Auth): `http://localhost:3000/auth/callback`
+| Route | What it does |
+|---|---|
+| `/browse/a3jKR9uD…` | Project list with reveal CTA |
+| `/reveals/a3jKR9uD…` | "My purchases" — research + reports + reveals |
+| `/list/a3jKR9uD…/sj` | $349 SJ report landing |
+| `/list/a3jKR9uD…/sj/success` | Post-purchase confirmation + download (already paid) |
+| `/research/a3jKR9uD…` | $1999 custom research city dropdown |
+| `/research/a3jKR9uD…/la/status` | LA research status (in_research) |
+| `/login` | Magic-link login form |
+| `/auth/callback` | Magic-link callback (hit by Supabase Auth) |
 
-**Prerequisites for the `/list` routes:**
+**Local Stripe checkout flows:**
 
-1. Migration `supabase/migrations/002-city-lists-and-list-purchases.sql` applied (creates `city_lists` + `list_purchases` tables and seeds the SJ row).
-2. `STRIPE_SECRET_KEY` set in `.env.local` (Buy button calls Stripe Checkout).
-3. PDF uploaded to Supabase Storage at `city-lists-pdfs/sj-2025.pdf` (Download button needs the file to exist).
+1. Set `STRIPE_SECRET_KEY` (test mode) in `.env.local`
+2. Run `npm run stripe:listen` in another terminal — copy the printed `STRIPE_WEBHOOK_SECRET` into `.env.local`
+3. Click any "Reveal" / "Buy" / "Order research" button — Stripe Checkout uses test card `4242 4242 4242 4242`
 
-**Prerequisites for the email login flow (`/login` + `/auth/callback`):**
+**Local magic-link login:**
 
-1. Migration `supabase/migrations/003-email-login-auth.sql` applied (adds `users.auth_user_id`, partial UNIQUE on email, `identity_fork_alerts` and `auth_login_events` tables, `paid_user_ids()` and `find_duplicate_emails()` RPCs).
-2. Supabase Auth SMTP configured to send via Resend from `auth.updatewave.org` (DNS: SPF, DKIM, DMARC).
-3. Redirect URL allowlist in Supabase Auth includes `http://localhost:3000/auth/callback` for local dev and `https://updatewave-web.vercel.app/auth/callback` for production.
-4. Supabase Auth `magic_link` email template overridden to embed `{{ .TokenHash }}` directly in the callback URL (the default `{{ .ConfirmationURL }}` template goes through Supabase's `/verify` endpoint and does not produce the `token_hash` query param our `/auth/callback` route handler expects). Use this template body:
-   ```html
-   <h2>Log in to UpdateWave</h2>
-   <p>Click the link below to log into your UpdateWave account:</p>
-   <p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=magiclink">Log in to UpdateWave</a></p>
-   <p>Or paste this URL into your browser:</p>
-   <p>{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=magiclink</p>
-   <p>This link expires in 1 hour. If you did not request it, you can ignore this email.</p>
-   ```
+The local Supabase CLI ships with [Mailpit](http://127.0.0.1:54324) — every auth email is captured there instead of being delivered. After you submit `/login`, open Mailpit and click the link.
 
 ## Testing
 
 ```bash
-npm test              # Unit tests (Vitest)
-npm run test:watch    # Unit tests in watch mode
-npm run test:e2e      # E2E tests (Playwright)
-npm run test:e2e:smoke # Post-deploy smoke tests
+npm test              # Unit + integration tests (Vitest)
+npm run test:watch    # Watch mode
+npm run typecheck     # tsc --noEmit
+npm run lint          # ESLint
+npm run test:e2e      # E2E tests (Playwright — needs dev server)
+npm run test:e2e:smoke # Post-deploy smoke tests against production
 ```
 
 ### Stripe & Database helpers
 
 ```bash
-npm run stripe:listen  # Forward Stripe webhooks to localhost
-npm run db:seed        # Instructions for seeding test data
+npm run stripe:listen      # Forward Stripe webhooks to localhost
+npm run supabase:start     # Boot local Postgres / Auth / Storage / Mailpit
+npm run supabase:stop      # Stop the local stack
+npm run supabase:status    # Show URLs + keys
+npm run db:reset           # Drop + reapply schema, migrations, seed
+npm run db:init            # Apply schema, migrations, seed (no drop — idempotent)
+npm run db:seed            # Re-apply seed-test-data.sql only
 ```
+
+## Worktree Notes
+
+This repo uses git worktrees for parallel feature branches (see `.claude/worktrees/` and `.worktrees/`). When working in a fresh worktree:
+
+1. **`npm install`** — `node_modules` is gitignored, so each worktree needs its own install. Or symlink/copy from the main repo.
+2. **`.env.local`** is gitignored too — copy from the main repo or re-run `cp .env.example .env.local`.
+3. **The local Supabase stack is shared across all worktrees** (one Docker stack per project). You don't run `supabase start` per worktree.
 
 ## Data Pipeline
 
@@ -183,8 +208,8 @@ MIT — see [LICENSE](LICENSE).
 
 ## Security
 
-- Hash-based auth (no passwords, no sessions)
+- Hash-based auth (no passwords for cold-email entry); magic-link email login for returning users
 - `Referrer-Policy: no-referrer` on all pages
 - CSP headers restricting to Stripe + Supabase origins
-- RLS: anon can only read published projects, service role required for users/reveals
-- Webhook signature verification + idempotent reveal insertion
+- RLS: anon can only read published projects, service role required for users/reveals/purchases
+- Webhook signature verification + idempotent reveal/purchase insertion via UNIQUE constraints

@@ -7,12 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test --project=chromium",
     "test:e2e:smoke": "playwright test --project=smoke",
     "stripe:listen": "stripe listen --forward-to localhost:3000/api/webhook",
-    "db:seed": "echo 'Run: psql $DATABASE_URL < supabase/seed-test-data.sql'",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "db:init": "bash scripts/db-init.sh",
+    "db:reset": "bash scripts/db-init.sh --drop",
+    "db:seed": "bash scripts/db-seed.sh",
     "setup": "bash scripts/setup-local.sh"
   },
   "dependencies": {
@@ -32,6 +38,7 @@
     "dotenv": "^17.4.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
+    "supabase": "^2.98.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.2"

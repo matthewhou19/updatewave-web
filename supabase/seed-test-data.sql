@@ -4,13 +4,14 @@
 -- Insert test user (simulates create_user_hashes.py output)
 INSERT INTO users (hash, name, company, email, city_filter, source_campaign)
 VALUES (
-  'test_abcdefghijklmnopqrstuvwxyz1234567890A',
+  'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ',
   'Mike Johnson',
   'Pacific Coast Builders',
   'mike@pacificcoastbuilders.com',
   'Los Altos',
   'test'
-);
+)
+ON CONFLICT (hash) DO NOTHING;
 
 -- Insert test projects (simulates publish_leads.py output)
 INSERT INTO projects (city, address, project_type, estimated_value_cents, estimated_value, architect_name, architect_firm, architect_contact, architect_website, source_permit_id, filing_date, source_url, status, published_at)
@@ -40,7 +41,53 @@ ON CONFLICT (hash) DO NOTHING;
 INSERT INTO reveals (user_id, project_id, stripe_payment_id, amount_cents)
 SELECT u.id, p.id, 'pi_test_seed_001', 2500
 FROM users u, projects p
-WHERE u.hash = 'test_abcdefghijklmnopqrstuvwxyz1234567890A'
+WHERE u.hash = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
   AND p.address = '336 SPRINGER RD'
   AND p.city = 'Los Altos'
 ON CONFLICT (user_id, project_id) DO NOTHING;
+
+-- Test list_purchase: test user bought the SJ 2025 'report'-tier city list
+-- (the city_list row itself is auto-seeded by migration 002 with service_tier='report')
+INSERT INTO list_purchases (user_id, city_list_id, stripe_session_id, stripe_payment_id, amount_cents)
+SELECT u.id, cl.id, 'cs_test_seed_list_001', 'pi_test_seed_list_001', 34900
+FROM users u, city_lists cl
+WHERE u.hash = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
+  AND cl.city = 'sj'
+  AND cl.year = 2025
+  AND cl.service_tier = 'report'
+ON CONFLICT (user_id, city_list_id) DO NOTHING;
+
+-- Test research city_list: Los Altos 2025 research-tier product
+INSERT INTO city_lists (
+  city, year, title, description, headline_insight,
+  price_cents, anchor_price_cents, pdf_storage_path,
+  service_tier, delivery_window_days, active
+)
+VALUES (
+  'la',
+  2025,
+  'Los Altos 2025 Custom Market Research',
+  'Bespoke 5-10 business day research deliverable: every architect, every developer, every contact tied to your target permits.',
+  'Hand-built by us. Includes 90-day post-purchase digest of new permits.',
+  199900,
+  249900,
+  'la-2025-research.pdf',
+  'research',
+  10,
+  true
+)
+ON CONFLICT (city, year, service_tier) DO NOTHING;
+
+-- Test research_purchase: test user bought the LA 2025 research (still being researched)
+INSERT INTO research_purchases (
+  user_id, city_list_id, stripe_session_id, stripe_payment_id,
+  amount_cents, delivery_status, digest_subscription_until
+)
+SELECT u.id, cl.id, 'cs_test_seed_research_001', 'pi_test_seed_research_001',
+       199900, 'in_research', NOW() + INTERVAL '90 days'
+FROM users u, city_lists cl
+WHERE u.hash = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
+  AND cl.city = 'la'
+  AND cl.year = 2025
+  AND cl.service_tier = 'research'
+ON CONFLICT (user_id, city_list_id) DO NOTHING;
