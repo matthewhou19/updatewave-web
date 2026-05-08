@@ -9,6 +9,7 @@ CREATE TABLE projects (
   project_type TEXT,
   estimated_value_cents BIGINT,
   estimated_value TEXT,          -- display string e.g. "$1.2M"
+  description TEXT,              -- Marketing/listing copy (PR #6); see migration 006 for prod backfill
   architect_name TEXT,
   architect_firm TEXT,
   architect_contact TEXT,        -- phone/email

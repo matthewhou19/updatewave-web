@@ -161,6 +161,10 @@ The local Supabase CLI ships with [Mailpit](http://127.0.0.1:54324) — every au
 
 ## Testing
 
+For a full end-to-end manual walk-through of the local stack (browse →
+purchases → magic-link login → checkout, with expected results and
+troubleshooting), see [docs/manual-test-story.md](docs/manual-test-story.md).
+
 ```bash
 npm test              # Unit + integration tests (Vitest)
 npm run test:watch    # Watch mode
