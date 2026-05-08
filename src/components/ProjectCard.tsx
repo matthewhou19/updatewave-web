@@ -13,6 +13,12 @@ interface ProjectCardProps {
   isRevealed: boolean
   hash?: string
   justRevealed?: boolean
+  /**
+   * 'demo' renders a read-only card for marketing surfaces (e.g. the homepage
+   * "we monitor the market live" proof section): no $25 price, no reveal CTA,
+   * no sign-in link. Defaults to 'transactional' which is the /browse behaviour.
+   */
+  mode?: 'transactional' | 'demo'
 }
 
 // Re-export for backwards compatibility with tests that import from this module.
@@ -32,7 +38,7 @@ function MaskedAddress({ address }: { address: string }) {
   )
 }
 
-export default function ProjectCard({ project, isRevealed, hash, justRevealed }: ProjectCardProps) {
+export default function ProjectCard({ project, isRevealed, hash, justRevealed, mode = 'transactional' }: ProjectCardProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleReveal() {
@@ -149,39 +155,49 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed }:
       </div>
 
       <div className="flex flex-col items-end justify-between text-right gap-3">
-        <div>
-          {!isRevealed && (
-            <>
-              <div className="font-serif text-[24px] font-semibold leading-none">$25</div>
-              <div className="font-mono text-[10px] text-muted mt-1">
-                {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
-              </div>
-            </>
-          )}
-          {isRevealed && (
-            <span className="font-mono text-[10px] text-accent uppercase tracking-wider border border-accent px-2 py-1 inline-block">
-              ✓ Revealed
-            </span>
-          )}
-        </div>
-        {!isRevealed &&
-          (hash ? (
-            <button
-              onClick={handleReveal}
-              disabled={loading}
-              className={buttonStyles('primary', 'sm')}
-            >
-              {loading ? 'Processing...' : 'Reveal · $25'}
-            </button>
-          ) : (
-            <Link
-              href={ANONYMOUS_REVEAL_LOGIN_HREF}
-              data-testid="anonymous-reveal-cta"
-              className={buttonStyles('primary', 'sm')}
-            >
-              Sign in to reveal · $25
-            </Link>
-          ))}
+        {mode === 'demo' ? (
+          <div className="font-mono text-[10px] text-muted uppercase tracking-[0.1em] leading-relaxed max-w-[120px]">
+            <span className="text-accent" aria-hidden>●</span> Public record
+            <br />
+            monitored daily
+          </div>
+        ) : (
+          <>
+            <div>
+              {!isRevealed && (
+                <>
+                  <div className="font-serif text-[24px] font-semibold leading-none">$25</div>
+                  <div className="font-mono text-[10px] text-muted mt-1">
+                    {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
+                  </div>
+                </>
+              )}
+              {isRevealed && (
+                <span className="font-mono text-[10px] text-accent uppercase tracking-wider border border-accent px-2 py-1 inline-block">
+                  ✓ Revealed
+                </span>
+              )}
+            </div>
+            {!isRevealed &&
+              (hash ? (
+                <button
+                  onClick={handleReveal}
+                  disabled={loading}
+                  className={buttonStyles('primary', 'sm')}
+                >
+                  {loading ? 'Processing...' : 'Reveal · $25'}
+                </button>
+              ) : (
+                <Link
+                  href={ANONYMOUS_REVEAL_LOGIN_HREF}
+                  data-testid="anonymous-reveal-cta"
+                  className={buttonStyles('primary', 'sm')}
+                >
+                  Sign in to reveal · $25
+                </Link>
+              ))}
+          </>
+        )}
       </div>
     </article>
   )

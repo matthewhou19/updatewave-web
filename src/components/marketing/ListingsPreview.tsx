@@ -5,6 +5,10 @@ import { buttonStyles } from '../ui/Button'
 
 interface Props {
   projects: Project[]
+  /**
+   * Total count of published projects in the dataset. Surfaced in the
+   * "we monitored N filings this month" line so the proof feels live.
+   */
   totalCount: number
 }
 
@@ -14,10 +18,12 @@ export default function ListingsPreview({ projects, totalCount }: Props) {
       <div className="max-w-[1200px] mx-auto">
         <div className="mb-8">
           <h2 className="font-serif text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-[800px]">
-            See what&apos;s filed in San Jose right now.
+            We watch every filing in San Jose.
           </h2>
-          <p className="font-mono text-[13px] text-muted mt-3">
-            Free to browse. $25 to reveal contact info. New listings every few hours.
+          <p className="font-mono text-[13px] text-muted mt-3 max-w-[640px]">
+            Below: the four most recent permits, pulled from the city this morning. The report is
+            what 12 months of these filings <em className="italic">add up to</em> — concentration,
+            tier breakdown, named LLCs, the playbook for each segment.
           </p>
         </div>
 
@@ -29,18 +35,21 @@ export default function ListingsPreview({ projects, totalCount }: Props) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {projects.map((p) => (
-              <ProjectCard key={p.id} project={p} isRevealed={false} />
+              <ProjectCard key={p.id} project={p} isRevealed={false} mode="demo" />
             ))}
           </div>
         )}
 
-        <div className="mt-10 text-center">
-          <Link href="/login" className={buttonStyles('primary')}>
-            View all {totalCount} listings →
+        <p className="font-mono text-[11px] text-muted mt-6 text-center">
+          {totalCount > 0
+            ? `${totalCount} San Jose filings tracked. The report structures all of them.`
+            : 'San Jose filings tracked daily. The report structures all of them.'}
+        </p>
+
+        <div className="mt-8 text-center">
+          <Link href="/pricing" className={buttonStyles('primary')}>
+            See the SJ report → $349
           </Link>
-          <p className="font-mono text-[11px] text-muted mt-3">
-            Free account required to browse the full list. No payment to view.
-          </p>
         </div>
       </div>
     </section>

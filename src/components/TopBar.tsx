@@ -27,8 +27,8 @@ export default function TopBar({ hash, view = 'public' }: TopBarProps) {
               </Link>
             </li>
             <li>
-              <Link href="/#coverage" className="text-ink no-underline border-b border-transparent hover:border-ink pb-0.5">
-                Coverage
+              <Link href="/#listings" className="text-ink no-underline border-b border-transparent hover:border-ink pb-0.5">
+                Sample data
               </Link>
             </li>
             <li>
@@ -63,8 +63,8 @@ export default function TopBar({ hash, view = 'public' }: TopBarProps) {
               <Link href="/login" className={buttonStyles('outline')} data-testid="home-login-link">
                 Log in
               </Link>
-              <Link href="/login" className={buttonStyles('primary')}>
-                Get started
+              <Link href="/pricing" className={buttonStyles('primary')}>
+                See the SJ report
               </Link>
             </>
           )}

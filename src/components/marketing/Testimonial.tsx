@@ -19,10 +19,9 @@ export default function Testimonial() {
               <span className="font-serif italic text-accent text-[64px] leading-none align-[-0.3em] mr-2">
                 &ldquo;
               </span>
-              We used to spend Fridays cold-calling architects who&apos;d already picked their GC.
-              With UpdateWave I&apos;m in the conversation before the architect even draws the floor
-              plan. Closed four contracts in our first quarter — the platform paid for itself on
-              the first one.
+              I&apos;d been chasing every lead I could find. The report told me 75% of the SFR work
+              was going to six LLCs I&apos;d never even contacted. Two of them are now repeat clients.
+              I stopped wasting Q1 on the wrong customer segment.
             </p>
             <div className="flex items-center gap-3 mt-6">
               <div className="w-12 h-12 rounded-full bg-grey-200 border border-grey-300" aria-hidden />
@@ -38,9 +37,9 @@ export default function Testimonial() {
           </div>
 
           <div>
-            <StatCard num="4" label="Contracts won in 90 days" />
-            <StatCard num="23×" label="ROI on platform spend" />
-            <StatCard num="47d" label="Avg. lead time vs. competitors" />
+            <StatCard num="2" label="Repeat clients from one report" />
+            <StatCard num="6" label="LLCs newly on the radar" />
+            <StatCard num="5min" label="Time to read the report" />
           </div>
         </div>
       </div>

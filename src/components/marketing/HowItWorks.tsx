@@ -7,18 +7,18 @@ interface Step {
 const STEPS: Step[] = [
   {
     num: 'STEP 01',
-    title: 'Browse free.',
-    body: 'Filter by city, project type, value range. See what was filed before anyone else — addresses partially redacted, descriptions visible.',
+    title: 'We pull every permit.',
+    body: '12 months of public planning commission filings for your city — addresses, owners, project types, square footage, dates. Raw data nobody bothers to structure.',
   },
   {
     num: 'STEP 02',
-    title: 'Reveal what matters.',
-    body: 'Unlock full address, owner name, and architect contact for $25 per lead. Pay only for the ones you actually want to chase.',
+    title: 'AI maps the structure.',
+    body: 'Owner concentration, repeat-buyer LLCs, ADU vs. SFR vs. multifamily split, geographic clusters, who actually decides at each tier. The structural picture under the noise.',
   },
   {
     num: 'STEP 03',
-    title: 'Reach out first.',
-    body: 'Beat the 6–12 GCs your competitors are still waiting for permits to find. Average lead time advantage: 47 days.',
+    title: 'You get a PDF you can act on.',
+    body: '15 pages. Named LLCs. Per-tier playbooks. Read it on your phone in 5 minutes. Send your first targeted cold email this afternoon.',
   },
 ]
 
@@ -28,12 +28,12 @@ export default function HowItWorks() {
       <div className="max-w-[1200px] mx-auto">
         <div className="mb-8">
           <h2 className="font-serif text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-[800px]">
-            A new lead arrives in San Jose
+            From 621 raw permits to one PDF
             <br />
-            roughly every 4 hours.
+            you can actually use.
           </h2>
           <p className="font-mono text-[13px] text-muted mt-3">
-            Here&apos;s how you turn one into a contract.
+            What we do for San Jose, we&apos;ll do for any Bay Area city you ask about.
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 mt-12">
@@ -48,7 +48,7 @@ export default function HowItWorks() {
           ))}
         </div>
         <p className="font-mono text-[12px] text-muted mt-10 pt-4 border-t border-dashed border-grey-300 text-center">
-          Unlocks are one-time · No subscription · Full refund if contact info is invalid or outdated
+          $349 for San Jose 2025 (instant) · $1,999 for any Bay Area city + 90 days monitoring · 7-day refund
         </p>
       </div>
     </section>

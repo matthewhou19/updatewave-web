@@ -5,36 +5,36 @@ interface QA {
 
 const QAS: QA[] = [
   {
-    q: 'Where does the data come from?',
-    a: 'San Jose Planning Commission filings — public records that get posted before permits are issued. We monitor new filings continuously and republish them in a structured format with architect attribution.',
+    q: 'What does the report actually show me?',
+    a: '15 pages structured by tier (ADU, SFR, multifamily). For each tier: total permit count, owner concentration (the 6 LLCs that hold 75% of SJ SFR, by name), top zip codes, and the GC playbook for that segment. Designed to read on phone in 5 minutes.',
   },
   {
-    q: 'How often is the data updated?',
-    a: 'Continuously. New filings show up within hours of being posted by the city. We typically surface 4–8 new residential projects per day.',
-  },
-  {
-    q: 'What exactly do I get when I unlock a lead?',
-    a: 'The full street address, the architect firm name, and the architect\'s direct contact (email or phone, depending on what\'s on file). Plus a link to their website if we have it. Most filings also include the owner name and project value.',
-  },
-  {
-    q: 'What if the contact info is wrong or outdated?',
-    a: 'Full refund, no questions. Email matthew@updatewave.com with the lead ID and we\'ll process it within 24 hours. We refund both wrong contacts and contacts who refuse to engage on principle (architects who never wanted to be listed).',
-  },
-  {
-    q: 'Can architects opt out of being listed?',
-    a: 'Yes. Architects can email matthew@updatewave.com to be removed within 48 hours. We honor opt-outs unconditionally and refund any reveals of removed contacts.',
-  },
-  {
-    q: 'Is this legal? Is this public information?',
-    a: 'Yes. All filings come from public planning commission records — the same records anyone can request from the city. We just structure and republish them. We don\'t scrape any private data.',
+    q: 'Can\'t I just pull this data myself from the city?',
+    a: 'You can. It\'ll take 30–40 hours to scrape 621 permits, deduplicate owners, classify project types, and produce something you can act on. Our $349 buys back those hours and the analysis layer on top — owner concentration, tier playbooks, named LLCs.',
   },
   {
     q: 'How is this different from BuildZoom or Dodge?',
-    a: 'Stage and price. BuildZoom/Dodge sell post-permit data on annual subscriptions ($99–$300/mo). We sell pre-permit filings on a $25 per-lead basis. By the time those tools surface a project, the homeowner has usually already chosen a GC. We catch the project 30–60 days earlier.',
+    a: 'They sell post-permit lead lists on a $99–$300/mo subscription. We sell pre-permit structural analysis as a $349 one-time PDF. They tell you what just broke ground; we tell you which 6 owners decide what gets built next year.',
   },
   {
-    q: 'Do you offer refunds on a reveal?',
-    a: 'Yes — within 7 days of purchase if the contact info is wrong, outdated, or the architect has opted out. Email matthew@updatewave.com with the lead ID.',
+    q: "What if my city isn't San Jose?",
+    a: 'The $1,999 custom research covers any Bay Area city you ask about. Same report format, plus 90 days of weekly permit monitoring with founder commentary. 5–10 day delivery for new cities; instant for SJ.',
+  },
+  {
+    q: 'Who actually writes the analysis?',
+    a: 'Matthew (founder) reviews every report. AI handles bulk extraction (parsing permit text, normalizing owner names) but the structural insight, naming, and per-tier playbooks are written by hand. Not LLM-summarized.',
+  },
+  {
+    q: 'How current is the data?',
+    a: 'For the SJ historical report: 12 months ending in the most recent complete quarter. For the $1,999 custom research: same historical window plus 90 days of forward-looking weekly digests on new permits as they file.',
+  },
+  {
+    q: 'What\'s the refund policy?',
+    a: '7-day no-questions refund on either product. Email matthew@updatewave.com with the receipt number. We\'d rather refund than have an unhappy customer.',
+  },
+  {
+    q: 'Is this legal? Is this public information?',
+    a: 'Yes. Every filing comes from public planning commission records — the same records anyone can request from the city. We just structure and analyze them. Architects can request listing removal at any time.',
   },
 ]
 
@@ -44,7 +44,7 @@ export default function FAQ() {
       <div className="max-w-[1200px] mx-auto">
         <div className="mb-8">
           <h2 className="font-serif text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-[800px]">
-            Questions GCs ask before their first reveal.
+            Questions GCs ask before buying the report.
           </h2>
         </div>
         <div className="border-t border-ink mt-12">

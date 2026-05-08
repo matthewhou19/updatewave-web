@@ -1,5 +1,3 @@
-import { buttonStyles } from '../ui/Button'
-
 interface City {
   name: string
   status: string
@@ -7,13 +5,13 @@ interface City {
 }
 
 const CITIES: City[] = [
-  { name: 'San Jose, CA', status: '● Live now', live: true },
-  { name: 'Oakland, CA', status: 'Q1 2027' },
-  { name: 'San Francisco, CA', status: 'Q1 2027' },
-  { name: 'Mountain View, CA', status: 'Q2 2027' },
-  { name: 'Palo Alto, CA', status: 'Q2 2027' },
-  { name: 'Berkeley, CA', status: 'On waitlist' },
-  { name: 'Your city?', status: 'Notify me ↓' },
+  { name: 'San Jose, CA', status: '● $349 instant', live: true },
+  { name: 'Oakland, CA', status: '$1,999 on request' },
+  { name: 'San Francisco, CA', status: '$1,999 on request' },
+  { name: 'Mountain View, CA', status: '$1,999 on request' },
+  { name: 'Palo Alto, CA', status: '$1,999 on request' },
+  { name: 'Berkeley, CA', status: '$1,999 on request' },
+  { name: 'Your city?', status: 'Email Matthew ↓' },
 ]
 
 export default function Coverage() {
@@ -22,11 +20,12 @@ export default function Coverage() {
       <div className="max-w-[1200px] mx-auto">
         <div className="mb-8">
           <h2 className="font-serif text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-[800px]">
-            One city now. The Bay Area next.
+            San Jose today. Any Bay Area city you ask about.
           </h2>
-          <p className="font-mono text-[13px] text-muted mt-3 max-w-[600px]">
-            Get notified when UpdateWave goes live in your service area. Early-access GCs get the
-            first 5 reveals on us.
+          <p className="font-mono text-[13px] text-muted mt-3 max-w-[640px]">
+            The $349 SJ report ships instantly. For any other Bay Area city, the $1,999 custom
+            research delivers the same analysis in 5–10 days, plus 90 days of weekly permit
+            monitoring on top.
           </p>
         </div>
 
@@ -40,7 +39,7 @@ export default function Coverage() {
             aria-label="Coverage map placeholder showing San Jose pin"
           >
             <div className="absolute left-[32%] top-[62%] -translate-y-[120%] font-mono text-[11px] bg-ink text-paper px-2 py-1 whitespace-nowrap">
-              San Jose · LIVE
+              San Jose · ANALYZED
             </div>
           </div>
 
@@ -60,24 +59,12 @@ export default function Coverage() {
                 </li>
               ))}
             </ul>
-            <div className="flex flex-col sm:flex-row gap-2 mt-6">
-              <input
-                type="email"
-                placeholder="your@company.com"
-                disabled
-                className="flex-1 px-3 py-2.5 border border-ink bg-paper font-mono text-[12px] focus:outline-none disabled:opacity-60"
-                aria-label="Email for coverage notifications"
-              />
-              <button type="button" disabled className={`${buttonStyles('primary')} opacity-50 cursor-not-allowed`}>
-                Notify me · soon
-              </button>
-            </div>
-            <p className="font-mono text-[10px] text-muted mt-2">
-              Email capture going live shortly. For now, ping{' '}
-              <a href="mailto:matthew@updatewave.com" className="underline">
+            <p className="font-mono text-[12px] text-muted mt-6 leading-relaxed">
+              Need a city not listed?{' '}
+              <a href="mailto:matthew@updatewave.com?subject=Custom%20research%20for%20my%20city" className="underline text-ink">
                 matthew@updatewave.com
               </a>
-              .
+              . If we have data access for the city, we&apos;ll quote you.
             </p>
           </div>
         </div>
