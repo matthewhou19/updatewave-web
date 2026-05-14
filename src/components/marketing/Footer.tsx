@@ -18,7 +18,6 @@ const COLS: Col[] = [
   {
     heading: 'For Architects',
     links: [
-      { label: 'How listings work', href: 'mailto:matthew@updatewave.com?subject=Architect%20listing%20question' },
       { label: 'Opt out', href: 'mailto:matthew@updatewave.com?subject=Opt%20out%20of%20UpdateWave' },
     ],
   },
@@ -28,19 +27,12 @@ const COLS: Col[] = [
       { label: 'Contact', href: 'mailto:matthew@updatewave.com' },
     ],
   },
-  {
-    heading: 'Legal',
-    links: [
-      { label: 'Data sources', href: 'mailto:matthew@updatewave.com?subject=Data%20sources%20question' },
-      { label: 'DMCA', href: 'mailto:matthew@updatewave.com?subject=DMCA' },
-    ],
-  },
 ]
 
 export default function Footer() {
   return (
     <footer className="bg-paper px-6 md:px-12 pt-16 pb-8">
-      <div className="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-8">
+      <div className="max-w-[1200px] mx-auto grid grid-cols-2 md:grid-cols-[2fr_1fr_1fr_1fr] gap-8">
         <div className="col-span-2 md:col-span-1">
           <Link href="/" className="font-serif font-extrabold text-[28px] tracking-tight no-underline text-ink">
             UpdateWave<span className="text-accent">.</span>
