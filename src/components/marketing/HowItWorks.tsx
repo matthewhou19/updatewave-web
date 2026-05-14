@@ -8,7 +8,7 @@ const STEPS: Step[] = [
   {
     num: 'STEP 01',
     title: 'We pull every permit.',
-    body: '12 months of public planning commission filings for your city — addresses, owners, project types, square footage, dates. Raw data nobody bothers to structure.',
+    body: 'A year of public planning commission filings for your city — addresses, owners, project types, square footage, dates. Raw data nobody bothers to structure.',
   },
   {
     num: 'STEP 02',
@@ -18,7 +18,7 @@ const STEPS: Step[] = [
   {
     num: 'STEP 03',
     title: 'You get a PDF you can act on.',
-    body: '15 pages. Named LLCs. Per-tier playbooks. Read it on your phone in 5 minutes. Send your first targeted cold email this afternoon.',
+    body: 'Named LLCs. Per-tier playbooks. Read it on your phone in 5 minutes. Send your first targeted cold email this afternoon.',
   },
 ]
 
@@ -28,7 +28,7 @@ export default function HowItWorks() {
       <div className="max-w-[1200px] mx-auto">
         <div className="mb-8">
           <h2 className="font-serif text-[32px] md:text-[44px] leading-tight font-semibold tracking-tight max-w-[800px]">
-            From 621 raw permits to one PDF
+            From every raw permit to one PDF
             <br />
             you can actually use.
           </h2>

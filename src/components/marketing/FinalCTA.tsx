@@ -14,12 +14,12 @@ export default function FinalCTA() {
         <Link href="/pricing" className={buttonStyles('accent')}>
           See the SJ report →
         </Link>
-        <a
-          href="mailto:matthew@updatewave.com?subject=Custom%20research%20for%20my%20city"
+        <Link
+          href="/sample"
           className={`${buttonStyles('outline')} !border-paper !text-paper hover:!bg-paper hover:!text-ink`}
         >
-          Talk about your city
-        </a>
+          See a sample
+        </Link>
       </div>
     </section>
   )

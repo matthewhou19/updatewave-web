@@ -4,16 +4,6 @@ interface Props {
   stats: HomepageStats
 }
 
-function formatCents(cents: number): string {
-  if (cents >= 1_000_000_00) {
-    return `$${(cents / 1_000_000_00).toFixed(1)}M`
-  }
-  if (cents >= 1_000_00) {
-    return `$${Math.round(cents / 1_000_00)}K`
-  }
-  return `$${(cents / 100).toFixed(0)}`
-}
-
 export default function SocialProofStrip({ stats }: Props) {
   const { gcCount, monthlyReveals, avgValueCents } = stats
   // Fallback band if numbers are too small to show without embarrassment.
@@ -31,8 +21,8 @@ export default function SocialProofStrip({ stats }: Props) {
             San Jose data
           </div>
           <div>
-            <div className="font-serif text-[32px] font-semibold leading-none">621</div>
-            <div className="font-mono text-[11px] opacity-70 mt-1">Permits in the SJ report</div>
+            <div className="font-serif text-[32px] font-semibold leading-none">Every</div>
+            <div className="font-mono text-[11px] opacity-70 mt-1">SJ filing in 12 months</div>
           </div>
           <div>
             <div className="font-serif text-[32px] font-semibold leading-none">{gcCount}</div>
@@ -40,18 +30,18 @@ export default function SocialProofStrip({ stats }: Props) {
           </div>
           <div>
             <div className="font-serif text-[32px] font-semibold leading-none">
-              {avgValueCents ? formatCents(avgValueCents) : '—'}
+              Public
             </div>
-            <div className="font-mono text-[11px] opacity-70 mt-1">Avg. project value tracked</div>
+            <div className="font-mono text-[11px] opacity-70 mt-1">records · sourced direct</div>
           </div>
         </div>
       ) : (
         <div className="max-w-[1200px] mx-auto flex flex-wrap items-center justify-center gap-6 md:gap-10 font-mono text-[12px] uppercase tracking-[0.12em]">
           <span>
-            <span className="text-accent mr-2" aria-hidden>●</span>621 SJ permits analyzed
+            <span className="text-accent mr-2" aria-hidden>●</span>Every SJ filing, 12 months back
           </span>
           <span className="opacity-60">·</span>
-          <span>12 months of structural data</span>
+          <span>Structured for GCs</span>
           <span className="opacity-60">·</span>
           <span>Sourced from public records</span>
         </div>

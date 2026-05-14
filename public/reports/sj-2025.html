@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>San Jose 新建房屋市场报告 (2025.01–2026.04)</title>
+<style>
+/* ==========================================================================
+   Base
+   ========================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  line-height: 1.7;
+  color: #1f2937;
+  background: #f5f5f5;
+  font-feature-settings: "tnum";
+}
+a { color: inherit; }
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+.app {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  max-width: 1320px;
+  margin: 0 auto;
+  background: #ffffff;
+  min-height: 100vh;
+  box-shadow: 0 0 0 1px #e5e7eb;
+}
+
+aside.toc {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 28px 20px;
+  border-right: 1px solid #e5e7eb;
+  background: #fafafa;
+}
+.toc .toc-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #6b7280;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.toc nav a {
+  display: block;
+  padding: 6px 12px;
+  margin: 2px 0;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 4px;
+  font-size: 0.92rem;
+  border-left: 3px solid transparent;
+  transition: background 0.1s;
+}
+.toc nav a:hover { background: #eef2f7; }
+.toc nav a.cat-adu { border-left-color: #3b82f6; }
+.toc nav a.cat-sfr { border-left-color: #10b981; }
+.toc nav a.cat-apt { border-left-color: #8b5cf6; }
+.toc nav a.cat-th  { border-left-color: #f59e0b; }
+.toc nav a.cat-com { border-left-color: #64748b; }
+.toc nav a .count {
+  float: right;
+  font-size: 0.78rem;
+  color: #9ca3af;
+  font-variant-numeric: tabular-nums;
+}
+
+main {
+  padding: 48px 64px;
+  max-width: 1080px;
+}
+
+/* ==========================================================================
+   Header
+   ========================================================================== */
+header.report-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 24px;
+  margin-bottom: 40px;
+}
+h1 { font-size: 1.85rem; font-weight: 700; color: #111827; margin-bottom: 6px; letter-spacing: -0.01em; }
+.subtitle { font-size: 1.02rem; color: #4b5563; margin-bottom: 14px; }
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+.meta strong { color: #1f2937; font-weight: 600; }
+
+/* ==========================================================================
+   Sections (5 categories)
+   ========================================================================== */
+section.cat {
+  margin: 56px 0;
+  padding-top: 28px;
+  border-top: 2px solid #f3f4f6;
+}
+section.cat h2 {
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+section.cat h2 .tag {
+  display: inline-block;
+  padding: 3px 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: white;
+  vertical-align: middle;
+}
+section.cat .lead {
+  font-size: 0.98rem;
+  color: #6b7280;
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+#adu        h2 .tag { background: #3b82f6; }
+#sfr        h2 .tag { background: #10b981; }
+#apartment  h2 .tag { background: #8b5cf6; }
+#townhouse  h2 .tag { background: #f59e0b; }
+#commercial h2 .tag { background: #64748b; }
+
+#adu        { border-top-color: #3b82f6; }
+#sfr        { border-top-color: #10b981; }
+#apartment  { border-top-color: #8b5cf6; }
+#townhouse  { border-top-color: #f59e0b; }
+#commercial { border-top-color: #64748b; }
+
+section.cat h3 {
+  font-size: 1.02rem;
+  font-weight: 600;
+  margin: 28px 0 10px;
+  color: #1f2937;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+/* ==========================================================================
+   Stat strips
+   ========================================================================== */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+.stat {
+  padding: 12px 14px;
+  background: #f9fafb;
+  border-radius: 4px;
+  border: 1px solid #f3f4f6;
+}
+.stat .label { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.stat .value { font-size: 1.18rem; font-weight: 700; color: #111827; margin-top: 4px; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.stat .sub { font-size: 0.78rem; color: #6b7280; margin-top: 2px; }
+
+/* ==========================================================================
+   Charts (vertical bar trend, horizontal quartile distribution)
+   ========================================================================== */
+.trend-chart { margin: 18px 0 8px; }
+.trend-chart .bars {
+  display: flex;
+  gap: 14px;
+  height: 200px;
+  align-items: flex-end;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 4px;
+}
+.trend-chart .bar {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  height: 100%;
+  min-width: 40px;
+}
+.trend-chart .bar-num {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.trend-chart .bar-fill {
+  width: 100%;
+  height: calc(var(--pct) * 1%);
+  background: #bfdbfe;
+  border-radius: 3px 3px 0 0;
+  transition: height 0.4s ease;
+}
+.trend-chart .bar.peak .bar-fill { background: #3b82f6; }
+.trend-chart .bar-labels {
+  display: flex;
+  gap: 14px;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+.trend-chart .bar-labels span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.78rem;
+  color: #6b7280;
+  line-height: 1.4;
+}
+.trend-chart .bar-labels strong {
+  display: block;
+  color: #1e3a8a;
+  font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+.size-histogram {
+  display: grid;
+  grid-template-columns: 120px 1fr 110px;
+  gap: 8px 16px;
+  margin: 16px 0 8px;
+  align-items: center;
+}
+.size-histogram .hrow { display: contents; }
+.size-histogram .hlabel {
+  font-size: 0.88rem;
+  color: #4b5563;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.size-histogram .hbar-track {
+  position: relative;
+  height: 24px;
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+.size-histogram .hbar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: #bfdbfe;
+  border-radius: 3px;
+  width: calc(var(--w) * 1%);
+  transition: width 0.4s ease;
+}
+.size-histogram .hrow.peak .hbar-fill { background: #3b82f6; }
+.size-histogram .hrow.peak-2 .hbar-fill { background: #60a5fa; }
+.size-histogram .hval {
+  font-size: 0.85rem;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+.size-histogram .hrow.peak .hval,
+.size-histogram .hrow.peak-2 .hval { color: #1e3a8a; font-weight: 600; }
+
+.owner-concentration { margin: 16px 0 8px; }
+.owner-concentration .oc-headline {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-bottom: 14px;
+}
+.owner-concentration .oc-headline strong { color: #1e3a8a; font-weight: 700; }
+.owner-concentration .oc-chart {
+  display: grid;
+  grid-template-columns: 90px 1fr 270px;
+  gap: 8px 16px;
+  align-items: center;
+}
+.owner-concentration .oc-row { display: contents; }
+.owner-concentration .oc-label {
+  font-size: 0.88rem;
+  color: #4b5563;
+  text-align: right;
+}
+.owner-concentration .oc-bar {
+  position: relative;
+  height: 22px;
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+.owner-concentration .oc-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  background: #bfdbfe;
+  border-radius: 3px;
+  width: calc(var(--w) * 1%);
+  min-width: 3px;
+  transition: width 0.4s ease;
+}
+.owner-concentration .oc-row.peak .oc-fill { background: #3b82f6; }
+.owner-concentration .oc-val {
+  font-size: 0.85rem;
+  color: #374151;
+  font-variant-numeric: tabular-nums;
+}
+.owner-concentration .oc-row.peak .oc-val strong { color: #1e3a8a; font-weight: 700; }
+.owner-concentration .oc-val .note { color: #9ca3af; font-size: 0.82rem; font-style: italic; }
+
+/* ==========================================================================
+   Tier Overview (3-tier architecture diagram)
+   ========================================================================== */
+.tier-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0 16px;
+}
+.tier {
+  padding: 16px 20px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border-left: 5px solid #6b7280;
+}
+.tier-multi { border-left-color: #8b5cf6; background: #faf5ff; }
+.tier-sfr   { border-left-color: #10b981; background: #f0fdf4; }
+.tier-adu   { border-left-color: #3b82f6; background: #eff6ff; }
+.tier-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.tier-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: white;
+}
+.tier-multi .tier-tag { background: #8b5cf6; }
+.tier-sfr   .tier-tag { background: #10b981; }
+.tier-adu   .tier-tag { background: #3b82f6; }
+.tier-name { font-weight: 600; color: #1f2937; font-size: 0.95rem; }
+.tier-bars {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin: 8px 0;
+}
+.tier-bar-row {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+.tier-bar-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-align: right;
+}
+.tier-bar-track {
+  position: relative;
+  height: 18px;
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+.tier-bar-fill {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: calc(var(--w) * 1%);
+  min-width: 36px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.74rem;
+  font-variant-numeric: tabular-nums;
+  transition: width 0.4s ease;
+}
+.tier-multi .tier-bar-fill { background: #8b5cf6; }
+.tier-sfr   .tier-bar-fill { background: #10b981; }
+.tier-adu   .tier-bar-fill { background: #3b82f6; }
+.tier-summary {
+  font-size: 0.88rem;
+  color: #4b5563;
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+/* ==========================================================================
+   Tables
+   ========================================================================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 0.9rem;
+}
+th, td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+}
+th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e5e7eb;
+  white-space: nowrap;
+}
+tbody tr:hover { background: #fafafa; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.muted { color: #9ca3af; }
+.missing { color: #dc2626; font-style: italic; font-size: 0.88em; }
+.note { color: #6b7280; font-size: 0.85em; }
+
+/* ==========================================================================
+   Insight (→) and guidance callout
+   ========================================================================== */
+.insight {
+  padding: 8px 14px;
+  margin: 12px 0;
+  background: #f0f9ff;
+  border-left: 3px solid #0ea5e9;
+  font-size: 0.93rem;
+  color: #0c4a6e;
+  border-radius: 0 4px 4px 0;
+}
+.insight::before { content: "→ "; font-weight: 700; color: #0284c7; }
+
+.guidance {
+  margin: 24px 0 8px;
+  padding: 18px 22px;
+  background: #fffbeb;
+  border-left: 4px solid #ca8a04;
+  border-radius: 0 6px 6px 0;
+}
+.guidance h3 {
+  font-size: 0.92rem;
+  margin: 0 0 10px;
+  color: #713f12;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: none;
+  padding: 0;
+  font-weight: 700;
+}
+.guidance ol { margin: 0 0 0 22px; }
+.guidance li { margin-bottom: 8px; font-size: 0.94rem; color: #422006; }
+.guidance li:last-child { margin-bottom: 0; }
+.guidance strong { color: #713f12; }
+
+/* ==========================================================================
+   Caveats
+   ========================================================================== */
+section.caveats {
+  margin: 56px 0 24px;
+  padding: 24px 28px;
+  background: #f9fafb;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+section.caveats h2 {
+  font-size: 0.95rem;
+  margin-bottom: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+section.caveats ol { margin-left: 22px; color: #4b5563; font-size: 0.9rem; }
+section.caveats li { margin-bottom: 6px; }
+
+/* ==========================================================================
+   Footer / Next steps
+   ========================================================================== */
+footer.cta {
+  margin-top: 32px;
+  padding: 20px 24px;
+  background: #1f2937;
+  color: #d1d5db;
+  border-radius: 6px;
+  font-size: 0.92rem;
+}
+footer.cta strong { color: #ffffff; }
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  aside.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid #e5e7eb; }
+  main { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<aside class="toc">
+  <div class="toc-title">目录</div>
+  <nav>
+    <a href="#overview">三层架构</a>
+    <a href="#adu" class="cat-adu">一、ADU<span class="count">516</span></a>
+    <a href="#sfr" class="cat-sfr">二、SFR<span class="count">71</span></a>
+    <a href="#apartment" class="cat-apt">三、Apartment + Townhouse<span class="count">34</span></a>
+    <a href="#caveats">数据局限</a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="report-header">
+  <h1>San Jose 新建房屋市场报告</h1>
+  <p class="subtitle">面向 General Contractor 的 3 层建筑类型分析</p>
+  <div class="meta">
+    <span><strong>时间范围：</strong>2025.01 – 2026.04（15.3 个月）</span>
+  </div>
+</header>
+
+<!-- ============================================================
+     三层架构概览
+     ============================================================ -->
+<section id="overview" class="cat">
+  <h2>三层架构概览</h2>
+  <p class="lead">621 新建项目分 3 层市场。<strong>数量从下往上递减、面积从下往上递增</strong>——三层是三个完全不同的客户结构和 GC 打法。</p>
+
+  <div class="tier-stack">
+    <div class="tier tier-multi">
+      <div class="tier-head">
+        <span class="tier-tag">MULTIFAMILY</span>
+        <span class="tier-name">Apartment + Townhouse · 34 单（19 Apt + 15 TH）</span>
+      </div>
+      <div class="tier-bars">
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">数量</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:5">5%</div></div>
+        </div>
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">面积</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:81">81%</div></div>
+        </div>
+      </div>
+      <div class="tier-summary">全开发商私域 · top 5 开发商持有 59%</div>
+    </div>
+
+    <div class="tier tier-sfr">
+      <div class="tier-head">
+        <span class="tier-tag">SFR</span>
+        <span class="tier-name">Single-Family Residence · 71 单</span>
+      </div>
+      <div class="tier-bars">
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">数量</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:11">11%</div></div>
+        </div>
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">面积</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:8">8%</div></div>
+        </div>
+      </div>
+      <div class="tier-summary">75% 在 6 家多产业主手上 · 假"自由市场"，散户只占 25%</div>
+    </div>
+
+    <div class="tier tier-adu">
+      <div class="tier-head">
+        <span class="tier-tag">ADU</span>
+        <span class="tier-name">Accessory Dwelling Unit · 516 单</span>
+      </div>
+      <div class="tier-bars">
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">数量</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:83">83%</div></div>
+        </div>
+        <div class="tier-bar-row">
+          <span class="tier-bar-label">面积</span>
+          <div class="tier-bar-track"><div class="tier-bar-fill" style="--w:12">12%</div></div>
+        </div>
+      </div>
+      <div class="tier-summary">489 户业主 96% 只有 1 张 · B2C atomic 市场，0 渠道杠杆</div>
+    </div>
+  </div>
+
+  <div class="insight"><strong>关键反差</strong>：ADU 是数量怪物（83% 数量 / 12% 面积），Multifamily 是面积怪物（5% 数量 / 81% 面积），SFR 卡在中间。三层是三个不同的市场，必须用不同的 GC 打法——这份报告每一节给一种。</div>
+</section>
+
+<!-- ============================================================
+     一、ADU
+     ============================================================ -->
+<section id="adu" class="cat">
+  <h2><span class="tag">ADU</span>高频小工，B2C + 地理战</h2>
+  <p class="lead">516 单 · 数量占 <strong>77.6%</strong>、面积仅占 <strong>5.5%</strong> · 季度增速最快</p>
+
+  <h3>量 + 趋势</h3>
+  <div class="stats">
+    <div class="stat"><div class="label">总量</div><div class="value">516</div><div class="sub">占新建 77.6%</div></div>
+    <div class="stat"><div class="label">2025-Q1 → 2026-Q1</div><div class="value">70 → 151</div><div class="sub">同比 +116%</div></div>
+    <div class="stat"><div class="label">月均签发量</div><div class="value">50 / mo</div><div class="sub">2025-Q1 仅 23/mo</div></div>
+  </div>
+  <div class="trend-chart">
+    <div class="bars">
+      <div class="bar" style="--pct:46.4"><span class="bar-num">70</span><div class="bar-fill"></div></div>
+      <div class="bar" style="--pct:47.0"><span class="bar-num">71</span><div class="bar-fill"></div></div>
+      <div class="bar" style="--pct:67.5"><span class="bar-num">102</span><div class="bar-fill"></div></div>
+      <div class="bar" style="--pct:68.2"><span class="bar-num">103</span><div class="bar-fill"></div></div>
+      <div class="bar peak" style="--pct:100"><span class="bar-num">151</span><div class="bar-fill"></div></div>
+    </div>
+    <div class="bar-labels">
+      <span>2025-Q1</span>
+      <span>2025-Q2</span>
+      <span>2025-Q3</span>
+      <span>2025-Q4</span>
+      <span>2026-Q1<strong>+116% YoY</strong></span>
+    </div>
+  </div>
+
+  <h3>项目尺度</h3>
+  <div class="size-histogram">
+    <div class="hrow"><div class="hlabel">&lt; 400 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:51.6"></div></div><div class="hval">81 单 · 15.7%</div></div>
+    <div class="hrow peak"><div class="hlabel">400–600 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:100"></div></div><div class="hval">157 单 · 30.4%</div></div>
+    <div class="hrow peak-2"><div class="hlabel">600–800 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:86.2"></div></div><div class="hval">135 单 · 26.2%</div></div>
+    <div class="hrow"><div class="hlabel">800–1000 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:48.4"></div></div><div class="hval">76 单 · 14.7%</div></div>
+    <div class="hrow"><div class="hlabel">1000–1200 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:22.4"></div></div><div class="hval">35 单 · 6.8%</div></div>
+    <div class="hrow"><div class="hlabel">1200+ sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:20.4"></div></div><div class="hval">32 单 · 6.2%</div></div>
+  </div>
+ 
+  <h3>地理热点</h3>
+  <table>
+    <thead><tr><th>Zip</th><th>区域</th><th class="num">ADU 数</th><th class="num">总面积 (sqft)</th><th class="num">单均 (sqft)</th></tr></thead>
+    <tbody>
+      <tr><td>95125</td><td>Willow Glen</td><td class="num">66</td><td class="num">43,993</td><td class="num">666</td></tr>
+      <tr><td>95112</td><td>Downtown</td><td class="num">44</td><td class="num">33,572</td><td class="num">763</td></tr>
+      <tr><td>95111</td><td>South SJ </td><td class="num">38</td><td class="num">24,644</td><td class="num">649</td></tr>
+      <tr><td>95116</td><td>East SJ</td><td class="num">31</td><td class="num">24,232</td><td class="num">782</td></tr>
+      <tr><td>95121</td><td>South East</td><td class="num">25</td><td class="num">18,932</td><td class="num">757</td></tr>
+      <tr><td>95127</td><td>Alum Rock</td><td class="num">26</td><td class="num">17,630</td><td class="num">678</td></tr>
+      <tr><td>95129</td><td>West SJ </td><td class="num">26</td><td class="num">15,901</td><td class="num">612</td></tr>
+      <tr><td>95124</td><td>Cambrian</td><td class="num">28</td><td class="num">15,406</td><td class="num">550</td></tr>
+      <tr><td>95122</td><td>Eastside</td><td class="num">28</td><td class="num">15,179</td><td class="num">542</td></tr>
+      <tr><td>95148</td><td>Evergreen</td><td class="num">21</td><td class="num">13,275</td><td class="num">632</td></tr>
+    </tbody>
+  </table>
+
+  <h3>业主 / GC 格局</h3>
+
+  <div class="owner-concentration">
+    <p class="oc-headline">489 户业主持有 516 张 ADU permit — <strong>96% 业主只有 1 张</strong></p>
+    <div class="oc-chart">
+      <div class="oc-row peak"><div class="oc-label">持有 1 单</div><div class="oc-bar"><div class="oc-fill" style="--w:100"></div></div><div class="oc-val"><strong>470 户</strong> · 96.1%</div></div>
+      <div class="oc-row"><div class="oc-label">持有 2 单</div><div class="oc-bar"><div class="oc-fill" style="--w:3.4"></div></div><div class="oc-val">16 户 · 3.3%</div></div>
+      <div class="oc-row"><div class="oc-label">持有 3 单</div><div class="oc-bar"><div class="oc-fill" style="--w:0.2"></div></div><div class="oc-val">1 户 <span class="note">(NONE — 数据缺失)</span></div></div>
+      <div class="oc-row"><div class="oc-label">持有 5 单</div><div class="oc-bar"><div class="oc-fill" style="--w:0.2"></div></div><div class="oc-val">1 户 · SF21G LLC</div></div>
+      <div class="oc-row"><div class="oc-label">持有 6 单</div><div class="oc-bar"><div class="oc-fill" style="--w:0.2"></div></div><div class="oc-val">1 户 · Wall to Wall of California</div></div>
+    </div>
+  </div>
+  <div class="insight">完全的散户市场 — 不可能靠"签下大业主"做规模。</div>
+
+  <ul style="margin-left: 22px; margin-bottom: 14px;">
+     <li>承包商端最高也只有 10 单（SPEED CONSTRUCTION），市场极度碎片化</li>
+  </ul>
+
+  <h3>频繁出现的 ADU 玩家</h3>
+  <table>
+    <thead><tr><th>公司</th><th class="num">出现次数</th></tr></thead>
+    <tbody>
+      <tr><td>SPEED CONSTRUCTION (DE NGUYEN)</td><td class="num">10</td></tr>
+      <tr><td>TRUENEST DESIGN &amp; BUILD</td><td class="num">4</td></tr>
+      <tr><td>NORCAL HOME BUILDERS (Thomas Homes)</td><td class="num">4</td></tr>
+      <tr><td>COBALT CONSTRUCTION</td><td class="num">4</td></tr>
+      <tr><td>ARCUS CONSTRUCTION</td><td class="num">4</td></tr>
+      <tr><td>TMSM LLC dba BAY AREA PROJECT PRO</td><td class="num">6</td></tr>
+      <tr><td>QN DESIGN GROUP / DP Design</td><td class="num">7</td></tr>
+    </tbody>
+  </table>
+
+  <div class="guidance">
+    <h3>给 GC 的指引</h3>
+    <ol>
+      <li><strong>打 B2C 营销，别等渠道转介</strong>：489 个独立购买决策 = 真正的 B2C 市场。本地 SEO + Google Business + Yelp 评分 + Nextdoor 渗透是底盘。top expediter 1.2% / top designer 1.4%——市场上不存在能批量供单的渠道。</li>
+            <li><strong>每个工地都是广告位</strong>：ADU 周期 4–6 个月 = 在街道上投了半年免费广告。yard sign + 业主推荐二维码 + 工地短视频三件套。完工 1 单 = 解锁该街道未来 2–3 年潜在询单——这是 B2C + 地理战的复利点。</li>
+         </ol>
+  </div>
+</section>
+
+<!-- ============================================================
+     二、SFR
+     ============================================================ -->
+<section id="sfr" class="cat">
+  <h2><span class="tag">SFR</span>已被开发商锁死的"假自由市场"</h2>
+  <p class="lead">71 单 · 占全市新建 10.7% · 60% 由 3 家开发商持有</p>
+
+  <h3>项目尺度</h3>
+  <div class="size-histogram">
+    <div class="hrow"><div class="hlabel">&lt; 2,000 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:14.2"></div></div><div class="hval">3 单 · 4.2%</div></div>
+    <div class="hrow peak-2"><div class="hlabel">2,000–2,500 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:90.5"></div></div><div class="hval">19 单 · 26.8%</div></div>
+    <div class="hrow"><div class="hlabel">2,500–3,000 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:71.3"></div></div><div class="hval">15 单 · 21.1%</div></div>
+    <div class="hrow peak"><div class="hlabel">3,000–4,000 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:100"></div></div><div class="hval">21 单 · 29.6%</div></div>
+    <div class="hrow"><div class="hlabel">4,000–5,000 sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:42.9"></div></div><div class="hval">9 单 · 12.7%</div></div>
+    <div class="hrow"><div class="hlabel">5,000+ sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:18.9"></div></div><div class="hval">4 单 · 5.6%</div></div>
+  </div>
+ 
+  <h3>地理热点</h3>
+  <table>
+    <thead><tr><th>Zip</th><th>区域</th><th class="num">SFR 数</th></tr></thead>
+    <tbody>
+      <tr><td>95127</td><td>Alum Rock</td><td class="num">23</td></tr>
+      <tr><td>95136</td><td>Blossom Valley</td><td class="num">15</td></tr>
+      <tr><td>95120</td><td>Almaden</td><td class="num">10</td></tr>
+      <tr><td>95132</td><td>Berryessa</td><td class="num">5</td></tr>
+      <tr><td>95123</td><td>Cambrian</td><td class="num">4</td></tr>
+      <tr><td>95125</td><td>Willow Glen</td><td class="num">4</td></tr>
+      <tr><td>其他</td><td class="muted">–</td><td class="num">10</td></tr>
+    </tbody>
+  </table>
+ 
+  <h3>业主 / GC 格局 — 75% 在 6 家多产业主手上</h3>
+  <table>
+    <thead><tr><th>业主 LLC</th><th class="num">SFR 数</th><th class="num">总计面积 (sqft)</th></tr></thead>
+    <tbody>
+      <tr><td>KIRKAVE LLC</td><td class="num">18</td><td class="num">39,759</td></tr>
+      <tr><td>MTA PROPERTIES LP</td><td class="num">15</td><td class="num">43,785</td></tr>
+      <tr><td>BRASILLIA HILLS PARTNERS</td><td class="num">10</td><td class="num">39,581</td></tr>
+      <tr><td>5A HOLDINGS LLC</td><td class="num">4</td><td class="num">11,031</td></tr>
+      <tr><td>TRAN KEVIN &amp; TRUONG MAI TUYET</td><td class="num">3</td><td class="num">9,971</td></tr>
+      <tr><td>GHRT QUITO ROAD LLC</td><td class="num">3</td><td class="num">13,041</td></tr>
+    </tbody>
+  </table>
+ 
+  <div class="guidance">
+    <h3>给 GC 的指引</h3>
+    <ol>
+      <li><strong>想接 SFR 新建工 → 直接联系开发商（不是业主）</strong></li>
+       <li><strong>别误判市场结构</strong>：不要把 SFR 当作"自由竞争市场"做计划</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================
+     三、Apartment
+     ============================================================ -->
+<section id="apartment" class="cat">
+  <h2><span class="tag">MULTIFAMILY</span>Apartment + Townhouse — 全开发商私域</h2>
+  <p class="lead">34 单 · 数量 5.1% / 面积 38.6% · 全开发商私域 </p>
+
+  <h3>项目尺度（双峰分布）</h3>
+  <div class="size-histogram">
+    <div class="hrow peak"><div class="hlabel">&lt; 20K sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:100"></div></div><div class="hval">16 单 · 51.6%</div></div>
+    <div class="hrow"><div class="hlabel">20K–50K sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:18.8"></div></div><div class="hval">3 单 · 9.7%</div></div>
+    <div class="hrow"><div class="hlabel">50K–100K sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:12.6"></div></div><div class="hval">2 单 · 6.5%</div></div>
+    <div class="hrow peak-2"><div class="hlabel">100K–200K sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:43.8"></div></div><div class="hval">7 单 · 22.6%</div></div>
+    <div class="hrow"><div class="hlabel">200K+ sqft</div><div class="hbar-track"><div class="hbar-fill" style="--w:18.8"></div></div><div class="hval">3 单 · 9.7%</div></div>
+  </div>
+  <h3>地理分布</h3>
+  <table>
+    <thead><tr><th>Zip</th><th>区域</th><th class="num">单数</th><th class="num">% of 34</th></tr></thead>
+    <tbody>
+      <tr><td><strong>95134</strong></td><td>北圣何塞</td><td class="num"><strong>12</strong></td><td class="num"><strong>35.3%</strong></td></tr>
+      <tr><td>95119</td><td>南圣何塞</td><td class="num">4</td><td class="num">11.8%</td></tr>
+      <tr><td>95112</td><td>Downtown</td><td class="num">3</td><td class="num">8.8%</td></tr>
+      <tr><td>95110</td><td>Downtown 西</td><td class="num">3</td><td class="num">8.8%</td></tr>
+      <tr><td>95123</td><td>Cambrian</td><td class="num">3</td><td class="num">8.8%</td></tr>
+      <tr><td>95128</td><td>Westgate</td><td class="num">2</td><td class="num">5.9%</td></tr>
+      <tr><td>95130</td><td>El Paseo</td><td class="num">2</td><td class="num">5.9%</td></tr>
+      <tr><td>95133</td><td>Berryessa</td><td class="num">2</td><td class="num">5.9%</td></tr>
+      <tr><td>其他</td><td>95116 / 95118 / 95126</td><td class="num">3</td><td class="num">8.8%</td></tr>
+    </tbody>
+  </table>
+  
+  <h3>业主集中度（top 10）</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>业主</th>
+        <th class="num">总单</th>
+        <th class="num">Apt</th>
+        <th class="num">TH</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Seely Development Partners</strong></td><td class="num"><strong>7</strong></td><td class="num">2</td><td class="num">5</td></tr>
+      <tr><td><strong>Tri Pointe Homes</strong></td><td class="num">4</td><td class="num">0</td><td class="num">4</td></tr>
+      <tr><td><strong>JT Associates LLC</strong></td><td class="num">4</td><td class="num">0</td><td class="num">4</td></tr>
+      <tr><td>Santa Teresa LP</td><td class="num">3</td><td class="num">3</td><td class="num">0</td></tr>
+      <tr><td>El Paseo Property Owner</td><td class="num">2</td><td class="num">2</td><td class="num">0</td></tr>
+      <tr><td>UC Madera Owner (Erik Hayden)</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+      <tr><td>THC North Capitol</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+      <tr><td>Martha Gardens LLC</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+      <tr><td>525 Capitol LP</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+      <tr><td>San Jose Residential Inc</td><td class="num">1</td><td class="num">1</td><td class="num">0</td></tr>
+    </tbody>
+  </table>
+  <div class="insight">前 5 大业主持 20 单（59%），剩余 14 单分散在 13 户单产业主。<strong>Seely 跨 Apt + TH 共 7 单是绝对最大客户</strong>。</div>
+
+  <div class="guidance">
+    <h3>给 GC 的指引（Apartment + Townhouse 通用）</h3>
+    <ol>
+      <li><strong>没有散户入口，必须撬开发商</strong>：top 5 持有 59%（Seely 7 / Tri Pointe 4 / JT Associates 4 / Santa Teresa 3 / El Paseo 2）。所有策略以"建立这几家关系"为前提。</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============================================================
+     数据局限
+     ============================================================ -->
+<section id="caveats" class="caveats">
+  <h2>数据局限与诚实声明</h2>
+  <ol>
+    <li>报告剔除业主自报建造价值：业主普遍低报，不可作为 GC 合同价参考。所有项目尺度统一以 sqft 衡量。</li>
+    <li>没有完工日期 —— 无法判断工期、延期、利润周期。</li>
+    <li>数据截止 2026-04-13，2026-Q2 不完整。</li>
+</ol>
+</section>
+
+
+</main>
+</div>
+</body>
+</html>

@@ -6,11 +6,11 @@ interface QA {
 const QAS: QA[] = [
   {
     q: 'What does the report actually show me?',
-    a: '15 pages structured by tier (ADU, SFR, multifamily). For each tier: total permit count, owner concentration (the 6 LLCs that hold 75% of SJ SFR, by name), top zip codes, and the GC playbook for that segment. Designed to read on phone in 5 minutes.',
+    a: 'A 3-tier structural analysis (ADU, SFR, multifamily). For each tier: total permit count, owner concentration with named LLCs, top zip codes, and the GC playbook for that segment. Designed to read on phone in 5 minutes. See /sample for the table of contents and one redacted page.',
   },
   {
     q: 'Can\'t I just pull this data myself from the city?',
-    a: 'You can. It\'ll take 30–40 hours to scrape 621 permits, deduplicate owners, classify project types, and produce something you can act on. Our $349 buys back those hours and the analysis layer on top — owner concentration, tier playbooks, named LLCs.',
+    a: 'You can. It\'ll take 30–40 hours to scrape the raw filings, deduplicate owners, classify project types, and produce something you can act on. Our $349 buys back those hours and the analysis layer on top — owner concentration, tier playbooks, named LLCs.',
   },
   {
     q: 'How is this different from BuildZoom or Dodge?',
