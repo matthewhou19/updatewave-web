@@ -13,6 +13,12 @@ export const metadata = {
 // every actual finding (LLC names, percentages, owner unit counts). Visitors see
 // the SHAPE of what they'd buy, not the answer.
 
+// Buy CTAs route through /login. The auth callback substitutes {hash} with the
+// signed-in user's actual hash, so a brand-new visitor lands on
+// /list/USER_HASH/sj (which has the BuyButton wired to Stripe). Same pattern
+// as PricingTease + the /pricing page.
+const SJ_REPORT_BUY_HREF = `/login?next=${encodeURIComponent('/list/{hash}/sj')}`
+
 export default function SamplePage() {
   return (
     <div className="min-h-screen bg-paper">
@@ -33,7 +39,7 @@ export default function SamplePage() {
             named LLCs, exact unit counts, and per-tier playbooks.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link href="/pricing" className={buttonStyles('accent')}>
+            <Link href={SJ_REPORT_BUY_HREF} className={buttonStyles('accent')}>
               Buy the SJ report → $499
             </Link>
             <Link href="/" className={buttonStyles('outline')}>
@@ -179,7 +185,7 @@ export default function SamplePage() {
           $499. Instant download. 7-day refund.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
-          <Link href="/pricing" className={buttonStyles('accent')}>
+          <Link href={SJ_REPORT_BUY_HREF} className={buttonStyles('accent')}>
             Buy the SJ report →
           </Link>
         </div>
