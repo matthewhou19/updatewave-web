@@ -5,7 +5,7 @@ interface City {
 }
 
 const CITIES: City[] = [
-  { name: 'San Jose, CA', status: '● $349 instant', live: true },
+  { name: 'San Jose, CA', status: '● $499 instant', live: true },
   { name: 'Oakland, CA', status: '$1,999 on request' },
   { name: 'San Francisco, CA', status: '$1,999 on request' },
   { name: 'Mountain View, CA', status: '$1,999 on request' },
@@ -23,7 +23,7 @@ export default function Coverage() {
             San Jose today. Any Bay Area city you ask about.
           </h2>
           <p className="font-mono text-[13px] text-muted mt-3 max-w-[640px]">
-            The $349 SJ report ships instantly. For any other Bay Area city, the $1,999 custom
+            The $499 SJ report ships instantly. For any other Bay Area city, the $1,999 custom
             research delivers the same analysis in 5–10 days, plus 90 days of weekly permit
             monitoring on top.
           </p>

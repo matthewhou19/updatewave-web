@@ -148,8 +148,8 @@ export async function resolveUserByHash(supabase: SupabaseClient, hash: string) 
  * Filters on service_tier='report' to disambiguate after migration 004.
  * Migration 002 set UNIQUE(city, year) so SJ had at most one row per year.
  * Migration 004 lifts that to UNIQUE(city, year, service_tier), so SJ now
- * has TWO rows: the $349 'report' SKU and the $1999 'research' SKU. This
- * helper is for the existing /list product (the $349 report) — research
+ * has TWO rows: the $499 'report' SKU and the $1999 'research' SKU. This
+ * helper is for the existing /list product (the $499 report) — research
  * pages use fetchActiveResearchCities or a tier-filtered direct query.
  */
 export async function fetchCityList(supabase: SupabaseClient, city: string) {
@@ -169,7 +169,7 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
  * (download API after purchase verification). Never expose this result to
  * the client.
  *
- * Same service_tier='report' filter as fetchCityList — the $349 report's
+ * Same service_tier='report' filter as fetchCityList — the $499 report's
  * download API points here. The research download API has its own helper
  * with service_tier='research'.
  */
@@ -311,9 +311,9 @@ export async function fetchResearchPurchase(
 }
 
 /**
- * Detect $349-then-$1999 SJ collision before rendering the /research dropdown.
+ * Detect $499-then-$1999 SJ collision before rendering the /research dropdown.
  *
- * Returns whether the user already owns the $349 city report for the given
+ * Returns whether the user already owns the $499 city report for the given
  * city_list_id. The /research page uses this to surface the SJ collision
  * warning copy per design Locked Decision #20.
  *
@@ -336,7 +336,7 @@ export async function fetchListPurchaseForCollisionCheck(
 }
 
 /**
- * List all $349 city-report purchases for a user, joined with the city_lists
+ * List all $499 city-report purchases for a user, joined with the city_lists
  * row so the caller can render title + city slug without a second round trip.
  *
  * Sorted purchased_at descending (newest first). pdf_storage_path is NEVER

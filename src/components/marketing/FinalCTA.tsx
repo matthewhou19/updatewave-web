@@ -8,7 +8,7 @@ export default function FinalCTA() {
         Stop guessing your market. <em className="not-italic"><span className="italic text-accent">Get the structural analysis.</span></em>
       </h2>
       <p className="font-mono text-[14px] opacity-70 mb-8">
-        $349 for San Jose 2025. Instant download. 7-day refund.
+        $499 for San Jose. Instant download. 7-day refund.
       </p>
       <div className="flex flex-wrap gap-3 justify-center">
         <Link href="/pricing" className={buttonStyles('accent')}>

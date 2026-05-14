@@ -26,7 +26,7 @@ const ROWS: Row[] = [
   },
   {
     label: 'Cost',
-    us: '$349 one-time',
+    us: '$499 one-time',
     aggregator: '$99–$300 / month',
     diy: '"Free" + 40 hours of your time',
   },

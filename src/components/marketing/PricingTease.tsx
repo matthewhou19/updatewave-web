@@ -3,9 +3,9 @@ import { PRICING_TIERS, type PricingTier } from '@/lib/pricing'
 import { buttonStyles } from '../ui/Button'
 
 const FEATURED_SLUG = 'sj-report'
-// $25 reveals are intentionally hidden from the homepage tease — the brand pitch
-// is market analysis, not pay-per-lead. The full /pricing page still lists them
-// for transparency and existing customers.
+// Per-lead reveals ($199) are intentionally hidden from the homepage tease —
+// the brand pitch is market analysis, not pay-per-lead. The full /pricing page
+// still lists them for transparency and existing customers.
 const HOMEPAGE_TIERS: ReadonlyArray<PricingTier['slug']> = ['sj-report', 'research']
 
 function ctaHref(tier: PricingTier): string {
@@ -25,7 +25,7 @@ export default function PricingTease() {
             Two ways in. Same analysis underneath.
           </h2>
           <p className="font-mono text-[13px] text-muted mt-3 max-w-[640px]">
-            Start with San Jose for $349 (instant). Or commission the same analysis for any Bay
+            Start with San Jose for $499 (instant). Or commission the same analysis for any Bay
             Area city, plus 90 days of weekly permit monitoring, for $1,999.
           </p>
         </div>

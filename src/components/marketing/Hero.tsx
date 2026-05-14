@@ -20,7 +20,7 @@ export default function Hero() {
           </p>
           <div className="flex flex-wrap gap-3 mb-8">
             <Link href="/pricing" className={buttonStyles('accent')} data-testid="home-hero-cta">
-              See the SJ report → $349
+              See the SJ report → $499
             </Link>
             <Link href="/sample" className={buttonStyles('outline')}>
               See a sample

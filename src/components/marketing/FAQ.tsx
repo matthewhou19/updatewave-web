@@ -10,11 +10,11 @@ const QAS: QA[] = [
   },
   {
     q: 'Can\'t I just pull this data myself from the city?',
-    a: 'You can. It\'ll take 30–40 hours to scrape the raw filings, deduplicate owners, classify project types, and produce something you can act on. Our $349 buys back those hours and the analysis layer on top — owner concentration, tier playbooks, named LLCs.',
+    a: 'You can. It\'ll take 30–40 hours to scrape the raw filings, deduplicate owners, classify project types, and produce something you can act on. Our $499 buys back those hours and the analysis layer on top — owner concentration, tier playbooks, named LLCs.',
   },
   {
     q: 'How is this different from BuildZoom or Dodge?',
-    a: 'They sell post-permit lead lists on a $99–$300/mo subscription. We sell pre-permit structural analysis as a $349 one-time PDF. They tell you what just broke ground; we tell you which 6 owners decide what gets built next year.',
+    a: 'They sell post-permit lead lists on a $99–$300/mo subscription. We sell pre-permit structural analysis as a $499 one-time PDF. They tell you what just broke ground; we tell you which 6 owners decide what gets built next year.',
   },
   {
     q: "What if my city isn't San Jose?",

@@ -121,7 +121,7 @@ async function ensureSpringerReveal(userId) {
     user_id: userId,
     project_id: project.id,
     stripe_payment_id: 'pi_test_seed_001',
-    amount_cents: 2500,
+    amount_cents: 19900,
   })
   if (error) throw new Error(`insert reveal: ${error.message}`)
   console.log(`  - inserted reveal for project ${project.id}`)
@@ -140,23 +140,36 @@ async function seed(row, withReveal) {
 }
 
 async function ensureSjCityList() {
+  // Path starts with "/" → API route serves it directly from public/reports/
+  // (no Supabase Storage bucket needed for local dev).
+  const STATIC_PATH = '/reports/sj-2025.html'
+  const PRICE_CENTS = 49900
+  const ANCHOR_PRICE_CENTS = null
+
   const { data: existing } = await supabase
     .from('city_lists')
-    .select('id, pdf_storage_path')
+    .select('id, pdf_storage_path, price_cents, anchor_price_cents')
     .eq('city', 'sj')
     .eq('year', 2025)
     .maybeSingle()
 
-  // Path starts with "/" → API route serves it directly from public/reports/
-  // (no Supabase Storage bucket needed for local dev).
-  const STATIC_PATH = '/reports/sj-2025.html'
-
   if (existing) {
-    if (existing.pdf_storage_path !== STATIC_PATH) {
-      await supabase.from('city_lists').update({ pdf_storage_path: STATIC_PATH }).eq('id', existing.id)
-      console.log(`updated city_list id=${existing.id} pdf_storage_path=${STATIC_PATH}`)
+    const drift =
+      existing.pdf_storage_path !== STATIC_PATH ||
+      existing.price_cents !== PRICE_CENTS ||
+      existing.anchor_price_cents !== ANCHOR_PRICE_CENTS
+    if (drift) {
+      await supabase
+        .from('city_lists')
+        .update({
+          pdf_storage_path: STATIC_PATH,
+          price_cents: PRICE_CENTS,
+          anchor_price_cents: ANCHOR_PRICE_CENTS,
+        })
+        .eq('id', existing.id)
+      console.log(`updated city_list id=${existing.id} (price+path synced to $499 / ${STATIC_PATH})`)
     } else {
-      console.log(`city_list id=${existing.id} already points at ${STATIC_PATH}`)
+      console.log(`city_list id=${existing.id} already up to date`)
     }
     return existing.id
   }
@@ -167,11 +180,11 @@ async function ensureSjCityList() {
       city: 'sj',
       year: 2025,
       title: 'San Jose Market Structure Report',
-      description: '15-page structural analysis of every San Jose residential permit filed in the last year.',
+      description: 'Structural analysis of every San Jose residential permit filed in the last year.',
       headline_insight: 'Most residential work goes to a handful of LLCs. We name them.',
       headline_insight_subtext: 'Three-tier breakdown (ADU / SFR / Multifamily), per-tier playbooks, geographic clusters.',
-      price_cents: 34900,
-      anchor_price_cents: 49900,
+      price_cents: PRICE_CENTS,
+      anchor_price_cents: ANCHOR_PRICE_CENTS,
       pdf_storage_path: STATIC_PATH,
       active: true,
     })
@@ -198,7 +211,7 @@ async function ensureSjPurchase(userId, cityListId) {
     city_list_id: cityListId,
     stripe_session_id: `cs_test_seed_${userId}_${cityListId}`,
     stripe_payment_id: 'pi_test_seed_list_001',
-    amount_cents: 34900,
+    amount_cents: 49900,
   })
   if (error) throw new Error(`insert list_purchase: ${error.message}`)
   console.log(`  - inserted list_purchase user_id=${userId} city_list_id=${cityListId}`)

@@ -8,7 +8,7 @@ interface CityOption {
   slug: string
   /** Display label (e.g. 'San Jose 2025'). */
   label: string
-  /** True if the user already owns the $349 SJ report — collision warning shown. */
+  /** True if the user already owns the $499 SJ report — collision warning shown. */
   ownsExistingReport: boolean
 }
 
@@ -26,9 +26,9 @@ interface CitySelectorWithBuyProps {
  * additional CityOption entries.
  *
  * Collision UI per design Locked Decision #20: if the selected city is one
- * the user already owns the $349 report for, show the yellow callout below
+ * the user already owns the $499 report for, show the yellow callout below
  * the dropdown explaining what the $1,999 adds and that buying closes the
- * 7-day refund window on the existing $349 row.
+ * 7-day refund window on the existing $499 row.
  */
 export default function CitySelectorWithBuy({
   hash,
@@ -81,7 +81,7 @@ export default function CitySelectorWithBuy({
           <p className="font-mono text-[12px] text-ink leading-relaxed">
             <span className="text-accent uppercase tracking-wider mr-1">Note ·</span>
             You already own the San Jose historical report. Buying the $1,999 research adds 90
-            days of new permit monitoring on top, and your $349 7-day refund window will close
+            days of new permit monitoring on top, and your $499 7-day refund window will close
             upon checkout.
           </p>
         </div>

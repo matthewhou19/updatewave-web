@@ -48,7 +48,7 @@ export default function HowItWorks() {
           ))}
         </div>
         <p className="font-mono text-[12px] text-muted mt-10 pt-4 border-t border-dashed border-grey-300 text-center">
-          $349 for San Jose 2025 (instant) · $1,999 for any Bay Area city + 90 days monitoring · 7-day refund
+          $499 for San Jose (instant) · $1,999 for any Bay Area city + 90 days monitoring · 7-day refund
         </p>
       </div>
     </section>

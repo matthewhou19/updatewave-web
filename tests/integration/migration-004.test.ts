@@ -6,8 +6,8 @@ import { resolve } from 'node:path'
  * Migration 004 contract tests.
  *
  * Migration 004 fixes the (city, year) UNIQUE constraint on city_lists so we
- * can have BOTH a $349 'report' SKU and a $1999 'research' SKU for the same
- * city/year. It then seeds the SJ 2025 research row.
+ * can have BOTH a 'report' SKU and a 'research' SKU for the same city/year.
+ * It then seeds the SJ 2025 research row.
  *
  * Static analysis only — same approach as tests/integration/migration-003.test.ts
  * (vitest runs in node env without a real Postgres). Real-Postgres replay
@@ -97,7 +97,7 @@ describe('migration 004: seeds the SJ 2025 research SKU', () => {
     expect(nulls.length).toBeGreaterThanOrEqual(2)
   })
 
-  it('seed pdf_storage_path = sj-2025.pdf (same as $349 report)', () => {
+  it('seed pdf_storage_path = sj-2025.pdf (same as the SJ report)', () => {
     const m = sqlCode.match(/INSERT INTO city_lists[\s\S]+?VALUES\s*\(([\s\S]+?)\)\s*ON CONFLICT/i)!
     expect(m[1]).toMatch(/'sj-2025\.pdf'/)
   })

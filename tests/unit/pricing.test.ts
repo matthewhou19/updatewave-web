@@ -8,11 +8,12 @@ import { PRICING_TIERS, type PricingTier } from '../../src/lib/pricing'
  * of truth") that priceCents is the numeric truth used at Stripe checkout time,
  * while priceDisplay is the rendered string. These two MUST stay aligned. The
  * critical drift is between PRICING_TIERS.sj-report.priceCents and the
- * city_lists seed value (34900) — if they diverge, the comparison page shows
+ * city_lists row's price_cents — if they diverge, the comparison page shows
  * one price and the actual checkout charges a different amount.
  *
- * The seed value lives in:
- *   supabase/migrations/002-city-lists-and-list-purchases.sql (price_cents=34900)
+ * Note: migration 002 originally seeded price_cents=34900 (the legacy $349
+ * launch price). The current price is $499 (49900). When deploying a price
+ * change, update both this test AND the city_lists row in production.
  */
 
 describe('PRICING_TIERS structure', () => {
@@ -70,24 +71,25 @@ describe('PRICING_TIERS structure', () => {
 })
 
 describe('PRICING_TIERS drift assertions (CRITICAL)', () => {
-  it('sj-report.priceCents === 34900 (matches city_lists seed in migration 002)', () => {
+  it('sj-report.priceCents === 49900 (must match city_lists.price_cents in DB)', () => {
     const sj = PRICING_TIERS.find((t) => t.slug === 'sj-report')
     expect(sj).toBeDefined()
     // This is the load-bearing assertion. If this fails, the comparison page
     // shows a price that does not match the city_lists row, and Stripe charges
     // an amount that doesn't match what the customer was shown. DO NOT loosen
-    // this without updating BOTH the seed and the pricing config in lockstep.
-    expect(sj!.priceCents).toBe(34900)
+    // this without updating BOTH the city_lists row and the pricing config in
+    // lockstep.
+    expect(sj!.priceCents).toBe(49900)
   })
 
-  it('sj-report.priceDisplay matches priceCents formatting ($349)', () => {
+  it('sj-report.priceDisplay matches priceCents formatting ($499)', () => {
     const sj = PRICING_TIERS.find((t) => t.slug === 'sj-report')!
-    expect(sj.priceDisplay).toBe('$349')
+    expect(sj.priceDisplay).toBe('$499')
   })
 
-  it('sj-report.anchorDisplay === "$499" (matches city_lists.anchor_price_cents=49900)', () => {
+  it('sj-report.anchorDisplay is null (no strikethrough anchor at current price)', () => {
     const sj = PRICING_TIERS.find((t) => t.slug === 'sj-report')!
-    expect(sj.anchorDisplay).toBe('$499')
+    expect(sj.anchorDisplay).toBeNull()
   })
 
   it('research.priceCents === 199900 ($1,999 anchor)', () => {
@@ -108,9 +110,9 @@ describe('PRICING_TIERS drift assertions (CRITICAL)', () => {
 
   it('reveal.priceDisplay communicates per-unit pricing (per design OQ#6)', () => {
     const reveal = PRICING_TIERS.find((t) => t.slug === 'reveal')!
-    // Design proposal: "$25 each · pay per architect contact" — the key
-    // signal is that the string includes "$25" so customers see the per-unit price.
-    expect(reveal.priceDisplay).toContain('$25')
+    // The key signal is that the string includes the per-unit price so
+    // customers see what each reveal costs.
+    expect(reveal.priceDisplay).toContain('$199')
   })
 
   it('research has no anchorDisplay (it IS the anchor; no further anchor above it)', () => {

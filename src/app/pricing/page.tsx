@@ -7,7 +7,7 @@ import { buttonStyles } from '@/components/ui/Button'
  * /pricing — public pricing comparison page (no hash required).
  *
  * Per design Locked Decision #19: single-column vertical ladder, max-w-3xl.
- * Tiers stacked top-to-bottom in `order` ascending: $25 reveal → $349 SJ
+ * Tiers stacked top-to-bottom in `order` ascending: $199 reveal → $499 SJ
  * report → $1,999 research. NO "Recommended" badge — the ladder reading
  * order IS the recommendation.
  *
@@ -38,7 +38,7 @@ export default function PricingPage() {
             Three ways to find your next project
           </h1>
           <p className="font-mono text-[13px] text-ink leading-relaxed">
-            Start with $25-per-lead reveals if you want zero commitment. Buy a $349 city report if
+            Start with $199-per-lead reveals if you want zero commitment. Buy a $499 city report if
             you want the structural picture for San Jose today. Pay $1,999 if you want a custom
             research PDF for the city you actually work in, plus 90 days of weekly permit
             monitoring on top.

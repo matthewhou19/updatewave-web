@@ -15,7 +15,7 @@ interface ProjectCardProps {
   justRevealed?: boolean
   /**
    * 'demo' renders a read-only card for marketing surfaces (e.g. the homepage
-   * "we monitor the market live" proof section): no $25 price, no reveal CTA,
+   * "we monitor the market live" proof section): no $199 price, no reveal CTA,
    * no sign-in link. Defaults to 'transactional' which is the /browse behaviour.
    */
   mode?: 'transactional' | 'demo'
@@ -166,7 +166,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
             <div>
               {!isRevealed && (
                 <>
-                  <div className="font-serif text-[24px] font-semibold leading-none">$25</div>
+                  <div className="font-serif text-[24px] font-semibold leading-none">$199</div>
                   <div className="font-mono text-[10px] text-muted mt-1">
                     {project.reveal_count} GC{project.reveal_count !== 1 ? 's' : ''} revealed
                   </div>
@@ -185,7 +185,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
                   disabled={loading}
                   className={buttonStyles('primary', 'sm')}
                 >
-                  {loading ? 'Processing...' : 'Reveal · $25'}
+                  {loading ? 'Processing...' : 'Reveal · $199'}
                 </button>
               ) : (
                 <Link
@@ -193,7 +193,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
                   data-testid="anonymous-reveal-cta"
                   className={buttonStyles('primary', 'sm')}
                 >
-                  Sign in to reveal · $25
+                  Sign in to reveal · $199
                 </Link>
               ))}
           </>

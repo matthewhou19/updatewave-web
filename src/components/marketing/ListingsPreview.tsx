@@ -48,7 +48,7 @@ export default function ListingsPreview({ projects, totalCount }: Props) {
 
         <div className="mt-8 text-center">
           <Link href="/pricing" className={buttonStyles('primary')}>
-            See the SJ report → $349
+            See the SJ report → $499
           </Link>
         </div>
       </div>

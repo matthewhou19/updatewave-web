@@ -5,7 +5,7 @@ import { buttonStyles } from '@/components/ui/Button'
 
 export const metadata = {
   title: 'Sample · SJ Market Structure Report',
-  description: 'Table of contents and one redacted page from the $349 San Jose market analysis.',
+  description: 'Table of contents and one redacted page from the $499 San Jose market analysis.',
 }
 
 // Public sample of the SJ report. Shows enough STRUCTURE to prove the analysis
@@ -25,7 +25,7 @@ export default function SamplePage() {
             Sample preview · San Jose Market Structure Report
           </div>
           <h1 className="font-serif text-[40px] md:text-[56px] leading-[1.05] font-semibold tracking-tight mb-7">
-            What you actually get for <em className="not-italic"><span className="italic text-accent">$349</span></em>.
+            What you actually get for <em className="not-italic"><span className="italic text-accent">$499</span></em>.
           </h1>
           <p className="font-mono text-[14px] leading-relaxed text-ink max-w-[640px] mb-9">
             Below is the table of contents, the analytic framework, one fully visible page
@@ -34,7 +34,7 @@ export default function SamplePage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/pricing" className={buttonStyles('accent')}>
-              Buy the SJ report → $349
+              Buy the SJ report → $499
             </Link>
             <Link href="/" className={buttonStyles('outline')}>
               ← Back to home
@@ -116,7 +116,7 @@ export default function SamplePage() {
           <p className="font-mono text-[13px] leading-relaxed text-ink max-w-[700px] mb-8">
             Below is the actual layout of the SFR section&apos;s owner concentration table. The
             shape is real. The names and counts are redacted because they&apos;re the answer the
-            $349 report is selling.
+            $499 report is selling.
           </p>
 
           <div className="border border-ink">
@@ -176,7 +176,7 @@ export default function SamplePage() {
           Stop guessing. <em className="not-italic"><span className="italic text-accent">Get the names.</span></em>
         </h2>
         <p className="font-mono text-[14px] opacity-70 mb-8">
-          $349. Instant download. 7-day refund.
+          $499. Instant download. 7-day refund.
         </p>
         <div className="flex flex-wrap gap-3 justify-center">
           <Link href="/pricing" className={buttonStyles('accent')}>

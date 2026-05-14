@@ -63,7 +63,7 @@ export default async function ResearchPage({ params }: ResearchPageProps) {
             Custom city research + 90-day permit monitoring
           </h1>
           <p className="font-mono text-[13px] text-ink leading-relaxed">
-            Pick any Bay Area city we cover. We deliver the same market structure analysis our $349
+            Pick any Bay Area city we cover. We deliver the same market structure analysis our $499
             San Jose customers love — plus 90 days of weekly permit-monitoring digests, hand-curated
             by Matthew, so you&apos;re first to act on new construction in your service area.
           </p>
@@ -95,7 +95,7 @@ export default async function ResearchPage({ params }: ResearchPageProps) {
               {
                 num: '01',
                 title: '12-month historical market structure PDF',
-                body: '~15 pages. Tier breakdown (ADU / SFR / Multifamily), owner concentration, who actually decides at each tier, and the GC playbook for each segment. Same format as the $349 SJ report.',
+                body: '~15 pages. Tier breakdown (ADU / SFR / Multifamily), owner concentration, who actually decides at each tier, and the GC playbook for each segment. Same format as the $499 SJ report.',
               },
               {
                 num: '02',
@@ -131,7 +131,7 @@ export default async function ResearchPage({ params }: ResearchPageProps) {
               {formatPrice(priceCents)}
             </span>
             <p className="font-mono text-[13px] text-muted mt-3 leading-relaxed">
-              One-time purchase. For San Jose, instant download — same PDF that customers pay $349
+              One-time purchase. For San Jose, instant download — same PDF that customers pay $499
               for, plus the 90-day monitoring stream starts immediately.
             </p>
           </div>
@@ -150,8 +150,8 @@ export default async function ResearchPage({ params }: ResearchPageProps) {
           <div className="space-y-5">
             {[
               {
-                q: 'How is this different from the $349 city report?',
-                a: 'The $349 report is a one-time historical PDF — what happened in your city over the past 12 months. The $1,999 research adds 90 days of forward-looking permit monitoring on top, so you’re not just reading history, you’re acting on new filings as they happen.',
+                q: 'How is this different from the $499 city report?',
+                a: 'The $499 report is a one-time historical PDF — what happened in your city over the past 12 months. The $1,999 research adds 90 days of forward-looking permit monitoring on top, so you’re not just reading history, you’re acting on new filings as they happen.',
               },
               {
                 q: 'What cities do you cover?',
@@ -162,8 +162,8 @@ export default async function ResearchPage({ params }: ResearchPageProps) {
                 a: 'Matthew (founder) hand-picks notable permits each week and writes the commentary. You’re not getting an LLM summarizer — you’re getting opinionated GC-business analysis from someone who reads every filing.',
               },
               {
-                q: 'What if I already bought the $349 SJ report?',
-                a: 'The dropdown above will show a yellow notice. The $1,999 purchase covers the same PDF you already have plus the 90-day monitoring add-on. Buying the $1,999 closes the 7-day refund window on your existing $349 receipt — email matthew@updatewave.com first if you’d rather upgrade with a credit applied.',
+                q: 'What if I already bought the $499 SJ report?',
+                a: 'The dropdown above will show a yellow notice. The $1,999 purchase covers the same PDF you already have plus the 90-day monitoring add-on. Buying the $1,999 closes the 7-day refund window on your existing $499 receipt — email matthew@updatewave.com first if you’d rather upgrade with a credit applied.',
               },
             ].map((qa, i) => (
               <div key={i}>
