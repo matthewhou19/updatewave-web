@@ -15,7 +15,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
  *
  * Mirrors /api/create-list-checkout but targets the service_tier='research'
  * row in city_lists. The (city, year, service_tier) UNIQUE from migration 004
- * means the city slug alone is ambiguous (one row for $349 report + one for
+ * means the city slug alone is ambiguous (one row for $499 report + one for
  * $1999 research), so we filter explicitly.
  *
  *   - inline price_data (unit_amount from city_lists.price_cents)
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     return Response.json({ error: 'Invalid link.' }, { status: 403 })
   }
 
-  // Look up active RESEARCH-tier city_list by slug (not the $349 report row)
+  // Look up active RESEARCH-tier city_list by slug (not the $499 report row)
   const cityList = await fetchResearchCityListBySlug(supabase, city)
   if (!cityList) {
     return Response.json({ error: 'Research not available for this city.' }, { status: 404 })
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
  *
  * The (city, year, service_tier) UNIQUE constraint allows one row per
  * (city, year, tier). Filter on service_tier='research' so we never
- * accidentally pick up the $349 report row for SJ.
+ * accidentally pick up the $499 report row for SJ.
  */
 async function fetchResearchCityListBySlug(
   supabase: SupabaseClient,

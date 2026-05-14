@@ -8,7 +8,7 @@ const TEST_CITY_LIST = {
   year: 2025,
   title: 'San Jose 2025 GC Market Structure Report',
   description: 'desc',
-  price_cents: 34900,
+  price_cents: 49900,
   active: true,
   created_at: '2026-04-28T00:00:00Z',
   updated_at: '2026-04-28T00:00:00Z',

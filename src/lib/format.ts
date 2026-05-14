@@ -6,7 +6,7 @@
  */
 
 /**
- * Format a USD price from a cents value, e.g. 34900 -> "$349".
+ * Format a USD price from a cents value, e.g. 49900 -> "$499".
  * No decimals for whole-dollar amounts. Returns "—" for null/undefined.
  */
 export function formatPrice(cents: number | null | undefined): string {

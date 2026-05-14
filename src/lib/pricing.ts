@@ -6,7 +6,7 @@
  *
  * `priceCents` is the numeric truth. The unit test in tests/unit/pricing.test.ts
  * asserts that the SJ tier's priceCents matches the city_lists seed value
- * (34900) so the comparison page never silently drifts from the actual Stripe
+ * (49900) so the comparison page never silently drifts from the actual Stripe
  * checkout price. See design "Reviewer Concerns / pricing.ts source of truth".
  *
  * Layout per Locked Decision #19: single-column vertical ladder (max-w-3xl),
@@ -68,12 +68,12 @@ export const PRICING_TIERS: PricingTier[] = [
     order: 1,
     title: 'Per-lead reveal',
     subtitle: 'Pay only for the architect contacts you actually want.',
-    priceDisplay: '$25 each',
+    priceDisplay: '$199 each',
     priceCents: null,
     anchorDisplay: null,
     features: [
       'Browse pre-permit projects free',
-      'Unlock architect name + contact for $25 each',
+      'Unlock architect name + contact for $199 each',
       'No subscription, no minimum',
     ],
     ctaText: 'Browse leads',
@@ -85,12 +85,12 @@ export const PRICING_TIERS: PricingTier[] = [
     title: 'City market structure report',
     subtitle:
       'One PDF that shows you which 6 owners control 75% of San Jose SFR construction.',
-    priceDisplay: '$349',
-    priceCents: 34900,
-    anchorDisplay: '$499',
+    priceDisplay: '$499',
+    priceCents: 49900,
+    anchorDisplay: null,
     features: [
-      '15-page PDF for San Jose 2025 (instant download)',
-      '12 months of permit data, structured by tier',
+      'PDF for San Jose 2025 (instant download)',
+      'A year of permit data, structured by tier',
       '7-day refund, no questions',
     ],
     ctaText: 'See the SJ report',

@@ -46,6 +46,48 @@ export const RESEARCH_PURCHASE_PUBLIC_COLUMNS =
   'id, user_id, city_list_id, stripe_session_id, stripe_payment_id, amount_cents, delivery_status, digest_subscription_until, purchased_at, delivered_at'
 
 /**
+ * Aggregated homepage stats for the social-proof strip.
+ *
+ * Returns counts as raw numbers; the SocialProofStrip component decides whether
+ * to render the live numbers or fall back to a generic banner if any number is
+ * embarrassingly low (the rendering policy lives with the UI, not the query).
+ *
+ * avgValueCents is computed in JS because PostgREST doesn't expose AVG() via
+ * the standard table API. For our current dataset size this is acceptable; if
+ * `projects` ever grows past ~10k published rows, switch to a Postgres RPC.
+ */
+export interface HomepageStats {
+  gcCount: number
+  monthlyReveals: number
+  avgValueCents: number | null
+}
+
+export async function fetchHomepageStats(supabase: SupabaseClient): Promise<HomepageStats> {
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [usersRes, revealsRes, projectsRes] = await Promise.all([
+    supabase.from('users').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('reveals').select('*', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo),
+    supabase
+      .from('projects')
+      .select('estimated_value_cents')
+      .eq('status', 'published')
+      .not('estimated_value_cents', 'is', null),
+  ])
+
+  const gcCount = usersRes.count ?? 0
+  const monthlyReveals = revealsRes.count ?? 0
+
+  const values = ((projectsRes.data ?? []) as { estimated_value_cents: number | null }[])
+    .map((r) => r.estimated_value_cents)
+    .filter((v): v is number => typeof v === 'number')
+
+  const avgValueCents = values.length > 0 ? Math.round(values.reduce((s, v) => s + v, 0) / values.length) : null
+
+  return { gcCount, monthlyReveals, avgValueCents }
+}
+
+/**
  * Fetch published projects without architect fields.
  * Sorted by filing_date descending (newest first).
  */
@@ -106,8 +148,8 @@ export async function resolveUserByHash(supabase: SupabaseClient, hash: string) 
  * Filters on service_tier='report' to disambiguate after migration 004.
  * Migration 002 set UNIQUE(city, year) so SJ had at most one row per year.
  * Migration 004 lifts that to UNIQUE(city, year, service_tier), so SJ now
- * has TWO rows: the $349 'report' SKU and the $1999 'research' SKU. This
- * helper is for the existing /list product (the $349 report) — research
+ * has TWO rows: the $499 'report' SKU and the $1999 'research' SKU. This
+ * helper is for the existing /list product (the $499 report) — research
  * pages use fetchActiveResearchCities or a tier-filtered direct query.
  */
 export async function fetchCityList(supabase: SupabaseClient, city: string) {
@@ -127,7 +169,7 @@ export async function fetchCityList(supabase: SupabaseClient, city: string) {
  * (download API after purchase verification). Never expose this result to
  * the client.
  *
- * Same service_tier='report' filter as fetchCityList — the $349 report's
+ * Same service_tier='report' filter as fetchCityList — the $499 report's
  * download API points here. The research download API has its own helper
  * with service_tier='research'.
  */
@@ -269,9 +311,9 @@ export async function fetchResearchPurchase(
 }
 
 /**
- * Detect $349-then-$1999 SJ collision before rendering the /research dropdown.
+ * Detect $499-then-$1999 SJ collision before rendering the /research dropdown.
  *
- * Returns whether the user already owns the $349 city report for the given
+ * Returns whether the user already owns the $499 city report for the given
  * city_list_id. The /research page uses this to surface the SJ collision
  * warning copy per design Locked Decision #20.
  *
@@ -294,7 +336,7 @@ export async function fetchListPurchaseForCollisionCheck(
 }
 
 /**
- * List all $349 city-report purchases for a user, joined with the city_lists
+ * List all $499 city-report purchases for a user, joined with the city_lists
  * row so the caller can render title + city slug without a second round trip.
  *
  * Sorted purchased_at descending (newest first). pdf_storage_path is NEVER

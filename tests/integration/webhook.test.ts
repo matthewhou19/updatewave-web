@@ -55,7 +55,7 @@ function makeRequest(body: string, signature = 'valid_sig'): NextRequest {
 function makeCheckoutEvent(
   clientRefId: string | null,
   metadata: Record<string, string> | null = null,
-  amountTotal = 2500,
+  amountTotal = 19900,
   paymentStatus: string = 'paid'
 ) {
   return {
@@ -151,7 +151,7 @@ describe('POST /api/webhook', () => {
       user_id: TEST_USER.id,
       project_id: TEST_PROJECT_ID,
       stripe_payment_id: 'pi_test_123',
-      amount_cents: 2500,
+      amount_cents: 19900,
     })
   })
 
@@ -220,7 +220,7 @@ describe('POST /api/webhook', () => {
     year: 2025,
     title: 'San Jose 2025',
     description: 'desc',
-    price_cents: 34900,
+    price_cents: 49900,
     active: true,
     created_at: '2026-04-28T00:00:00Z',
     updated_at: '2026-04-28T00:00:00Z',
@@ -228,7 +228,7 @@ describe('POST /api/webhook', () => {
 
   it('inserts list_purchases row on valid list checkout event', async () => {
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 34900)
+      makeCheckoutEvent(null, LIST_METADATA, 49900)
     )
     mockSupabase._chain.single
       .mockResolvedValueOnce({ data: TEST_USER, error: null })       // resolveUserByHash
@@ -244,7 +244,7 @@ describe('POST /api/webhook', () => {
       city_list_id: 1,
       stripe_session_id: 'cs_test_123',
       stripe_payment_id: 'pi_test_123',
-      amount_cents: 34900,
+      amount_cents: 49900,
     })
   })
 
@@ -262,7 +262,7 @@ describe('POST /api/webhook', () => {
 
   it('list flow: handles duplicate (UNIQUE 23505) idempotently', async () => {
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 34900)
+      makeCheckoutEvent(null, LIST_METADATA, 49900)
     )
     mockSupabase._chain.single
       .mockResolvedValueOnce({ data: TEST_USER, error: null })
@@ -279,7 +279,7 @@ describe('POST /api/webhook', () => {
 
   it('list flow: deleted user does NOT receive list_purchases row', async () => {
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 34900)
+      makeCheckoutEvent(null, LIST_METADATA, 49900)
     )
     // resolveUserByHash returns null because deleted_at filter excludes the row
     mockSupabase._chain.single.mockResolvedValueOnce({
@@ -307,7 +307,7 @@ describe('POST /api/webhook', () => {
 
   it('list flow: returns 500 on non-duplicate DB error', async () => {
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 34900)
+      makeCheckoutEvent(null, LIST_METADATA, 49900)
     )
     mockSupabase._chain.single
       .mockResolvedValueOnce({ data: TEST_USER, error: null })
@@ -328,7 +328,7 @@ describe('POST /api/webhook', () => {
     // Stripe checkout.session.completed fires for async payment methods (Cash App,
     // ACH) BEFORE the payment is actually captured. We must wait for paid status.
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(`${TEST_USER.hash}:${TEST_PROJECT_ID}`, null, 2500, 'unpaid')
+      makeCheckoutEvent(`${TEST_USER.hash}:${TEST_PROJECT_ID}`, null, 19900, 'unpaid')
     )
 
     const res = await POST(makeRequest('{}'))
@@ -336,7 +336,7 @@ describe('POST /api/webhook', () => {
     expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
   })
 
-  it('does NOT insert reveal when amount_total != $25 (catches $0 coupon)', async () => {
+  it('does NOT insert reveal when amount_total != $199 (catches $0 coupon)', async () => {
     mockStripeConstructEvent.mockReturnValue(
       makeCheckoutEvent(`${TEST_USER.hash}:${TEST_PROJECT_ID}`, null, 0)
     )
@@ -348,14 +348,14 @@ describe('POST /api/webhook', () => {
   })
 
   it('does NOT insert list when amount_total != city_lists.price_cents', async () => {
-    // Mismatched amount: metadata says SJ list ($349), but Stripe reports $50.
+    // Mismatched amount: metadata says SJ list ($499), but Stripe reports $50.
     // Webhook must reject without insert.
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 5000)  // $50 instead of $349
+      makeCheckoutEvent(null, LIST_METADATA, 5000)  // $50 instead of $499
     )
     mockSupabase._chain.single
       .mockResolvedValueOnce({ data: TEST_USER, error: null })
-      .mockResolvedValueOnce({ data: TEST_CITY_LIST, error: null })  // expects $349
+      .mockResolvedValueOnce({ data: TEST_CITY_LIST, error: null })  // expects $499
 
     const res = await POST(makeRequest('{}'))
     expect(res.status).toBe(200)
@@ -366,7 +366,7 @@ describe('POST /api/webhook', () => {
     const metadataNoCity = { ...LIST_METADATA }
     delete (metadataNoCity as Record<string, string>).city
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, metadataNoCity, 34900)
+      makeCheckoutEvent(null, metadataNoCity, 49900)
     )
     mockSupabase._chain.single.mockResolvedValueOnce({ data: TEST_USER, error: null })
 
@@ -378,7 +378,7 @@ describe('POST /api/webhook', () => {
   it('list flow: city_list_id mismatch with looked-up city does NOT insert', async () => {
     // Metadata says city_list_id=1 but the city_lists row for 'sj' is id=99
     mockStripeConstructEvent.mockReturnValue(
-      makeCheckoutEvent(null, LIST_METADATA, 34900)
+      makeCheckoutEvent(null, LIST_METADATA, 49900)
     )
     mockSupabase._chain.single
       .mockResolvedValueOnce({ data: TEST_USER, error: null })
@@ -629,7 +629,7 @@ describe('POST /api/webhook', () => {
     expect(mockSupabase._chain.insert).not.toHaveBeenCalled()
   })
 
-  it('research flow: filters city_lists query by service_tier=research (avoids matching $349 row)', async () => {
+  it('research flow: filters city_lists query by service_tier=research (avoids matching $499 row)', async () => {
     const { insertSingle } = rebuildSupabaseForResearch()
     insertSingle
       .mockResolvedValueOnce({ data: { id: 11 }, error: null })

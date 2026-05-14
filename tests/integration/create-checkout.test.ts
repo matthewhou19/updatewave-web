@@ -179,7 +179,7 @@ describe('POST /api/create-checkout', () => {
         line_items: expect.arrayContaining([
           expect.objectContaining({
             price_data: expect.objectContaining({
-              unit_amount: 2500,
+              unit_amount: 19900,
               currency: 'usd',
             }),
           }),

@@ -39,7 +39,7 @@ ON CONFLICT (hash) DO NOTHING;
 -- Insert a test reveal so /reveals/{hash} has data to render.
 -- Uses the first project (336 SPRINGER RD) for the test user.
 INSERT INTO reveals (user_id, project_id, stripe_payment_id, amount_cents)
-SELECT u.id, p.id, 'pi_test_seed_001', 2500
+SELECT u.id, p.id, 'pi_test_seed_001', 19900
 FROM users u, projects p
 WHERE u.hash = 'a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ'
   AND p.address = '336 SPRINGER RD'

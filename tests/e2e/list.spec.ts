@@ -52,7 +52,7 @@ test.describe('List landing page', () => {
     // Price block
     const launchPrice = page.locator('[data-testid="launch-price"]')
     await expect(launchPrice).toBeVisible()
-    await expect(launchPrice).toContainText('$349')
+    await expect(launchPrice).toContainText('$499')
   })
 
   test('invalid hash shows friendly message (no stack)', async ({ page }) => {

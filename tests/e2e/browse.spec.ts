@@ -19,7 +19,7 @@ test.describe('Public browse (homepage)', () => {
     await page.goto('/')
     const cta = page.getByTestId('anonymous-reveal-cta').first()
     await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Sign in to reveal · \$25/)
+    await expect(cta).toHaveText(/Sign in to reveal · \$199/)
     // Should be an anchor with a /login?next=... href — public visitors get
     // routed through magic-link signup, which substitutes {hash} on callback.
     expect(await cta.evaluate((el) => el.tagName)).toBe('A')

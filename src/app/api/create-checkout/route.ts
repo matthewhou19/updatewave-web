@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           product_data: {
             name: `Reveal: ${project.address}`,
           },
-          unit_amount: 2500,
+          unit_amount: 19900,
         },
         quantity: 1,
       },

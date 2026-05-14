@@ -45,9 +45,20 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return Response.json({ error: 'Not purchased.' }, { status: 403 })
   }
 
+  // Two storage modes:
+  //   - "/reports/foo.html"   → public file under /public, served directly.
+  //                             Used in local dev so we don't need a Supabase
+  //                             Storage bucket configured locally.
+  //   - "anything else"       → path inside the city-lists-pdfs Supabase bucket;
+  //                             returns a 2-hour signed URL.
+  const path = cityList.pdf_storage_path
+  if (path.startsWith('/')) {
+    return Response.json({ url: path }, { headers: { 'Cache-Control': 'no-store' } })
+  }
+
   const { data: signed, error: signError } = await supabase.storage
     .from('city-lists-pdfs')
-    .createSignedUrl(cityList.pdf_storage_path, SIGNED_URL_EXPIRES_IN)
+    .createSignedUrl(path, SIGNED_URL_EXPIRES_IN)
 
   if (signError || !signed?.signedUrl) {
     return Response.json({ error: 'Could not generate download URL.' }, { status: 500 })

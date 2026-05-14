@@ -123,12 +123,9 @@ test.describe('Public /pricing page', () => {
     await expect(page.locator('[data-testid="pricing-tier-research"]')).toBeVisible()
 
     // Prices in tabular order
-    await expect(page.locator('[data-testid="pricing-price-reveal"]')).toContainText('$25')
-    await expect(page.locator('[data-testid="pricing-price-sj-report"]')).toContainText('$349')
+    await expect(page.locator('[data-testid="pricing-price-reveal"]')).toContainText('$199')
+    await expect(page.locator('[data-testid="pricing-price-sj-report"]')).toContainText('$499')
     await expect(page.locator('[data-testid="pricing-price-research"]')).toContainText('1,999')
-
-    // SJ tier shows the $499 anchor strikethrough
-    await expect(page.locator('[data-testid="pricing-anchor-sj-report"]')).toContainText('$499')
 
     // CTAs route to /login with a tier-specific `next` param (v2 self-serve
     // signup contract — replaces the v1 mailto fallback).

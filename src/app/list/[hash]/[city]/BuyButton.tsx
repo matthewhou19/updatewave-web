@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { buttonStyles } from '@/components/ui/Button'
 
 interface BuyButtonProps {
   hash: string
@@ -58,12 +59,13 @@ export default function BuyButton({ hash, city }: BuyButtonProps) {
         onClick={handleClick}
         disabled={loading}
         data-testid="buy-button"
-        className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#94a3b8] text-white text-base font-semibold rounded-md transition-colors min-h-[44px]"
+        className={`w-full sm:w-auto ${buttonStyles('primary')}`}
       >
-        {loading ? 'Redirecting…' : 'Buy report'}
+        {loading ? 'Redirecting…' : 'Buy report →'}
       </button>
       {error && (
-        <p className="text-sm text-[#dc2626] mt-3" data-testid="buy-error">
+        <p className="font-mono text-[12px] text-accent mt-3" data-testid="buy-error">
+          <span className="uppercase tracking-wider mr-1">Error ·</span>
           {error}
         </p>
       )}

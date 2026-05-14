@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { buttonStyles } from '@/components/ui/Button'
 
 interface DownloadButtonProps {
   hash: string
@@ -44,12 +45,13 @@ export default function DownloadButton({ hash, city }: DownloadButtonProps) {
         onClick={handleClick}
         disabled={loading}
         data-testid="download-button"
-        className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 bg-[#2563eb] hover:bg-[#1d4ed8] disabled:bg-[#94a3b8] text-white text-base font-semibold rounded-md transition-colors min-h-[44px]"
+        className={`w-full sm:w-auto ${buttonStyles('primary')}`}
       >
-        {loading ? 'Generating link…' : 'Download research PDF'}
+        {loading ? 'Generating link…' : 'Download research PDF ↓'}
       </button>
       {error && (
-        <p className="text-sm text-[#dc2626] mt-3" data-testid="download-error">
+        <p className="font-mono text-[12px] text-accent mt-3" data-testid="download-error">
+          <span className="uppercase tracking-wider mr-1">Error ·</span>
           {error}
         </p>
       )}

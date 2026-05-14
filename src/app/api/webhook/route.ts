@@ -9,7 +9,7 @@ import {
 } from '@/lib/queries'
 import type { CityList, ProductType } from '@/lib/types'
 
-const REVEAL_PRICE_CENTS = 2500
+const REVEAL_PRICE_CENTS = 19900
 
 /**
  * Stripe webhook handler.
