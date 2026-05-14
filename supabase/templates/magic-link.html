@@ -1,3 +1,13 @@
+<!--
+  Uses {{ .SiteURL }} as the host because GoTrue's URI_ALLOW_LIST matching
+  rejects emailRedirectTo with a path, so .RedirectTo always falls back to
+  SiteURL (host only). To pin the link to /auth/callback, hardcode the path.
+  Whichever dev port site_url is set to, the email links to that port.
+  KNOWN LIMITATION: ?next= passed by LoginForm gets dropped here (no way to
+  carry it through the email round-trip until URI_ALLOW_LIST matching is
+  fixed). /sample → /list/{hash}/sj direct-to-checkout falls back to
+  /browse/{hash} after first login.
+-->
 <h2>Log in to UpdateWave</h2>
 <p>Click the link below to log into your UpdateWave account:</p>
 <p><a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=magiclink">Log in to UpdateWave</a></p>
