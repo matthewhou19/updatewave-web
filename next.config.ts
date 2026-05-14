@@ -1,5 +1,12 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV !== 'production'
+
+// In dev, allow the browser to talk to local Supabase (default port 54321)
+// and any other localhost service. Production stays strict — only the cloud
+// Supabase project + Stripe.
+const devConnectSources = isDev ? ' http://127.0.0.1:* http://localhost:*' : ''
+
 const securityHeaders = [
   {
     key: 'X-DNS-Prefetch-Control',
@@ -29,7 +36,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
       "font-src 'self'",
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com",
+      `connect-src 'self' https://*.supabase.co https://api.stripe.com${devConnectSources}`,
       "frame-src https://js.stripe.com https://hooks.stripe.com",
     ].join('; '),
   },
