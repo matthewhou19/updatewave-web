@@ -36,22 +36,19 @@ export default function Hero() {
         <div className="hidden md:block relative mt-3" aria-hidden>
           <div className="border border-ink bg-paper p-6 shadow-[8px_8px_0_var(--color-grey-200)]">
             <div className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted mb-3">
-              Schematic · ownership concentration
+              Sample · top owners in one tier
             </div>
             <div className="space-y-2">
-              <OwnerRow name="Owner A — LLC" width="100%" />
-              <OwnerRow name="Owner B — LLC" width="78%" />
-              <OwnerRow name="Owner C — LLC" width="52%" />
-              <OwnerRow name="Owner D — LLC" width="32%" />
-              <OwnerRow name="Owner E" width="24%" />
-              <OwnerRow name="Owner F" width="20%" />
-              <div className="pt-2 mt-2 border-t border-grey-300 flex items-baseline justify-between">
-                <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-muted">Top owners</span>
-                <span className="font-serif text-[28px] font-semibold leading-none">most of it</span>
-              </div>
+              <OwnerRow name="Crescent Equity LLC"   pct={28} count={19} />
+              <OwnerRow name="Ridgemont Holdings"    pct={19} count={13} />
+              <OwnerRow name="Hillview Capital"      pct={12} count={ 9} />
+              <OwnerRow name="Pacific Heights Dev"   pct={ 8} count={ 6} />
+              <OwnerRow name="Mission Land Co"       pct={ 5} count={ 4} />
+              <OwnerRow name="Bayview Properties"    pct={ 3} count={ 3} />
             </div>
             <div className="mt-4 pt-3 border-t border-dashed border-grey-300 font-mono text-[10px] text-muted italic">
-              Schematic only. The paid report names every LLC, with unit count and per-tier playbook.
+              Names + numbers sanitized — realistic shape, not the actual report data.
+              The paid report ships every real LLC, exact counts, per-tier playbook.
             </div>
           </div>
         </div>
@@ -60,20 +57,21 @@ export default function Hero() {
   )
 }
 
-// Schematic owner rows — no real names, no real percentages. The paid report
-// is what ships the actual LLC names + unit counts. Bar widths are illustrative
-// of a generic long-tail concentration shape.
-function OwnerRow({ name, width }: { name: string; width: string }) {
+// Sample/illustrative ownership rows. Names are sanitized (plausible LLC names,
+// not real SJ owners) and percentages are tweaked away from the actual report's
+// exact distribution — the chart shows the SHAPE of a typical concentration
+// finding, not the answer. Disclaimer in the card makes this explicit.
+function OwnerRow({ name, pct, count }: { name: string; pct: number; count: number }) {
   return (
     <div className="flex items-center gap-3 font-mono text-[11px]">
       <div className="flex-1 grid grid-cols-[1fr_auto] gap-2 items-center">
-        <span className="truncate text-muted">{name}</span>
-        <span className="text-muted tracking-[0.1em]" aria-hidden>██</span>
+        <span className="truncate">{name}</span>
+        <span className="text-muted tabular-nums">{count} permits</span>
       </div>
-      <div className="w-20 h-2 bg-grey-100 relative">
-        <div className="absolute inset-y-0 left-0 bg-accent" style={{ width }} />
+      <div className="w-16 h-2 bg-grey-100 relative">
+        <div className="absolute inset-y-0 left-0 bg-accent" style={{ width: `${Math.min(pct * 3.5, 100)}%` }} />
       </div>
-      <span className="w-8 text-right text-muted" aria-hidden>—</span>
+      <span className="w-8 text-right tabular-nums">{pct}%</span>
     </div>
   )
 }
