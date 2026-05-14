@@ -146,11 +146,15 @@ async function ensureSjCityList() {
   const PRICE_CENTS = 49900
   const ANCHOR_PRICE_CENTS = null
 
+  // Migration 004 added service_tier to the (city, year, service_tier) UNIQUE.
+  // SJ 2025 has two rows: 'report' (the $499 product) and 'research' (the
+  // $1,999 product). We seed/sync only the report row.
   const { data: existing } = await supabase
     .from('city_lists')
     .select('id, pdf_storage_path, price_cents, anchor_price_cents')
     .eq('city', 'sj')
     .eq('year', 2025)
+    .eq('service_tier', 'report')
     .maybeSingle()
 
   if (existing) {
@@ -186,6 +190,7 @@ async function ensureSjCityList() {
       price_cents: PRICE_CENTS,
       anchor_price_cents: ANCHOR_PRICE_CENTS,
       pdf_storage_path: STATIC_PATH,
+      service_tier: 'report',
       active: true,
     })
     .select('id')
