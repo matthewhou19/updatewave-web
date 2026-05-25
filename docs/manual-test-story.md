@@ -62,14 +62,14 @@ EMAIL: mike@pacificcoastbuilders.com
 Simulates a GC clicking the link in their UpdateWave outreach email.
 
 1. **Do** — open `http://localhost:3000/browse/a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ`
-   - **Expect** — TopBar shows "UpdateWave" + "My purchases →". Heading
-     "Pre-permit projects in your area". 7 project cards visible.
+   - **Expect** — TopBar shows "UpdateWave" + "My purchases →". Filters render above
+     the list, the count reads "Showing 7 projects", and 7 project cards are visible.
    - **Verify** — count cards in the DOM; each card has city + address +
-     project type + filing date + a "Reveal architect for $25" button.
+     project type + filing date + a $199 price block and "Reveal · $199" button.
 
 2. **Do** — open one card that has architect data (e.g. 336 SPRINGER RD).
    - **Expect** — name / firm / email / website are HIDDEN until reveal.
-     The button reads "Reveal architect for $25".
+     The button reads "Reveal · $199".
    - **Verify** — view source: architect_* fields are NOT in the rendered HTML
      for unrevealed projects (defense-in-depth check).
 
@@ -77,7 +77,7 @@ Simulates a GC clicking the link in their UpdateWave outreach email.
    the seeded reveal).
    - **Expect** — instead of a Reveal button, the card shows
      "Liu Architecture Studio · jia@liuarch.com · liuarch.com".
-   - **Verify** — no $25 CTA; architect contact rendered inline.
+   - **Verify** — no $199 CTA; architect contact rendered inline.
 
 ---
 
@@ -157,18 +157,17 @@ just enters their email.
 1. **Do** — open
    `http://localhost:3000/reveals/empty_reveals_test_user_hash_000000000000`.
    - **Expect** — H1 "My purchases" + an empty state region with
-     "You haven't bought anything yet." + a "Browse available projects →"
-     button.
+     "No purchases yet." + a "Browse available projects →" button.
    - **Verify** — no section headings (Custom research / City reports /
      Reveals) appear; the only content beneath the H1 is the empty-state.
      `data-testid="empty-reveals"` exists.
 
 2. **Do** — open `http://localhost:3000/reveals/totally_invalid_hash_000`.
    - **Expect** — a centered "This link isn't valid. Check your email for
-     the correct URL." page. No TopBar, no sections.
+     the correct URL." page with the public TopBar and no purchase sections.
 
 3. **Do** — open `http://localhost:3000/list/a3jKR9uD…/nope`.
-   - **Expect** — 404 / not-found page (no city_list with slug `nope`).
+   - **Expect** — an error shell saying "This report isn't available right now."
 
 ---
 
@@ -193,13 +192,13 @@ fully without Stripe.
 
 ### Reveal flow
 
-1. **Do** — on `/browse/<hash>`, click "Reveal architect for $25" on any
+1. **Do** — on `/browse/<hash>`, click "Reveal · $199" on any
    un-revealed card. Stripe Checkout opens.
 
 2. **Do** — pay with test card `4242 4242 4242 4242`, any future expiry,
    any CVC, any zip.
 
-3. **Do** — Checkout returns to `/browse/<hash>?reveal=success`.
+3. **Do** — Checkout returns to `/browse/<hash>?revealed=<projectId>`.
    - **Verify** — the card you just revealed now shows architect contact
      inline. The `stripe:listen` terminal logs a `checkout.session.completed`
      event. Confirm a new row appeared:
@@ -208,19 +207,20 @@ fully without Stripe.
        "SELECT id, user_id, project_id, amount_cents FROM reveals ORDER BY id DESC LIMIT 3;"
      ```
 
-### City report flow ($349)
+### City report flow ($499)
 
-1. **Do** — open `/list/<hash>/sj` (a city other than the already-purchased
-   one would also work if you've seeded more).
+1. **Do** — open `/list/<hash>/sj` with a test user that has not already bought
+   the SJ report, or seed another report city for this flow. The default Mike
+   test user already owns SJ and redirects to `/success`.
 2. **Do** — click "Buy report" → Stripe Checkout → test card.
 3. **Verify** — landing on `/list/<hash>/sj/success`; new row in
    `list_purchases`.
 
-### Research flow ($1999)
+### Research flow ($1,999)
 
 1. **Do** — open `/research/<hash>`. Pick a city that hasn't been ordered
    yet (LA already has one).
-2. **Do** — click "Order research" → Stripe Checkout → test card.
+2. **Do** — click "Configure research" → Stripe Checkout → test card.
 3. **Verify** — landing on `/research/<hash>/<city>/status`; status reads
    "Pending"; new rows in `research_purchases` AND `digest_subscriptions`.
 

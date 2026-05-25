@@ -11,7 +11,7 @@
 
 ## Error Monitoring — Sentry
 - **What:** Add Sentry (or Vercel error monitoring) for production error tracking.
-- **Why:** No visibility into production errors. If webhook fails at 2am, nobody knows until a customer complains. With $25/reveal revenue, even one lost payment justifies monitoring.
+- **Why:** No visibility into production errors. If webhook fails at 2am, nobody knows until a customer complains. With $199/reveal revenue, even one lost payment justifies monitoring.
 - **Pros:** Immediate alerts on errors, stack traces, error grouping, performance monitoring.
 - **Cons:** Adds SDK dependency. Free tier: 5K errors/month (more than enough).
 - **Context:** Currently zero error monitoring. Post-deploy smoke tests (Layer 3) catch "site is down" but not runtime errors or degraded behavior. Sentry Next.js SDK is a 5-minute install.
@@ -66,7 +66,7 @@ Design audit scored the site B- → B+ after fixing all 4 high-impact findings. 
 - **Effort:** Trivial. Find-and-replace in ProjectCard.tsx and reveals page.
 
 ### Reveal Button Missing Accessible Context (subagent finding, high, a11y)
-- **What:** Add `aria-describedby` on the Reveal button linking it to the blurred placeholder, so screen readers announce WHAT is being revealed, not just "Reveal · $25".
+- **What:** Add `aria-describedby` on the Reveal button linking it to the blurred placeholder, so screen readers announce WHAT is being revealed, not just "Reveal · $199".
 - **Where:** `ProjectCard.tsx:127-133`. The adjacent blur div already has `aria-label="Architect details hidden"` but is not linked.
 - **Effort:** Small. Add an `id` to the blur div and `aria-describedby` to the button.
 

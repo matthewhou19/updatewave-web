@@ -2,7 +2,7 @@
 
 # UpdateWave Web — Pre-Permit Lead Marketplace
 
-Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $25/reveal to see architect contact info.
+Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $199/reveal to see architect contact info, $499 for the SJ city report, or $1,999 for custom city research.
 
 **Live:** https://updatewave-web.vercel.app
 **Supabase:** project ref `gucsgfpiruhjsmzwcnqp`
@@ -10,14 +10,21 @@ Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $
 
 ## Architecture
 - `/browse/[hash]` — main browsing page (server component + client filter component)
-- `/reveals/[hash]` — past reveals page (server component)
+- `/reveals/[hash]` — aggregated purchases page (reveals + reports + research)
+- `/list/[hash]/[city]` — $499 city report landing + success/download flow
+- `/research/[hash]` — $1,999 custom city research landing + status/download flow
 - `/api/create-checkout` — Stripe Checkout session creation (no rate limiting; see TODOS.md)
+- `/api/create-list-checkout` — Stripe Checkout session creation for city reports
+- `/api/create-research-checkout` — Stripe Checkout session creation for custom research
 - `/api/webhook` — Stripe webhook handler (idempotent via UNIQUE constraint)
 
 ## Database
-4 tables in Supabase: `projects`, `users`, `reveals`, `project_status_log`
+Core tables in Supabase: `projects`, `users`, `reveals`, `city_lists`, `list_purchases`,
+`research_purchases`, `digest_subscriptions`, `delivery_events`, `identity_fork_alerts`,
+`auth_login_events`, `project_status_log`
 - RLS enabled: anon reads published projects only, service role for everything else
 - `reveals` has UNIQUE(user_id, project_id) for idempotency
+- `list_purchases` and `research_purchases` have UNIQUE(user_id, city_list_id) for idempotency
 - `projects.updated_at` auto-updated via trigger
 
 ## Data Flow

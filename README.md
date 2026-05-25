@@ -1,6 +1,6 @@
 # UpdateWave Web
 
-Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $25/reveal to see architect contact info, $349 for a city market-structure report, or $1999 for custom city research with a 90-day post-purchase digest.
+Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $199/reveal to see architect contact info, $499 for a city market-structure report, or $1,999 for custom city research with a 90-day post-purchase digest.
 
 **Live:** https://updatewave-web.vercel.app
 
@@ -8,7 +8,7 @@ Pre-permit lead marketplace for general contractors. GCs browse project listings
 
 1. GC receives cold email with unique browse link (`/browse/{hash}`)
 2. Browses pre-permit project listings with city/type/value filters
-3. Pays via Stripe to reveal architect info ($25), buy a city report ($349), or commission custom research ($1999)
+3. Pays via Stripe to reveal architect info ($199), buy a city report ($499), or commission custom research ($1,999)
 4. Views all past purchases at `/reveals/{hash}` ("My purchases" — reveals + reports + research aggregated)
 
 Authentication is dual-mode: hash-in-URL identity (cold-email entry point) plus magic-link email login for returning customers.
@@ -35,16 +35,16 @@ src/
     auth/callback/                            # Magic-link callback handler
     browse/[hash]/page.tsx                    # Server component: project list
     reveals/[hash]/page.tsx                   # "My purchases" — reveals + reports + research
-    list/[hash]/[city]/                       # $349 city market report
+    list/[hash]/[city]/                       # $499 city market report
       page.tsx                                # Landing (preview + CTA)
       BuyButton.tsx                           # Client: POSTs /api/create-list-checkout
       success/page.tsx                        # Post-purchase confirmation + download
-    research/[hash]/                          # $1999 custom city research
+    research/[hash]/                          # $1,999 custom city research
       page.tsx                                # Landing (city dropdown + CTA)
       [city]/status/page.tsx                  # Bookmarkable status + delivered download
-    api/create-checkout/                      # Stripe Checkout for $25 reveals
-    api/create-list-checkout/                 # Stripe Checkout for $349 reports
-    api/create-research-checkout/             # Stripe Checkout for $1999 research
+    api/create-checkout/                      # Stripe Checkout for $199 reveals
+    api/create-list-checkout/                 # Stripe Checkout for $499 reports
+    api/create-research-checkout/             # Stripe Checkout for $1,999 research
     api/download-list/[hash]/[city]/          # Signed URL for paid report download
     api/download-research/[hash]/[city]/      # Signed URL for delivered research PDF
     api/webhook/                              # Stripe webhook (dispatch on metadata.product_type)
@@ -76,7 +76,7 @@ supabase/
   migrations/
     001-reveal-count-trigger-and-soft-delete.sql
     002-city-lists-and-list-purchases.sql
-    003-research-and-digest.sql               # $1999 research + 90-day digest tables
+    003-research-and-digest.sql               # $1,999 research + 90-day digest tables
     004-research-tier-uniqueness-fix.sql
     005-email-login-auth.sql                  # auth_user_id + magic-link login
 ```
@@ -102,7 +102,7 @@ After it finishes:
 npm run dev
 ```
 
-Visit `http://localhost:3000/reveals/a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ` to see the "My purchases" page populated with one reveal + one $349 report + one $1999 research-in-progress.
+Visit `http://localhost:3000/reveals/a3jKR9uD6615GnOJQblPtEK4UIAQxpr8vCiPKbe9nHQ` to see the "My purchases" page populated with one reveal + one $499 report + one $1,999 research-in-progress.
 
 ### Manual Setup
 
@@ -142,9 +142,9 @@ The local-default keys (`...JhbGciOi...exp:1983812996`) are public CLI demo keys
 |---|---|
 | `/browse/a3jKR9uD…` | Project list with reveal CTA |
 | `/reveals/a3jKR9uD…` | "My purchases" — research + reports + reveals |
-| `/list/a3jKR9uD…/sj` | $349 SJ report landing |
+| `/list/a3jKR9uD…/sj` | $499 SJ report landing |
 | `/list/a3jKR9uD…/sj/success` | Post-purchase confirmation + download (already paid) |
-| `/research/a3jKR9uD…` | $1999 custom research city dropdown |
+| `/research/a3jKR9uD…` | $1,999 custom research city dropdown |
 | `/research/a3jKR9uD…/la/status` | LA research status (in_research) |
 | `/login` | Magic-link login form |
 | `/auth/callback` | Magic-link callback (hit by Supabase Auth) |
@@ -153,7 +153,7 @@ The local-default keys (`...JhbGciOi...exp:1983812996`) are public CLI demo keys
 
 1. Set `STRIPE_SECRET_KEY` (test mode) in `.env.local`
 2. Run `npm run stripe:listen` in another terminal — copy the printed `STRIPE_WEBHOOK_SECRET` into `.env.local`
-3. Click any "Reveal" / "Buy" / "Order research" button — Stripe Checkout uses test card `4242 4242 4242 4242`
+3. Click any "Reveal" / "Buy report" / "Configure research" button — Stripe Checkout uses test card `4242 4242 4242 4242`
 
 **Local magic-link login:**
 
