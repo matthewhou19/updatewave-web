@@ -65,6 +65,19 @@ const nextConfig: NextConfig = {
       },
     ]
   },
+  // Canonical host: redirect the bare apex updatewave.org → www.updatewave.org.
+  // Matches the apex Host only, so www, *.vercel.app, preview deploys, and
+  // localhost are untouched (no redirect loop). Path and query are preserved.
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'updatewave.org' }],
+        destination: 'https://www.updatewave.org/:path*',
+        permanent: true,
+      },
+    ]
+  },
 }
 
 export default nextConfig
