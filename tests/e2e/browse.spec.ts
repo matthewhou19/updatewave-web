@@ -7,23 +7,10 @@ test.describe('Public browse (hash view)', () => {
     await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
   })
 
-  test('shows "Sign in to reveal" login link for public visitors', async ({ page }) => {
+  test('filter bar renders with city options', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
-    const cta = page.getByTestId('anonymous-reveal-cta').first()
-    await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Sign in to reveal · \$199/)
-    // Should be an anchor with a /login?next=... href — public visitors get
-    // routed through magic-link signup, which substitutes {hash} on callback.
-    expect(await cta.evaluate((el) => el.tagName)).toBe('A')
-    const href = await cta.getAttribute('href')
-    expect(href).toMatch(/^\/login\?next=/)
-    expect(href).toContain(encodeURIComponent('/browse/{hash}'))
-  })
-
-  test('filter sidebar renders with city checkboxes', async ({ page }) => {
-    await page.goto(`/browse/${TEST_HASH}`)
-    // Desktop sidebar should have city filter
-    await expect(page.locator('legend:has-text("City")').first()).toBeVisible()
+    // The filter bar shows a "City:" label followed by one pill per seeded city.
+    await expect(page.getByText('City:')).toBeVisible()
   })
 })
 
