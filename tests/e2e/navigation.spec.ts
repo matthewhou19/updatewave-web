@@ -6,7 +6,7 @@ test.describe('TopBar navigation', () => {
     await page.goto(`/browse/${TEST_HASH}`)
 
     // Skip if test user doesn't have data
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered — test user may not be seeded')
@@ -41,7 +41,7 @@ test.describe('TopBar navigation', () => {
     await page.waitForURL(`**/browse/${TEST_HASH}`)
 
     // Assert browse page loaded with project cards
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     await expect(cards.first()).toBeVisible()
   })
 })

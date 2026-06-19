@@ -79,7 +79,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
   return (
     <article
       className={`border ${borderClass} bg-paper p-5 grid grid-cols-[1fr_auto] gap-4`}
-      data-testid={justRevealed ? 'just-revealed-card' : undefined}
+      data-testid={justRevealed ? 'just-revealed-card' : 'project-card'}
     >
       <div className="min-w-0">
         {justRevealed && (

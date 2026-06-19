@@ -48,7 +48,7 @@ test.describe('Reveals page', () => {
     // Assert empty state
     const emptyState = page.locator('[data-testid="empty-reveals"]')
     await expect(emptyState).toBeVisible()
-    await expect(page.locator('text=You haven\'t bought anything yet')).toBeVisible()
+    await expect(page.locator('text=No purchases yet.')).toBeVisible()
 
     // Assert browse link with correct hash
     const browseLink = emptyState.locator(`a[href="/browse/${TEST_HASH_NO_REVEALS}"]`)

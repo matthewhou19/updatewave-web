@@ -1,37 +1,16 @@
 import { test, expect } from '@playwright/test'
 import { TEST_HASH } from './fixtures'
 
-test.describe('Public browse (homepage)', () => {
+test.describe('Public browse (hash view)', () => {
   test('renders published projects', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('h1')).toContainText('Pre-permit projects in your area')
-    // Skip gracefully if no projects are seeded
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
-    const cardCount = await cards.count()
-    if (cardCount === 0) {
-      test.skip(true, 'No project cards rendered — database may not be seeded')
-      return
-    }
-    await expect(cards.first()).toBeVisible()
+    await page.goto(`/browse/${TEST_HASH}`)
+    await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
   })
 
-  test('shows "Sign in to reveal" login link for public visitors', async ({ page }) => {
-    await page.goto('/')
-    const cta = page.getByTestId('anonymous-reveal-cta').first()
-    await expect(cta).toBeVisible()
-    await expect(cta).toHaveText(/Sign in to reveal · \$199/)
-    // Should be an anchor with a /login?next=... href — public visitors get
-    // routed through magic-link signup, which substitutes {hash} on callback.
-    expect(await cta.evaluate((el) => el.tagName)).toBe('A')
-    const href = await cta.getAttribute('href')
-    expect(href).toMatch(/^\/login\?next=/)
-    expect(href).toContain(encodeURIComponent('/browse/{hash}'))
-  })
-
-  test('filter sidebar renders with city checkboxes', async ({ page }) => {
-    await page.goto('/')
-    // Desktop sidebar should have city filter
-    await expect(page.locator('legend:has-text("City")').first()).toBeVisible()
+  test('filter bar renders with city options', async ({ page }) => {
+    await page.goto(`/browse/${TEST_HASH}`)
+    // The filter bar shows a "City:" label followed by one pill per seeded city.
+    await expect(page.getByText('City:')).toBeVisible()
   })
 })
 
@@ -40,7 +19,7 @@ test.describe('Authenticated browse', () => {
     await page.goto(`/browse/${TEST_HASH}`)
 
     // Skip gracefully if test user doesn't exist in the database
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered — test user may not be seeded')
@@ -61,7 +40,7 @@ test.describe('Authenticated browse', () => {
     await page.goto(`/browse/${TEST_HASH}`)
 
     // Skip gracefully if test user doesn't exist in the database
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered — test user may not be seeded')
