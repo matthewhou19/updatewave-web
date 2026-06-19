@@ -47,4 +47,8 @@ jobs:
       - name: Post-deploy smoke tests
         run: npx playwright test --project=smoke
         env:
-          PRODUCTION_URL: ${{ github.event.deployment_status.environment_url || inputs.url || 'https://updatewave-web.vercel.app' }}
+          # NOTE: do not use deployment_status.environment_url here - Vercel reports
+          # the per-deployment URL, which has Deployment Protection and returns 401
+          # to anonymous requests. Smoke the public alias instead; by the time the
+          # deployment_status fires, the alias already points at this deployment.
+          PRODUCTION_URL: ${{ inputs.url || 'https://updatewave-web.vercel.app' }}

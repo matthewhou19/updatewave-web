@@ -7,7 +7,9 @@ test.describe('Production smoke tests', () => {
   test('homepage returns 200 and contains heading', async ({ page }) => {
     const response = await page.goto('/')
     expect(response?.status()).toBe(200)
-    await expect(page.locator('text=Pre-permit projects in your area')).toBeVisible()
+    // Assert a heading renders, not specific marketing copy (which changes with
+    // redesigns). Identity is covered by the security-header and API tests below.
+    await expect(page.locator('h1').first()).toBeVisible()
   })
 
   test('API is alive (create-checkout returns 400 for invalid body)', async ({ request }) => {
