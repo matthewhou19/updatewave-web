@@ -11,7 +11,7 @@ test.describe('Filter sidebar', () => {
 
   test('filters projects by city', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
-    await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
+    await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
 
     // Get initial project count
     const showingText = page.locator('text=/Showing \\d+ project/').first()
@@ -34,7 +34,7 @@ test.describe('Filter sidebar', () => {
 
   test('filter persistence via localStorage', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
-    await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
+    await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
 
     // Select a city filter
     const losAltosCheckbox = page.locator('label:has-text("Los Altos") input[type="checkbox"]').first()
@@ -45,14 +45,14 @@ test.describe('Filter sidebar', () => {
 
       // Reload and verify filter is persisted
       await page.reload()
-      await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
+      await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
       await expect(losAltosCheckbox).toBeChecked()
     }
   })
 
   test('clear all filters restores full list', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
-    await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
+    await expect(page.locator('[data-testid="project-card"]').first()).toBeVisible()
 
     // Apply a filter
     const losAltosCheckbox = page.locator('label:has-text("Los Altos") input[type="checkbox"]').first()

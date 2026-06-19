@@ -101,6 +101,22 @@ jobs:
       - name: Apply schema + migrations + seed
         run: bash scripts/db-init.sh --drop
 
+      - name: Reload PostgREST schema cache and verify the seed is readable
+        run: |
+          # PostgREST boots (during `supabase start`) before db-init creates the
+          # tables, so its schema cache can be stale. Force a reload.
+          docker exec "supabase_db_updatewave-web" psql -U postgres -d postgres \
+            -c "NOTIFY pgrst, 'reload schema';" || true
+          sleep 3
+          # Diagnostic: confirm the app's service key can read seeded rows via the
+          # REST API (surfaces key/RLS/schema-cache problems directly in the log).
+          URL=$(grep '^NEXT_PUBLIC_SUPABASE_URL=' .env.local | cut -d= -f2-)
+          KEY=$(grep '^SUPABASE_SERVICE_ROLE_KEY=' .env.local | cut -d= -f2-)
+          echo "Projects readable via API:"
+          curl -sS "$URL/rest/v1/projects?select=id,city,status&order=id&limit=10" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" || true
+          echo ""
+
       - name: E2E tests
         run: npx playwright test --project=chromium
 

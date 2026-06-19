@@ -13,7 +13,7 @@ test.describe('Reveal flow', () => {
     }
 
     // Wait for project cards to load
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered — test data may not be seeded')
@@ -44,7 +44,7 @@ test.describe('Reveal flow', () => {
   test('Reveal button shows loading state on click', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
 
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered')
@@ -76,7 +76,7 @@ test.describe('Post-reveal experience', () => {
   test('revealed project shows architect info or Revealed badge', async ({ page }) => {
     await page.goto(`/browse/${TEST_HASH}`)
 
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
+    const cards = page.locator('[data-testid="project-card"]')
     const cardCount = await cards.count()
     if (cardCount === 0) {
       test.skip(true, 'No project cards rendered — test data may not be seeded')
