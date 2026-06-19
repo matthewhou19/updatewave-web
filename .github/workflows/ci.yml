@@ -46,26 +46,23 @@ jobs:
       - name: Build
         run: npm run build
 
-  # E2E runs inside the official Playwright container, so browsers and their
-  # system dependencies are pre-installed. This removes the
-  # `playwright install --with-deps` step that previously hung on apt and
-  # tripped the 10-minute job timeout.
+  # E2E runs against an ephemeral local Supabase (started via the Supabase CLI and
+  # seeded with scripts/db-init.sh) - the same stack developers run locally. This
+  # makes the suite self-contained and deterministic: no shared/prod database and
+  # no missing-seed-data failures. It runs on the host (not a container) because
+  # `supabase start` needs Docker.
   #
-  # Keep the image tag in sync with the @playwright/test version in package.json.
-  # This job is intentionally NOT a required check: E2E infra flakiness must not
-  # block merges. The `quality` job above is the gate.
+  # NOT a required check: E2E/infra flakiness must not block merges. `quality` is
+  # the gate.
   e2e:
     name: e2e
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: quality
-    container:
-      image: mcr.microsoft.com/playwright:v1.59.1-noble
     env:
-      HAS_SECRETS: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL != '' }}
-      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      # Supabase comes from the local stack via .env.local (see "Configure local
+      # env"). Stripe stays in test mode from secrets; a shell/job env var
+      # overrides the blank STRIPE_* values in .env.example.
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
 
@@ -81,13 +78,55 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+
+      - name: Install Playwright Chromium
+        timeout-minutes: 8
+        run: |
+          # Stop the runner's background apt job, which can hold the dpkg lock and
+          # make `--with-deps` hang. The step timeout bounds it either way.
+          sudo systemctl stop unattended-upgrades.service 2>/dev/null || true
+          npx playwright install --with-deps chromium
+
+      - name: Configure local env (Supabase points at the local stack)
+        run: cp .env.example .env.local
+
+      - name: Start local Supabase
+        run: npx supabase start
+
+      - name: Apply schema + migrations + seed
+        run: bash scripts/db-init.sh --drop
+
+      - name: Reload PostgREST schema cache and verify the seed is readable
+        run: |
+          # PostgREST boots (during `supabase start`) before db-init creates the
+          # tables, so its schema cache can be stale. Force a reload.
+          docker exec "supabase_db_updatewave-web" psql -U postgres -d postgres \
+            -c "NOTIFY pgrst, 'reload schema';" || true
+          sleep 3
+          # Diagnostic: confirm the app's service key can read seeded rows via the
+          # REST API (surfaces key/RLS/schema-cache problems directly in the log).
+          URL=$(grep '^NEXT_PUBLIC_SUPABASE_URL=' .env.local | cut -d= -f2-)
+          KEY=$(grep '^SUPABASE_SERVICE_ROLE_KEY=' .env.local | cut -d= -f2-)
+          echo "Projects readable via API:"
+          curl -sS "$URL/rest/v1/projects?select=id,city,status&order=id&limit=10" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" || true
+          echo ""
+
       - name: E2E tests
-        if: env.HAS_SECRETS == 'true'
         run: npx playwright test --project=chromium
+
+      - name: Stop local Supabase
+        if: always()
+        run: npx supabase stop || true
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
-        if: ${{ failure() && env.HAS_SECRETS == 'true' }}
+        if: failure()
         with:
           name: playwright-report
           path: playwright-report/

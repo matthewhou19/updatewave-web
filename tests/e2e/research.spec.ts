@@ -151,7 +151,7 @@ test.describe('Existing flows still work (regression — IRON RULE)', () => {
       return
     }
     // Hero or already-purchased redirect to success — either way we expect a header
-    await expect(page.locator('header')).toBeVisible()
+    await expect(page.locator('nav')).toBeVisible()
   })
 
   test('browse page (/browse/[hash]) still loads', async ({ page }) => {
@@ -160,6 +160,6 @@ test.describe('Existing flows still work (regression — IRON RULE)', () => {
       test.skip(true, 'Test data not seeded')
       return
     }
-    await expect(page.locator('header')).toBeVisible()
+    await expect(page.locator('nav')).toBeVisible()
   })
 })
