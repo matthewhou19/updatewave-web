@@ -7,6 +7,7 @@ import {
 } from '@/lib/queries'
 import type { CityList } from '@/lib/types'
 import { SupabaseClient } from '@supabase/supabase-js'
+import { resolveBaseUrl } from '@/lib/site-url'
 
 /**
  * Create a Stripe Checkout session for a city RESEARCH purchase ($1,999 SKU).
@@ -79,11 +80,10 @@ export async function POST(request: NextRequest) {
   }
 
   // Create Stripe Checkout session.
-  // Use env-based URL, never trust Origin header (open redirect risk).
+  // resolveBaseUrl() sanitizes the env value so a malformed NEXT_PUBLIC_BASE_URL
+  // can't produce a non-ASCII success_url that Stripe rejects (2026-06-19 outage).
   const stripe = createStripeClient()
-  const origin =
-    process.env.NEXT_PUBLIC_BASE_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  const origin = resolveBaseUrl()
 
   // Idempotency key: if the same user double-clicks Buy or opens two tabs and
   // both POST within ~24h, Stripe returns the SAME session URL instead of
