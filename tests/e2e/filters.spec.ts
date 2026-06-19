@@ -1,15 +1,16 @@
 import { test, expect } from '@playwright/test'
+import { TEST_HASH } from './fixtures'
 
 test.describe('Filter sidebar', () => {
   test.beforeEach(async ({ page }) => {
     // Clear localStorage before each test
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     await page.evaluate(() => localStorage.clear())
     await page.reload()
   })
 
   test('filters projects by city', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
 
     // Get initial project count
@@ -32,7 +33,7 @@ test.describe('Filter sidebar', () => {
   })
 
   test('filter persistence via localStorage', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
 
     // Select a city filter
@@ -50,7 +51,7 @@ test.describe('Filter sidebar', () => {
   })
 
   test('clear all filters restores full list', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
 
     // Apply a filter

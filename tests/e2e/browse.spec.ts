@@ -1,22 +1,14 @@
 import { test, expect } from '@playwright/test'
 import { TEST_HASH } from './fixtures'
 
-test.describe('Public browse (homepage)', () => {
+test.describe('Public browse (hash view)', () => {
   test('renders published projects', async ({ page }) => {
-    await page.goto('/')
-    await expect(page.locator('h1')).toContainText('Pre-permit projects in your area')
-    // Skip gracefully if no projects are seeded
-    const cards = page.locator('[class*="bg-white rounded-lg"]')
-    const cardCount = await cards.count()
-    if (cardCount === 0) {
-      test.skip(true, 'No project cards rendered — database may not be seeded')
-      return
-    }
-    await expect(cards.first()).toBeVisible()
+    await page.goto(`/browse/${TEST_HASH}`)
+    await expect(page.locator('[class*="bg-white rounded-lg"]').first()).toBeVisible()
   })
 
   test('shows "Sign in to reveal" login link for public visitors', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     const cta = page.getByTestId('anonymous-reveal-cta').first()
     await expect(cta).toBeVisible()
     await expect(cta).toHaveText(/Sign in to reveal · \$199/)
@@ -29,7 +21,7 @@ test.describe('Public browse (homepage)', () => {
   })
 
   test('filter sidebar renders with city checkboxes', async ({ page }) => {
-    await page.goto('/')
+    await page.goto(`/browse/${TEST_HASH}`)
     // Desktop sidebar should have city filter
     await expect(page.locator('legend:has-text("City")').first()).toBeVisible()
   })

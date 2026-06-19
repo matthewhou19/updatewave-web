@@ -90,11 +90,11 @@ test.describe('anonymous signup entry points', () => {
     await expect(page.locator('[data-testid="login-form"]')).toBeVisible()
   })
 
-  test('homepage hero CTA routes to /login', async ({ page }) => {
+  test('homepage hero CTA routes to /pricing', async ({ page }) => {
     await page.goto('/')
     await expect(page.locator('[data-testid="home-hero-cta"]')).toBeVisible()
     await page.locator('[data-testid="home-hero-cta"]').click()
-    await page.waitForURL(/\/login/)
+    await page.waitForURL(/\/pricing/)
   })
 
   test('pricing CTA routes to /login with a next param', async ({ page }) => {
