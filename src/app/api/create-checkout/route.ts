@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { createStripeClient, ensureStripeConfigured } from '@/lib/stripe'
 import { resolveCheckoutUser } from '@/lib/checkout-auth'
+import { resolveBaseUrl } from '@/lib/site-url'
 
 // Rate limiting: removed non-functional in-memory Map (resets on Vercel cold start,
 // not shared across instances). See TODOS.md for Upstash Redis migration plan.
@@ -66,8 +67,9 @@ export async function POST(request: NextRequest) {
 
   // Create Stripe Checkout session
   const stripe = createStripeClient()
-  // Use env-based URL, never trust Origin header (open redirect risk)
-  const origin = process.env.NEXT_PUBLIC_BASE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+  // resolveBaseUrl() sanitizes the env value so a malformed NEXT_PUBLIC_BASE_URL
+  // can't produce a non-ASCII success_url that Stripe rejects (2026-06-19 outage).
+  const origin = resolveBaseUrl()
 
   const session = await stripe.checkout.sessions.create({
     line_items: [
