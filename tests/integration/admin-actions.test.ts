@@ -13,7 +13,7 @@ vi.mock('@/lib/supabase', () => ({
   createSupabaseServiceClient: () => mockServiceClient,
 }))
 
-const { approveLead, rejectLead } = await import('../../src/app/admin/leads/actions')
+const { approveLead, rejectLead, withdrawLead } = await import('../../src/app/admin/leads/actions')
 
 function makeServiceClient(
   updateResult: { data: unknown; error: unknown },
@@ -76,7 +76,7 @@ describe('approveLead', () => {
   it('is idempotent: 0 rows changed → no log, reports already-processed', async () => {
     mockServiceClient = makeServiceClient({ data: [], error: null })
     const res = await approveLead(7)
-    expect(res).toEqual({ ok: false, error: 'Already processed (no longer a candidate).' })
+    expect(res).toEqual({ ok: false, error: 'Already changed by another action. Refresh.' })
     expect(mockServiceClient._insert).not.toHaveBeenCalled()
   })
 
@@ -101,5 +101,35 @@ describe('rejectLead', () => {
     expect(mockServiceClient._insert).toHaveBeenCalledWith(
       expect.objectContaining({ project_id: 7, new_status: 'archived' })
     )
+  })
+})
+
+describe('withdrawLead', () => {
+  it('un-publishes (published → candidate), guards on published, clears published_at, logs', async () => {
+    const res = await withdrawLead(7)
+    expect(res).toEqual({ ok: true })
+
+    const patch = mockServiceClient._updateChain.update.mock.calls[0][0]
+    expect(patch.status).toBe('candidate')
+    expect(patch.published_at).toBeNull()
+
+    expect(mockServiceClient._updateChain.eq).toHaveBeenCalledWith('id', 7)
+    expect(mockServiceClient._updateChain.eq).toHaveBeenCalledWith('status', 'published')
+
+    expect(mockServiceClient._insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        project_id: 7,
+        old_status: 'published',
+        new_status: 'candidate',
+        changed_by: 'admin',
+      })
+    )
+  })
+
+  it('rejects an unauthenticated caller', async () => {
+    isAuthed = false
+    const res = await withdrawLead(7)
+    expect(res).toEqual({ ok: false, error: 'Not authorized.' })
+    expect(mockServiceClient.from).not.toHaveBeenCalled()
   })
 })

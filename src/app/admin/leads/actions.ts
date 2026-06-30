@@ -6,19 +6,25 @@ import { isAdminAuthed } from '@/lib/admin-auth'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
-type TargetStatus = 'published' | 'archived'
+type Status = 'candidate' | 'published' | 'archived'
 
 /**
- * Move a candidate lead to `published` (approve) or `archived` (reject).
+ * Move a lead between review states, guarded on its current status so a
+ * double-click or a race affects 0 rows. A Server Action is an independently
+ * callable endpoint, so we re-verify the admin here (defense in depth). The
+ * service-role client bypasses RLS; a project_status_log audit row is written
+ * (best-effort).
  *
- * Security: a Server Action is an independently-callable endpoint, so we
- * re-verify the admin here rather than trusting the page gate (defense in
- * depth). All writes use the service-role client (RLS bypass).
- *
- * Idempotency: the `status='candidate'` guard means a double-click or a race
- * affects 0 rows the second time, so we never re-publish or double-log.
+ *   approve:  candidate -> published  (sets published_at, reviewed_at)
+ *   reject:   candidate -> archived   (sets reviewed_at)
+ *   withdraw: published -> candidate  (clears published_at; back to the queue)
  */
-async function transition(projectId: number, toStatus: TargetStatus): Promise<ActionResult> {
+async function transition(
+  projectId: number,
+  fromStatus: Status,
+  toStatus: Status,
+  extraPatch: Record<string, string | null>
+): Promise<ActionResult> {
   if (!Number.isInteger(projectId) || projectId <= 0) {
     return { ok: false, error: 'Invalid lead id.' }
   }
@@ -28,18 +34,12 @@ async function transition(projectId: number, toStatus: TargetStatus): Promise<Ac
   }
 
   const service = createSupabaseServiceClient()
-  const now = new Date().toISOString()
-
-  const patch =
-    toStatus === 'published'
-      ? { status: 'published', published_at: now, reviewed_at: now }
-      : { status: 'archived', reviewed_at: now }
 
   const { data: updated, error: updateError } = await service
     .from('projects')
-    .update(patch)
+    .update({ status: toStatus, ...extraPatch })
     .eq('id', projectId)
-    .eq('status', 'candidate')
+    .eq('status', fromStatus)
     .select('id')
 
   if (updateError) {
@@ -47,15 +47,12 @@ async function transition(projectId: number, toStatus: TargetStatus): Promise<Ac
   }
 
   if (!updated || updated.length === 0) {
-    return { ok: false, error: 'Already processed (no longer a candidate).' }
+    return { ok: false, error: 'Already changed by another action. Refresh.' }
   }
 
-  // Audit trail is best-effort: the status change already committed, so a
-  // logging failure must not fail the action. Mirrors the auth-callback's
-  // best-effort event logging.
   await service.from('project_status_log').insert({
     project_id: projectId,
-    old_status: 'candidate',
+    old_status: fromStatus,
     new_status: toStatus,
     changed_by: 'admin',
   })
@@ -65,9 +62,16 @@ async function transition(projectId: number, toStatus: TargetStatus): Promise<Ac
 }
 
 export async function approveLead(projectId: number): Promise<ActionResult> {
-  return transition(projectId, 'published')
+  const now = new Date().toISOString()
+  return transition(projectId, 'candidate', 'published', { published_at: now, reviewed_at: now })
 }
 
 export async function rejectLead(projectId: number): Promise<ActionResult> {
-  return transition(projectId, 'archived')
+  return transition(projectId, 'candidate', 'archived', { reviewed_at: new Date().toISOString() })
+}
+
+export async function withdrawLead(projectId: number): Promise<ActionResult> {
+  // Un-publish: take it off the live site and back to the pending queue, where
+  // it can be re-approved or rejected. Clear published_at.
+  return transition(projectId, 'published', 'candidate', { published_at: null })
 }
