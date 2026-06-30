@@ -1,0 +1,72 @@
+name: Deploy to Cloudflare
+
+# Manual deploy of updatewave-web to Cloudflare Workers via @opennextjs/cloudflare.
+# Runs on Linux (OpenNext is not fully Windows-compatible). Dispatch-only during the
+# Vercel -> Cloudflare migration: it deploys to the *.workers.dev URL while production
+# DNS still points at Vercel, so it is safe to run repeatedly. A `push` trigger is
+# added at DNS cutover so main auto-deploys to Cloudflare.
+#
+# Requires repo secrets (add in Settings -> Secrets and variables -> Actions):
+#   CLOUDFLARE_API_TOKEN   - token with Account > Workers Scripts: Edit
+#                            (+ Account Settings: Read; Zone > Workers Routes: Edit
+#                            for the custom domain step later)
+#   CLOUDFLARE_ACCOUNT_ID  - the Cloudflare account id
+# Reuses app secrets already configured for CI (.github/workflows/ci.yml):
+#   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
+#   SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # NEXT_PUBLIC_* are inlined at build time. NEXT_PUBLIC_BASE_URL is pinned to the
+      # canonical domain so server-built URLs (Stripe success/cancel) never fall back
+      # to Vercel's VERCEL_URL.
+      - name: Build (OpenNext for Cloudflare)
+        run: npx opennextjs-cloudflare build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_BASE_URL: https://www.updatewave.org
+
+      # Deploy first so the Worker exists before secrets are set (secret put needs the
+      # Worker). wrangler deploy preserves previously-set secrets across deploys.
+      - name: Deploy to Cloudflare Workers
+        run: npx opennextjs-cloudflare deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # Runtime secrets are read from GitHub secrets via env (GitHub masks them in logs);
+      # never interpolated directly into the shell command. Idempotent on re-runs.
+      - name: Provision Worker runtime secrets
+        run: |
+          printf '%s' "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+          printf '%s' "$STRIPE_SECRET_KEY"         | npx wrangler secret put STRIPE_SECRET_KEY
+          printf '%s' "$STRIPE_WEBHOOK_SECRET"     | npx wrangler secret put STRIPE_WEBHOOK_SECRET
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
