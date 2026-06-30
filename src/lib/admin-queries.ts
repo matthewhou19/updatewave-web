@@ -28,3 +28,17 @@ export async function fetchCandidateProjects(supabase: SupabaseClient) {
 
   return { projects: (data ?? []) as Project[], error }
 }
+
+/**
+ * Fetch published (live) leads for the admin review surface so the owner can
+ * withdraw approval. Newest-published first. Service-role only.
+ */
+export async function fetchPublishedProjectsForReview(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('projects')
+    .select(PROJECT_ADMIN_COLUMNS)
+    .eq('status', 'published')
+    .order('published_at', { ascending: false })
+
+  return { projects: (data ?? []) as Project[], error }
+}

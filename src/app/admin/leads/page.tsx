@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { isAdminAuthed } from '@/lib/admin-auth'
 import { logoutAdmin } from '../login/actions'
-import { fetchCandidateProjects } from '@/lib/admin-queries'
+import { fetchCandidateProjects, fetchPublishedProjectsForReview } from '@/lib/admin-queries'
 import { listDrawings, type Drawing } from '@/lib/drawings'
 import { Project } from '@/lib/types'
 import { formatDate } from '@/lib/format'
@@ -11,18 +11,24 @@ import ReviewActions from './ReviewActions'
 
 export const dynamic = 'force-dynamic'
 
+type ReviewStatus = 'candidate' | 'published'
+
 export default async function AdminLeadsPage() {
   if (!(await isAdminAuthed())) {
     redirect('/admin/login?next=/admin/leads')
   }
 
   const service = createSupabaseServiceClient()
-  const { projects } = await fetchCandidateProjects(service)
+  const [{ projects: candidates }, { projects: published }] = await Promise.all([
+    fetchCandidateProjects(service),
+    fetchPublishedProjectsForReview(service),
+  ])
 
-  // One storage list per lead; run them in parallel.
-  const drawingsByProject = await Promise.all(
-    projects.map((p) => listDrawings(service, p.id))
-  )
+  // One storage list per shown lead; run them all in parallel.
+  const [candidateDrawings, publishedDrawings] = await Promise.all([
+    Promise.all(candidates.map((p) => listDrawings(service, p.id))),
+    Promise.all(published.map((p) => listDrawings(service, p.id))),
+  ])
 
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col">
@@ -45,40 +51,90 @@ export default async function AdminLeadsPage() {
       </header>
 
       <main className="max-w-[1100px] w-full mx-auto px-6 md:px-12 py-10 flex-1">
-        <div className="mb-8 flex items-baseline justify-between gap-4">
-          <h1 className="font-serif text-[28px] font-semibold tracking-tight">待审 Lead</h1>
-          <p className="font-mono text-[12px] text-muted whitespace-nowrap" data-testid="pending-count">
-            待审 {projects.length} 条
+        <div className="mb-10 flex items-baseline justify-between gap-4">
+          <h1 className="font-serif text-[28px] font-semibold tracking-tight">Lead 审核</h1>
+          <p className="font-mono text-[12px] text-muted whitespace-nowrap" data-testid="counts">
+            待审 {candidates.length} · 已上线 {published.length}
           </p>
         </div>
 
-        {projects.length === 0 ? (
-          <div className="border border-ink p-10 text-center" data-testid="empty-state">
-            <p className="font-mono text-[14px] text-ink">🎉 没有待审 lead</p>
-            <p className="font-mono text-[12px] text-muted mt-2">等下一批 AI 抓取。</p>
-          </div>
-        ) : (
-          <ul className="space-y-6 list-none p-0">
-            {projects.map((project, i) => (
-              <LeadCard key={project.id} project={project} drawings={drawingsByProject[i]} />
-            ))}
-          </ul>
-        )}
+        <LeadSection
+          title="待审"
+          status="candidate"
+          projects={candidates}
+          drawings={candidateDrawings}
+          emptyText="🎉 没有待审 lead — 等下一批 AI 抓取。"
+        />
+
+        <LeadSection
+          title="已上线"
+          status="published"
+          projects={published}
+          drawings={publishedDrawings}
+          emptyText="还没有已上线的 lead。"
+        />
       </main>
     </div>
   )
 }
 
-function LeadCard({ project, drawings }: { project: Project; drawings: Drawing[] }) {
+function LeadSection({
+  title,
+  status,
+  projects,
+  drawings,
+  emptyText,
+}: {
+  title: string
+  status: ReviewStatus
+  projects: Project[]
+  drawings: Drawing[][]
+  emptyText: string
+}) {
+  return (
+    <section className="mb-12" data-testid={`section-${status}`}>
+      <div className="mb-5 flex items-baseline justify-between gap-4 border-b border-ink pb-2">
+        <h2 className="font-serif text-[22px] font-semibold tracking-tight">{title}</h2>
+        <span className="font-mono text-[12px] text-muted whitespace-nowrap">{projects.length} 条</span>
+      </div>
+      {projects.length === 0 ? (
+        <p className="font-mono text-[13px] text-muted py-4" data-testid={`empty-${status}`}>
+          {emptyText}
+        </p>
+      ) : (
+        <ul className="space-y-6 list-none p-0">
+          {projects.map((project, i) => (
+            <LeadCard key={project.id} project={project} drawings={drawings[i]} status={status} />
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function LeadCard({
+  project,
+  drawings,
+  status,
+}: {
+  project: Project
+  drawings: Drawing[]
+  status: ReviewStatus
+}) {
+  const isPublished = status === 'published'
   return (
     <li className="border border-ink bg-paper p-6" data-testid="lead-card">
       <div className="flex items-start justify-between gap-4 mb-4">
         <div>
-          <h2 className="font-serif text-[20px] font-semibold leading-tight">{project.address}</h2>
+          <h3 className="font-serif text-[20px] font-semibold leading-tight">{project.address}</h3>
           <p className="font-mono text-[12px] text-muted mt-1">{project.city}</p>
         </div>
-        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted border border-grey-300 px-2 py-1 whitespace-nowrap">
-          Candidate
+        <span
+          className={`font-mono text-[10px] uppercase tracking-[0.15em] px-2 py-1 whitespace-nowrap border ${
+            isPublished ? 'border-accent text-accent' : 'border-grey-300 text-muted'
+          }`}
+        >
+          {isPublished ? 'Published' : 'Candidate'}
         </span>
       </div>
 
@@ -86,7 +142,10 @@ function LeadCard({ project, drawings }: { project: Project; drawings: Drawing[]
         <Field label="类型" value={project.project_type} />
         <Field label="估值" value={project.estimated_value} />
         <Field label="Filing date" value={formatDate(project.filing_date)} />
-        <Field label="录入时间" value={formatDate(project.created_at)} />
+        <Field
+          label={isPublished ? '上线时间' : '录入时间'}
+          value={formatDate(isPublished ? project.published_at : project.created_at)}
+        />
       </dl>
 
       <div className="border-t border-grey-200 pt-4 mb-5">
@@ -139,7 +198,7 @@ function LeadCard({ project, drawings }: { project: Project; drawings: Drawing[]
       )}
 
       <div className="border-t border-grey-200 pt-4">
-        <ReviewActions projectId={project.id} />
+        <ReviewActions projectId={project.id} status={status} />
       </div>
     </li>
   )
