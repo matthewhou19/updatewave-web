@@ -65,19 +65,12 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-  // Canonical host: redirect the bare apex updatewave.org → www.updatewave.org.
-  // Matches the apex Host only, so www, *.vercel.app, preview deploys, and
-  // localhost are untouched (no redirect loop). Path and query are preserved.
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        has: [{ type: 'host', value: 'updatewave.org' }],
-        destination: 'https://www.updatewave.org/:path*',
-        permanent: true,
-      },
-    ]
-  },
+  // NOTE: the apex updatewave.org → www redirect that used to live here was
+  // removed during the Cloudflare migration. Next's `redirects()` with a
+  // `:path*` param does NOT work under @opennextjs/cloudflare — the param is
+  // not substituted (Location becomes the literal `/:path*`) and the host
+  // condition matched www too, producing an infinite 308 loop on the worker.
+  // apex → www is handled at the Cloudflare edge (a redirect rule) instead.
 }
 
 export default nextConfig
