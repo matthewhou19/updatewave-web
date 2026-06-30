@@ -1,9 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { resolveAdmin } from '@/lib/admin'
+import { isAdminAuthed } from '@/lib/admin-auth'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -24,9 +23,7 @@ async function transition(projectId: number, toStatus: TargetStatus): Promise<Ac
     return { ok: false, error: 'Invalid lead id.' }
   }
 
-  const cookieClient = await createSupabaseServerClient()
-  const admin = await resolveAdmin(cookieClient)
-  if (!admin.ok) {
+  if (!(await isAdminAuthed())) {
     return { ok: false, error: 'Not authorized.' }
   }
 
@@ -60,7 +57,7 @@ async function transition(projectId: number, toStatus: TargetStatus): Promise<Ac
     project_id: projectId,
     old_status: 'candidate',
     new_status: toStatus,
-    changed_by: `admin:${admin.email}`,
+    changed_by: 'admin',
   })
 
   revalidatePath('/admin/leads')
