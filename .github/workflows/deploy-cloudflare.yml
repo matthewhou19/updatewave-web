@@ -1,21 +1,24 @@
 name: Deploy to Cloudflare
 
-# Manual deploy of updatewave-web to Cloudflare Workers via @opennextjs/cloudflare.
-# Runs on Linux (OpenNext is not fully Windows-compatible). Dispatch-only during the
-# Vercel -> Cloudflare migration: it deploys to the *.workers.dev URL while production
-# DNS still points at Vercel, so it is safe to run repeatedly. A `push` trigger is
-# added at DNS cutover so main auto-deploys to Cloudflare.
+# Deploys updatewave-web to Cloudflare Workers via @opennextjs/cloudflare.
+# Runs on Linux (OpenNext is not fully Windows-compatible).
+#
+# Auto-deploys on push to main. main is PR-only and branch protection requires the
+# `quality` CI check on every PR, so only CI-passing code reaches main and gets
+# deployed (the quality gate happens at PR time; deploy is intentionally NOT coupled
+# to the non-blocking e2e job). workflow_dispatch allows a manual deploy.
 #
 # Requires repo secrets (add in Settings -> Secrets and variables -> Actions):
 #   CLOUDFLARE_API_TOKEN   - token with Account > Workers Scripts: Edit
-#                            (+ Account Settings: Read; Zone > Workers Routes: Edit
-#                            for the custom domain step later)
+#                            (+ Account Settings: Read; Zone > Workers Routes: Edit)
 #   CLOUDFLARE_ACCOUNT_ID  - the Cloudflare account id
 # Reuses app secrets already configured for CI (.github/workflows/ci.yml):
 #   NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY,
 #   SUPABASE_SERVICE_ROLE_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -40,8 +43,7 @@ jobs:
         run: npm ci
 
       # NEXT_PUBLIC_* are inlined at build time. NEXT_PUBLIC_BASE_URL is pinned to the
-      # canonical domain so server-built URLs (Stripe success/cancel) never fall back
-      # to Vercel's VERCEL_URL.
+      # canonical domain so server-built URLs (Stripe success/cancel) are always correct.
       - name: Build (OpenNext for Cloudflare)
         run: npx opennextjs-cloudflare build
         env:

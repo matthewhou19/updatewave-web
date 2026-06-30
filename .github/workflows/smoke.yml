@@ -1,15 +1,12 @@
 name: Smoke
 
-# Post-deploy smoke tests. Runs AFTER a deployment reports success, against the
-# URL that was actually deployed - replacing the previous "smoke right after
-# push" job that could race ahead of the Vercel deploy and test the old version.
-#
-# This depends on Vercel's GitHub integration emitting `deployment_status`
-# events (its standard Git integration does). If you don't see this workflow run
-# after a deploy, trigger it manually via "Run workflow" (workflow_dispatch) and
-# check the deployment environment label below.
+# Post-deploy smoke tests against the live production URL. Runs after the
+# "Deploy to Cloudflare" workflow completes successfully, so it tests the version
+# that was just deployed. workflow_dispatch allows an ad-hoc run against any URL.
 on:
-  deployment_status:
+  workflow_run:
+    workflows: ["Deploy to Cloudflare"]
+    types: [completed]
   workflow_dispatch:
     inputs:
       url:
@@ -22,13 +19,10 @@ jobs:
     name: smoke
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Manual runs always proceed. Automatic runs only for a SUCCESSFUL production
-    # deployment. If Vercel labels the environment differently, adjust the
-    # `contains(...)` check (the manual dispatch path still works regardless).
+    # Manual runs always proceed. Automatic runs only after a SUCCESSFUL deploy.
     if: >-
       ${{ github.event_name == 'workflow_dispatch' ||
-          (github.event.deployment_status.state == 'success' &&
-           contains(github.event.deployment_status.environment, 'roduction')) }}
+          github.event.workflow_run.conclusion == 'success' }}
     container:
       image: mcr.microsoft.com/playwright:v1.59.1-noble
 
@@ -47,8 +41,5 @@ jobs:
       - name: Post-deploy smoke tests
         run: npx playwright test --project=smoke
         env:
-          # NOTE: do not use deployment_status.environment_url here - Vercel reports
-          # the per-deployment URL, which has Deployment Protection and returns 401
-          # to anonymous requests. Smoke the public alias instead; by the time the
-          # deployment_status fires, the alias already points at this deployment.
+          # Smoke the public production URL (custom domain on Cloudflare).
           PRODUCTION_URL: ${{ inputs.url || 'https://www.updatewave.org' }}
