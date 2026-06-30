@@ -58,7 +58,8 @@ describe('listDrawings', () => {
     expect(mock.storage.list).toHaveBeenCalledWith('7', expect.objectContaining({ limit: 100 }))
     expect(mock.storage.createSignedUrls).toHaveBeenCalledWith(
       ['7/site-plan.pdf', '7/elevation.png'],
-      3600
+      3600,
+      { download: true }
     )
   })
 

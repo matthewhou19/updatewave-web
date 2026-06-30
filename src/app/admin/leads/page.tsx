@@ -6,6 +6,7 @@ import { fetchCandidateProjects } from '@/lib/admin-queries'
 import { listDrawings, type Drawing } from '@/lib/drawings'
 import { Project } from '@/lib/types'
 import { formatDate } from '@/lib/format'
+import { buttonStyles } from '@/components/ui/Button'
 import ReviewActions from './ReviewActions'
 
 export const dynamic = 'force-dynamic'
@@ -121,23 +122,19 @@ function LeadCard({ project, drawings }: { project: Project; drawings: Drawing[]
       </div>
 
       {drawings.length > 0 && (
-        <div className="border border-grey-200 p-4 mb-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted mb-3">
-            图纸 ({drawings.length})
-          </p>
-          <ul className="space-y-2 list-none p-0">
-            {drawings.map((d) => (
-              <li key={d.name}>
-                <a
-                  href={d.url}
-                  download={d.name}
-                  className="font-mono text-[12px] text-ink underline decoration-dotted underline-offset-2 hover:text-accent break-all"
-                >
-                  ↓ {d.name}
-                </a>
-              </li>
-            ))}
-          </ul>
+        <div className="mb-5 flex flex-wrap gap-2" data-testid="drawings">
+          {drawings.map((d) => (
+            <a
+              key={d.name}
+              href={d.url}
+              download={d.name}
+              title={d.name}
+              className={buttonStyles('outline', 'sm')}
+              data-testid="drawing-download"
+            >
+              ↓ 下载图纸{drawings.length > 1 ? `：${d.name}` : ''}
+            </a>
+          ))}
         </div>
       )}
 

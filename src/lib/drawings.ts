@@ -49,7 +49,11 @@ export async function listDrawings(
 
   const { data: signed, error: signError } = await supabase.storage
     .from(DRAWINGS_BUCKET)
-    .createSignedUrls(paths, SIGNED_URL_EXPIRES_IN)
+    // download: true puts `content-disposition: attachment` on the signed URL,
+    // so clicking downloads the file instead of previewing it inline in the
+    // browser. (The <a download> attribute is ignored for cross-origin URLs, so
+    // this is the part that actually forces a download.)
+    .createSignedUrls(paths, SIGNED_URL_EXPIRES_IN, { download: true })
 
   if (signError || !signed) return []
 
