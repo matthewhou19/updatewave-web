@@ -119,7 +119,7 @@ function resolveRedirectBase(): string {
   return (
     process.env.AUTH_REDIRECT_URL ||
     process.env.NEXT_PUBLIC_BASE_URL ||
-    'https://updatewave-web.vercel.app'
+    'https://www.updatewave.org'
   )
 }
 

@@ -2,7 +2,7 @@
 
 Pre-permit lead marketplace for general contractors. GCs browse project listings and pay $199/reveal to see architect contact info, $499 for a city market-structure report, or $1,999 for custom city research with a 90-day post-purchase digest.
 
-**Live:** https://updatewave-web.vercel.app
+**Live:** https://www.updatewave.org
 
 ## How It Works
 
@@ -19,7 +19,7 @@ Authentication is dual-mode: hash-in-URL identity (cold-email entry point) plus 
 - **Database:** Supabase (Postgres + RLS)
 - **Auth:** Supabase Auth magic-link
 - **Payments:** Stripe Checkout + Webhooks
-- **Hosting:** Vercel
+- **Hosting:** Cloudflare Workers (via @opennextjs/cloudflare)
 - **Styling:** Tailwind CSS v4
 - **Local dev:** Supabase CLI (Docker)
 

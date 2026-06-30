@@ -4,7 +4,7 @@
 
 Next.js 16 + Supabase + Stripe. GCs browse pre-permit project listings and pay $199/reveal to see architect contact info, $499 for the SJ city report, or $1,999 for custom city research.
 
-**Live:** https://updatewave-web.vercel.app
+**Live:** https://www.updatewave.org
 **Supabase:** project ref `gucsgfpiruhjsmzwcnqp`
 **Stripe:** test mode, webhook at `/api/webhook`
 

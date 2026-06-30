@@ -15,7 +15,7 @@ on:
       url:
         description: Production URL to smoke-test
         required: false
-        default: https://updatewave-web.vercel.app
+        default: https://www.updatewave.org
 
 jobs:
   smoke:
@@ -51,4 +51,4 @@ jobs:
           # the per-deployment URL, which has Deployment Protection and returns 401
           # to anonymous requests. Smoke the public alias instead; by the time the
           # deployment_status fires, the alias already points at this deployment.
-          PRODUCTION_URL: ${{ inputs.url || 'https://updatewave-web.vercel.app' }}
+          PRODUCTION_URL: ${{ inputs.url || 'https://www.updatewave.org' }}
