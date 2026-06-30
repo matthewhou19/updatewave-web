@@ -48,15 +48,8 @@ describe('resolveBaseUrl', () => {
     expect(resolveBaseUrl()).toBe('https://www.updatewave.org')
   })
 
-  it('uses VERCEL_URL when NEXT_PUBLIC_BASE_URL is empty', () => {
-    process.env.NEXT_PUBLIC_BASE_URL = ''
-    process.env.VERCEL_URL = 'updatewave-abc123.vercel.app'
-    expect(resolveBaseUrl()).toBe('https://updatewave-abc123.vercel.app')
-  })
-
   it('falls back to localhost when nothing is configured', () => {
     delete process.env.NEXT_PUBLIC_BASE_URL
-    delete process.env.VERCEL_URL
     expect(resolveBaseUrl()).toBe('http://localhost:3000')
   })
 })

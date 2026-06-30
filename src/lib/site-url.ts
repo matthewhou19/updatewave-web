@@ -18,15 +18,14 @@
  *      survived, falling back to the canonical domain.
  *
  * Resolution order mirrors the previous inline logic:
- *   NEXT_PUBLIC_BASE_URL  ->  https://$VERCEL_URL  ->  http://localhost:3000
+ *   NEXT_PUBLIC_BASE_URL  ->  http://localhost:3000
  */
 
 const CANONICAL_BASE_URL = 'https://www.updatewave.org'
 
 export function resolveBaseUrl(): string {
   const fromEnv = (process.env.NEXT_PUBLIC_BASE_URL ?? '').trim()
-  const fromVercel = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL.trim()}` : ''
-  const candidate = fromEnv || fromVercel || 'http://localhost:3000'
+  const candidate = fromEnv || 'http://localhost:3000'
 
   try {
     const origin = new URL(candidate).origin

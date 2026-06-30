@@ -22,7 +22,7 @@ export default defineConfig({
       name: 'smoke',
       testMatch: 'smoke.spec.ts',
       use: {
-        baseURL: process.env.PRODUCTION_URL || 'https://updatewave-web.vercel.app',
+        baseURL: process.env.PRODUCTION_URL || 'https://www.updatewave.org',
       },
     },
   ],
