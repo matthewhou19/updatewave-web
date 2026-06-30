@@ -1,7 +1,7 @@
-import { redirect, notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { redirect } from 'next/navigation'
 import { createSupabaseServiceClient } from '@/lib/supabase'
-import { resolveAdmin } from '@/lib/admin'
+import { isAdminAuthed } from '@/lib/admin-auth'
+import { logoutAdmin } from '../login/actions'
 import { fetchCandidateProjects } from '@/lib/admin-queries'
 import { listDrawings, type Drawing } from '@/lib/drawings'
 import { Project } from '@/lib/types'
@@ -12,14 +12,8 @@ import ReviewActions from './ReviewActions'
 export const dynamic = 'force-dynamic'
 
 export default async function AdminLeadsPage() {
-  const cookieClient = await createSupabaseServerClient()
-  const admin = await resolveAdmin(cookieClient)
-
-  if (!admin.ok) {
-    if (admin.reason === 'unauthenticated') {
-      redirect('/login?next=/admin/leads')
-    }
-    notFound()
+  if (!(await isAdminAuthed())) {
+    redirect('/admin/login?next=/admin/leads')
   }
 
   const service = createSupabaseServiceClient()
@@ -38,9 +32,15 @@ export default async function AdminLeadsPage() {
             UpdateWave<span className="text-accent">.</span>{' '}
             <span className="font-mono text-[12px] font-normal text-muted">Lead review</span>
           </span>
-          <span className="font-mono text-[12px] text-muted" data-testid="admin-email">
-            {admin.email}
-          </span>
+          <form action={logoutAdmin}>
+            <button
+              type="submit"
+              className="font-mono text-[12px] text-muted hover:text-accent underline decoration-dotted underline-offset-2"
+              data-testid="admin-logout"
+            >
+              Log out
+            </button>
+          </form>
         </div>
       </header>
 

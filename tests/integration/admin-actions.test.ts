@@ -1,28 +1,19 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 
-// Both client factories are read at action-call time, so late assignment in
-// each test is picked up (same pattern as download-list.test.ts).
-let mockCookieClient: ReturnType<typeof makeCookieClient>
-let mockServiceClient: ReturnType<typeof makeServiceClient>
-
-vi.mock('@/lib/supabase-server', () => ({
-  createSupabaseServerClient: () => mockCookieClient,
+// Read at action-call time, so per-test assignment is picked up.
+let isAuthed: boolean
+vi.mock('@/lib/admin-auth', () => ({
+  isAdminAuthed: () => Promise.resolve(isAuthed),
 }))
+
+let mockServiceClient: ReturnType<typeof makeServiceClient>
 vi.mock('@/lib/supabase', () => ({
   createSupabaseServiceClient: () => mockServiceClient,
 }))
 
 const { approveLead, rejectLead } = await import('../../src/app/admin/leads/actions')
-
-function makeCookieClient(authUser: { id: string; email?: string } | null) {
-  return {
-    auth: {
-      getUser: vi.fn().mockResolvedValue({ data: { user: authUser }, error: null }),
-    },
-  }
-}
 
 function makeServiceClient(
   updateResult: { data: unknown; error: unknown },
@@ -42,27 +33,16 @@ function makeServiceClient(
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.stubEnv('ADMIN_EMAILS', 'matthew@updatewave.org')
-  mockCookieClient = makeCookieClient({ id: 'uuid', email: 'matthew@updatewave.org' })
+  isAuthed = true
   mockServiceClient = makeServiceClient({ data: [{ id: 7 }], error: null })
 })
 
-afterEach(() => {
-  vi.unstubAllEnvs()
-})
-
 describe('approveLead', () => {
-  it('rejects a logged-in non-admin and never touches the DB', async () => {
-    mockCookieClient = makeCookieClient({ id: 'uuid', email: 'intruder@evil.com' })
+  it('rejects an unauthenticated caller and never touches the DB', async () => {
+    isAuthed = false
     const res = await approveLead(7)
     expect(res).toEqual({ ok: false, error: 'Not authorized.' })
     expect(mockServiceClient.from).not.toHaveBeenCalled()
-  })
-
-  it('rejects an unauthenticated caller', async () => {
-    mockCookieClient = makeCookieClient(null)
-    const res = await approveLead(7)
-    expect(res).toEqual({ ok: false, error: 'Not authorized.' })
   })
 
   it('rejects an invalid id', async () => {
@@ -88,7 +68,7 @@ describe('approveLead', () => {
         project_id: 7,
         old_status: 'candidate',
         new_status: 'published',
-        changed_by: 'admin:matthew@updatewave.org',
+        changed_by: 'admin',
       })
     )
   })
