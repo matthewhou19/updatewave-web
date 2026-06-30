@@ -15,9 +15,9 @@ function mockAuth(authUser: { id: string; email?: string } | null): SupabaseClie
 }
 
 describe('getAdminEmails', () => {
-  it('defaults to the founder email when unset/empty (no prod env needed)', () => {
+  it('defaults to the owner emails when unset/empty (no prod env needed)', () => {
     vi.stubEnv('ADMIN_EMAILS', '')
-    expect(getAdminEmails()).toEqual(['matthew@updatewave.org'])
+    expect(getAdminEmails()).toEqual(['matthew.chivalri@gmail.com', 'matthew@updatewave.org'])
   })
 
   it('splits, trims, lowercases, and drops empties when ADMIN_EMAILS overrides', () => {
@@ -27,8 +27,9 @@ describe('getAdminEmails', () => {
 })
 
 describe('isAdminEmail', () => {
-  it('falls back to the founder default when ADMIN_EMAILS is unset', () => {
+  it('falls back to the owner defaults when ADMIN_EMAILS is unset', () => {
     vi.stubEnv('ADMIN_EMAILS', '')
+    expect(isAdminEmail('matthew.chivalri@gmail.com')).toBe(true)
     expect(isAdminEmail('matthew@updatewave.org')).toBe(true)
     expect(isAdminEmail('a@x.com')).toBe(false)
   })

@@ -13,7 +13,12 @@ import { SupabaseClient } from '@supabase/supabase-js'
  * to override/extend the list (e.g. add a second admin) without a code change.
  */
 
-const DEFAULT_ADMIN_EMAILS = ['matthew@updatewave.org']
+// Owner addresses, both already public in this repo (mailto: contacts in docs/), so
+// listing them leaks nothing — and an email is not a credential (access still requires
+// controlling the inbox). matthew.chivalri@gmail.com is the verified working login; the
+// @updatewave.org address is a Cloudflare Email Routing forward kept as a brand alias.
+// ADMIN_EMAILS env overrides this list entirely.
+const DEFAULT_ADMIN_EMAILS = ['matthew.chivalri@gmail.com', 'matthew@updatewave.org']
 
 /**
  * The admin allowlist. Uses ADMIN_EMAILS (comma-separated, case-insensitive)
