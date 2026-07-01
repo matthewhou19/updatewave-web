@@ -17,6 +17,8 @@ function project(overrides: Partial<Project>): Project {
     description: null,
     source_permit_id: null,
     filing_date: null,
+    last_action_date: null,
+    last_action_summary: null,
     source_url: null,
     status: 'candidate',
     reveal_count: 0,

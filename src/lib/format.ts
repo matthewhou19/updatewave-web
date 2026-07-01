@@ -20,7 +20,12 @@ export function formatPrice(cents: number | null | undefined): string {
  */
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return '—'
-  const date = new Date(iso)
+  // Date-only strings (YYYY-MM-DD, e.g. filing_date) must be parsed as LOCAL,
+  // not UTC, or they render one day early in negative-offset timezones. Full
+  // timestamps carry their own offset and are left as-is.
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(iso)
+    ? new Date(`${iso}T00:00:00`)
+    : new Date(iso)
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',

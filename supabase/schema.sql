@@ -16,6 +16,8 @@ CREATE TABLE projects (
   architect_website TEXT,
   source_permit_id BIGINT,      -- FK to apollo.db permits.id (for dedup)
   filing_date DATE,
+  last_action_date DATE,        -- date of the most recent planning action/hearing
+  last_action_summary TEXT,     -- what that action did, from the minutes
   source_url TEXT,
   status TEXT NOT NULL DEFAULT 'candidate'
     CHECK (status IN ('candidate', 'published', 'stale', 'archived')),

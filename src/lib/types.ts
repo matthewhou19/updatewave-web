@@ -12,6 +12,8 @@ export interface Project {
   description: string | null
   source_permit_id: number | null
   filing_date: string | null
+  last_action_date: string | null
+  last_action_summary: string | null
   source_url: string | null
   status: 'candidate' | 'published' | 'stale' | 'archived'
   reveal_count: number

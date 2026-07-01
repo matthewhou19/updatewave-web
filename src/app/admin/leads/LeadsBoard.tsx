@@ -245,6 +245,20 @@ function LeadDetail({
         </dl>
       </div>
 
+      {(project.last_action_date || project.last_action_summary) && (
+        <div className="border-t border-grey-200 pt-4 mb-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted mb-2">
+            最新进展 · Last action
+          </p>
+          <p className="font-mono text-[13px] text-ink leading-relaxed">
+            {project.last_action_date && (
+              <span className="text-muted">{formatDate(project.last_action_date)} — </span>
+            )}
+            {project.last_action_summary ?? '—'}
+          </p>
+        </div>
+      )}
+
       {project.description && (
         <p className="font-mono text-[13px] text-ink leading-relaxed mb-5 whitespace-pre-wrap">
           {project.description}
