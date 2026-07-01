@@ -20,10 +20,12 @@ import {
 
 /**
  * Explicit columns for project listings. Architect fields are intentionally
- * excluded to prevent data leaks to the client.
+ * excluded to prevent data leaks to the client. `source_url` is excluded too:
+ * it points at the original city permit record and is never delivered to the
+ * client — not even after a reveal (product decision: the source stays private).
  */
 const PROJECT_LIST_COLUMNS =
-  'id, city, address, description, project_type, estimated_value_cents, estimated_value, filing_date, source_url, status, reveal_count, published_at, updated_at, created_at'
+  'id, city, address, description, project_type, estimated_value_cents, estimated_value, filing_date, status, reveal_count, published_at, updated_at, created_at'
 
 /**
  * Public columns for city_lists. pdf_storage_path is intentionally excluded
@@ -248,6 +250,23 @@ export async function fetchArchitectData(
     }
   }
   return result
+}
+
+/**
+ * IDs of published projects that carry architect info, for the pre-reveal
+ * manifest ("this lead includes architect contact"). Selects ONLY `id` — the
+ * architect values themselves never leave the server for unrevealed leads.
+ */
+export async function fetchArchitectPresenceIds(
+  supabase: SupabaseClient
+): Promise<number[]> {
+  const { data } = await supabase
+    .from('projects')
+    .select('id')
+    .eq('status', 'published')
+    .or('architect_contact.not.is.null,architect_firm.not.is.null,architect_website.not.is.null')
+
+  return (data ?? []).map((r: { id: number }) => r.id)
 }
 
 /**

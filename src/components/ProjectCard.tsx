@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { Project } from '@/lib/types'
+import { Drawing } from '@/lib/drawings'
 import { formatRelativeTime, formatProjectType, maskStreetNumber } from '@/lib/utils'
 import { buttonStyles } from './ui/Button'
 
@@ -19,6 +20,15 @@ interface ProjectCardProps {
    * no sign-in link. Defaults to 'transactional' which is the /browse behaviour.
    */
   mode?: 'transactional' | 'demo'
+  /**
+   * Flexible pre-reveal manifest — which of these this lead actually has.
+   * Undefined on demo cards, where the manifest isn't shown.
+   */
+  hasOwnerContact?: boolean
+  hasArchitectContact?: boolean
+  hasDrawings?: boolean
+  /** Signed drawing download links — populated only once revealed. */
+  drawings?: Drawing[]
 }
 
 // Re-export for backwards compatibility with tests that import from this module.
@@ -38,7 +48,26 @@ function MaskedAddress({ address }: { address: string }) {
   )
 }
 
-export default function ProjectCard({ project, isRevealed, hash, justRevealed, mode = 'transactional' }: ProjectCardProps) {
+function ManifestItem({ label }: { label: string }) {
+  return (
+    <li className="flex items-baseline gap-2 font-mono text-[12px] text-ink">
+      <span className="text-accent" aria-hidden>+</span>
+      <span>{label}</span>
+    </li>
+  )
+}
+
+export default function ProjectCard({
+  project,
+  isRevealed,
+  hash,
+  justRevealed,
+  mode = 'transactional',
+  hasOwnerContact = false,
+  hasArchitectContact = false,
+  hasDrawings = false,
+  drawings = [],
+}: ProjectCardProps) {
   const [loading, setLoading] = useState(false)
 
   async function handleReveal() {
@@ -87,7 +116,7 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
             className="mb-3 px-2 py-1 border border-accent text-accent font-mono text-[11px] uppercase tracking-wider inline-block"
             data-testid="just-revealed-banner"
           >
-            ✓ Architect info revealed
+            ✓ Lead unlocked
           </div>
         )}
 
@@ -123,6 +152,20 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
           )}
         </div>
 
+        {mode === 'transactional' && !isRevealed && (
+          <div className="mt-4 pt-4 border-t border-grey-300" data-testid="reveal-manifest">
+            <div className="font-mono text-[10px] text-muted uppercase tracking-wider mb-2">
+              Unlock on reveal
+            </div>
+            <ul className="space-y-1">
+              <ManifestItem label="Exact street address" />
+              {hasOwnerContact && <ManifestItem label="Property owner — name & phone/email" />}
+              {hasArchitectContact && <ManifestItem label="Architect / designer — firm & contact" />}
+              {hasDrawings && <ManifestItem label="Architectural drawings" />}
+            </ul>
+          </div>
+        )}
+
         {isRevealed && (project.architect_firm || project.architect_contact || project.architect_website) && (
           <div className="mt-4 pt-4 border-t border-grey-300">
             {project.architect_firm && (
@@ -144,6 +187,28 @@ export default function ProjectCard({ project, isRevealed, hash, justRevealed, m
                 <p className="font-mono text-[10px] text-muted mt-1">Visit their portfolio →</p>
               </>
             )}
+          </div>
+        )}
+
+        {isRevealed && drawings.length > 0 && (
+          <div className="mt-4 pt-4 border-t border-grey-300">
+            <div className="font-mono text-[10px] text-muted uppercase tracking-wider mb-2">
+              Architectural drawings
+            </div>
+            <div className="flex flex-wrap gap-2" data-testid="drawings">
+              {drawings.map((d) => (
+                <a
+                  key={d.name}
+                  href={d.url}
+                  download={d.name}
+                  title={d.name}
+                  className={buttonStyles('outline', 'sm')}
+                  data-testid="drawing-download"
+                >
+                  ↓ {d.name}
+                </a>
+              ))}
+            </div>
           </div>
         )}
 

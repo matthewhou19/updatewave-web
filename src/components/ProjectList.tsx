@@ -2,13 +2,13 @@
 
 import { useEffect, useRef, useState, useMemo, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Project } from '@/lib/types'
+import { BrowseProject } from '@/lib/browse'
 import { formatProjectType } from '@/lib/utils'
 import ProjectCard from './ProjectCard'
 import { buttonStyles } from './ui/Button'
 
 interface ProjectListProps {
-  projects: Project[]
+  projects: BrowseProject[]
   revealedProjectIds: number[]
   hash?: string
 }
@@ -165,6 +165,10 @@ function ProjectListInner({ projects, revealedProjectIds, hash }: ProjectListPro
               isRevealed={revealedSet.has(project.id)}
               hash={hash}
               justRevealed={justRevealedId === project.id}
+              hasOwnerContact={project.has_owner_contact}
+              hasArchitectContact={project.has_architect_contact}
+              hasDrawings={project.has_drawings}
+              drawings={project.drawings}
             />
           ))}
         </div>

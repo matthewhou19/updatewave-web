@@ -4,10 +4,12 @@ import {
   RESEARCH_PURCHASE_PUBLIC_COLUMNS,
   createDigestSubscription,
   fetchActiveResearchCities,
+  fetchArchitectPresenceIds,
   fetchCityList,
   fetchCityListWithStoragePath,
   fetchListPurchase,
   fetchListPurchaseForCollisionCheck,
+  fetchPublishedProjects,
   fetchResearchPurchase,
   fetchUserByHash,
   fetchUserListPurchases,
@@ -35,6 +37,7 @@ interface ChainStubs {
   maybeSingle?: ReturnType<typeof vi.fn>
   order?: ReturnType<typeof vi.fn>
   insert?: ReturnType<typeof vi.fn>
+  or?: ReturnType<typeof vi.fn>
 }
 
 function makeChain(overrides: ChainStubs = {}) {
@@ -46,6 +49,7 @@ function makeChain(overrides: ChainStubs = {}) {
     maybeSingle: overrides.maybeSingle ?? vi.fn(),
     order: overrides.order ?? vi.fn(),
     insert: overrides.insert ?? vi.fn().mockReturnThis(),
+    or: overrides.or ?? vi.fn(),
   }
   return chain
 }
@@ -630,5 +634,55 @@ describe('fetchUserResearchPurchases', () => {
 
     const { purchases } = await fetchUserResearchPurchases(supabase, 99)
     expect(purchases).toEqual([])
+  })
+})
+
+// ─────────────────────────────────────────────────────────────────────────
+// Browse card data: public projects + architect presence (manifest)
+// ─────────────────────────────────────────────────────────────────────────
+
+describe('fetchPublishedProjects', () => {
+  it('selects public columns WITHOUT source_url or architect fields (security)', async () => {
+    const chain = makeChain()
+    chain.order.mockResolvedValue({ data: [], error: null })
+    const supabase = makeSupabase(chain)
+
+    await fetchPublishedProjects(supabase)
+
+    expect(supabase.from).toHaveBeenCalledWith('projects')
+    const selectArg = chain.select.mock.calls[0][0] as string
+    // source_url is never delivered to the client (not even post-reveal).
+    expect(selectArg).not.toContain('source_url')
+    // Architect values are fetched separately for revealed ids only.
+    expect(selectArg).not.toContain('architect')
+    expect(selectArg).toContain('description')
+    expect(chain.eq).toHaveBeenCalledWith('status', 'published')
+    expect(chain.order).toHaveBeenCalledWith('filing_date', { ascending: false })
+  })
+})
+
+describe('fetchArchitectPresenceIds', () => {
+  it('selects ONLY id (no architect values leak) for published leads with architect info', async () => {
+    const chain = makeChain()
+    chain.or.mockResolvedValue({ data: [{ id: 3 }, { id: 9 }], error: null })
+    const supabase = makeSupabase(chain)
+
+    const ids = await fetchArchitectPresenceIds(supabase)
+
+    expect(supabase.from).toHaveBeenCalledWith('projects')
+    const selectArg = chain.select.mock.calls[0][0] as string
+    expect(selectArg).toBe('id')
+    expect(chain.eq).toHaveBeenCalledWith('status', 'published')
+    expect(chain.or).toHaveBeenCalledWith(
+      'architect_contact.not.is.null,architect_firm.not.is.null,architect_website.not.is.null'
+    )
+    expect(ids).toEqual([3, 9])
+  })
+
+  it('returns [] when no leads have architect info', async () => {
+    const chain = makeChain()
+    chain.or.mockResolvedValue({ data: [], error: null })
+    const supabase = makeSupabase(chain)
+    expect(await fetchArchitectPresenceIds(supabase)).toEqual([])
   })
 })
