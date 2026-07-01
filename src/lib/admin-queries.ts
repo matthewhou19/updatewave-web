@@ -13,7 +13,7 @@ import { SupabaseClient } from '@supabase/supabase-js'
 import { Project } from './types'
 
 const PROJECT_ADMIN_COLUMNS =
-  'id, city, address, project_type, estimated_value_cents, estimated_value, description, architect_name, architect_firm, architect_contact, architect_website, source_permit_id, filing_date, source_url, status, reveal_count, reviewed_at, published_at, updated_at, created_at'
+  'id, city, address, project_type, estimated_value_cents, estimated_value, description, architect_name, architect_firm, architect_contact, architect_website, source_permit_id, filing_date, last_action_date, last_action_summary, source_url, status, reveal_count, reviewed_at, published_at, updated_at, created_at'
 
 /**
  * Fetch all leads awaiting review (status='candidate'), newest first.
