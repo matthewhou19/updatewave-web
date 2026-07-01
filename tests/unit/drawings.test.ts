@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { listDrawings } from '@/lib/drawings'
+import { listDrawings, fetchDrawingProjectIds, fetchDrawingsForProjects } from '@/lib/drawings'
 
 function makeClient() {
   const storage = {
@@ -82,5 +82,45 @@ describe('listDrawings', () => {
       error: null,
     })
     expect(await listDrawings(mock.client, 7)).toEqual([{ name: 'a.pdf', url: 'https://s/a' }])
+  })
+})
+
+describe('fetchDrawingProjectIds', () => {
+  it('lists the bucket root and returns numeric folder ids (presence only, no signing)', async () => {
+    mock.storage.list.mockResolvedValue({
+      data: [{ name: '40' }, { name: '128' }, { name: '.emptyFolderPlaceholder' }, { name: 'notes.txt' }],
+      error: null,
+    })
+
+    const ids = await fetchDrawingProjectIds(mock.client)
+
+    expect(ids).toEqual([40, 128]) // placeholder + non-numeric entries dropped
+    expect(mock.storage.from).toHaveBeenCalledWith('lead-drawings')
+    expect(mock.storage.list).toHaveBeenCalledWith('', expect.objectContaining({ limit: 1000 }))
+    // Presence only — never mints signed URLs.
+    expect(mock.storage.createSignedUrls).not.toHaveBeenCalled()
+  })
+
+  it('returns [] when the bucket is unavailable', async () => {
+    mock.storage.list.mockResolvedValue({ data: null, error: { message: 'no bucket' } })
+    expect(await fetchDrawingProjectIds(mock.client)).toEqual([])
+  })
+})
+
+describe('fetchDrawingsForProjects', () => {
+  it('returns {} for an empty id list without touching storage', async () => {
+    expect(await fetchDrawingsForProjects(mock.client, [])).toEqual({})
+    expect(mock.storage.list).not.toHaveBeenCalled()
+  })
+
+  it('keys signed drawings by project id and omits leads with no files', async () => {
+    mock.storage.list.mockResolvedValue({ data: [{ name: 'plan.pdf' }], error: null })
+    mock.storage.createSignedUrls.mockResolvedValue({
+      data: [{ path: '40/plan.pdf', signedUrl: 'https://s/plan', error: null }],
+      error: null,
+    })
+
+    const out = await fetchDrawingsForProjects(mock.client, [40])
+    expect(out).toEqual({ 40: [{ name: 'plan.pdf', url: 'https://s/plan' }] })
   })
 })

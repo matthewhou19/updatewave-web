@@ -1,6 +1,15 @@
 import { createSupabaseServiceClient } from '@/lib/supabase'
 import { User } from '@/lib/types'
-import { fetchPublishedProjects, fetchUserByHash, fetchUserReveals, fetchArchitectData, mergeArchitectData } from '@/lib/queries'
+import {
+  fetchPublishedProjects,
+  fetchUserByHash,
+  fetchUserReveals,
+  fetchArchitectData,
+  fetchArchitectPresenceIds,
+  mergeArchitectData,
+} from '@/lib/queries'
+import { fetchDrawingProjectIds, fetchDrawingsForProjects } from '@/lib/drawings'
+import { assembleBrowseProjects } from '@/lib/browse'
 import TopBar from '@/components/TopBar'
 import ProjectList from '@/components/ProjectList'
 import Footer from '@/components/marketing/Footer'
@@ -39,14 +48,30 @@ export default async function BrowsePage({ params }: BrowsePageProps) {
 
   const { projects } = await fetchPublishedProjects(supabase)
   const { revealedProjectIds } = await fetchUserReveals(supabase, typedUser.id)
-  const architectData = await fetchArchitectData(supabase, revealedProjectIds)
-  const sanitizedProjects = mergeArchitectData(projects, architectData)
+
+  // Reveal-gated values + manifest presence. Architect values and drawing URLs
+  // are fetched only for revealed ids; the presence sets carry ids, no values.
+  const [architectData, architectPresenceIds, drawingProjectIds, drawingsByProject] =
+    await Promise.all([
+      fetchArchitectData(supabase, revealedProjectIds),
+      fetchArchitectPresenceIds(supabase),
+      fetchDrawingProjectIds(supabase),
+      fetchDrawingsForProjects(supabase, revealedProjectIds),
+    ])
+
+  const browseProjects = assembleBrowseProjects({
+    projects: mergeArchitectData(projects, architectData),
+    revealedProjectIds,
+    architectPresenceIds,
+    drawingProjectIds,
+    drawingsByProject,
+  })
 
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col">
       <TopBar hash={hash} view="browse" />
       <main className="flex-1">
-        <ProjectList projects={sanitizedProjects} revealedProjectIds={revealedProjectIds} hash={hash} />
+        <ProjectList projects={browseProjects} revealedProjectIds={revealedProjectIds} hash={hash} />
       </main>
       <Footer />
     </div>

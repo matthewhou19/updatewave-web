@@ -67,3 +67,54 @@ export async function listDrawings(
 
   return drawings
 }
+
+/**
+ * IDs of leads that have at least one drawing, for the pre-reveal manifest
+ * ("this lead includes architectural drawings"). One listing of the bucket
+ * root: each lead's files live under a `{projectId}/` prefix, so the root
+ * entries are exactly the project-id folders that contain files.
+ *
+ * Presence only — no signed URLs are minted here, so nothing downloadable
+ * leaks before payment. Returns [] on any error (e.g. bucket absent in dev).
+ *
+ * Note: the root listing is capped (limit 1000); fine at current scale. If the
+ * published set ever exceeds that, switch to a maintained `drawings_count`
+ * column.
+ */
+export async function fetchDrawingProjectIds(
+  supabase: SupabaseClient
+): Promise<number[]> {
+  const { data, error } = await supabase.storage
+    .from(DRAWINGS_BUCKET)
+    .list('', { limit: 1000 })
+
+  if (error || !data) return []
+
+  return data
+    .map((entry) => entry.name)
+    .filter((name) => name && name !== '.emptyFolderPlaceholder')
+    .map((name) => Number(name))
+    .filter((id) => Number.isInteger(id) && id > 0)
+}
+
+/**
+ * Signed drawing URLs for the given (revealed) leads, keyed by project id.
+ * Only leads with ≥1 drawing appear in the map. Call with revealed ids only —
+ * this mints downloadable URLs, so it is a post-payment delivery step.
+ */
+export async function fetchDrawingsForProjects(
+  supabase: SupabaseClient,
+  projectIds: number[]
+): Promise<Record<number, Drawing[]>> {
+  if (projectIds.length === 0) return {}
+
+  const entries = await Promise.all(
+    projectIds.map(async (id) => [id, await listDrawings(supabase, id)] as const)
+  )
+
+  const result: Record<number, Drawing[]> = {}
+  for (const [id, drawings] of entries) {
+    if (drawings.length > 0) result[id] = drawings
+  }
+  return result
+}
